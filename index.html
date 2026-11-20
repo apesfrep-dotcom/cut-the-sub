@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut the Sub</title>
+<style>
+  :root {
+    --dark: #312a21; --brown: #ae7c3d; --cream: #f9f4e8; --gold: #d9b271;
+    --bread: #e2b26a; --crust: #b97a35; --red: #c0392b; --green: #2e8b57; --gray: #c8c0b2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--dark); color: var(--dark);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  #app { max-width: 1100px; margin: 0 auto; padding: 16px; min-height: 100%; display: flex; flex-direction: column; }
+  .card { background: var(--cream); border-radius: 28px; padding: 24px 28px; box-shadow: 8px 8px 0 var(--brown); flex: 1; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; color: var(--cream); }
+  header h1 { margin: 0; font-size: 30px; letter-spacing: -0.5px; }
+  header .right { display: flex; gap: 10px; align-items: center; }
+  button { font-family: inherit; cursor: pointer; border: none; border-radius: 16px; font-weight: 700; }
+  .icon-btn { background: var(--brown); color: var(--cream); font-size: 18px; padding: 10px 14px; }
+  .big { font-size: 26px; padding: 18px 30px; background: var(--brown); color: var(--cream); box-shadow: 0 5px 0 #7d5626; }
+  .big:active { transform: translateY(3px); box-shadow: 0 2px 0 #7d5626; }
+  .big.alt { background: var(--dark); box-shadow: 0 5px 0 #000; }
+  .big:disabled { opacity: .45; cursor: default; }
+  h2 { margin: 0 0 6px; font-size: 34px; color: var(--brown); text-align: center; }
+  p.sub { margin: 0 0 14px; text-align: center; font-size: 20px; }
+  .center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; flex: 1; }
+  .row { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; font-weight: 800; vertical-align: middle; }
+  .frac .n { padding: 0 6px 4px; }
+  .frac .d { border-top: 5px solid currentColor; padding: 4px 6px 0; }
+  .modepick .big { min-width: 300px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .modepick small { font-size: 16px; font-weight: 400; opacity: .9; }
+  .status { display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 4px; color: var(--brown); font-weight: 700; }
+  svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
+  .feedback { min-height: 64px; text-align: center; font-size: 24px; font-weight: 700; }
+  .stars { font-size: 44px; letter-spacing: 6px; color: var(--gold); }
+  .stars .off { color: #ddd3c2; }
+  .choice { min-width: 200px; font-size: 40px; padding: 18px 26px; }
+  .choice .frac { font-size: 44px; }
+  .levels { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+  .levels button { background: #eadfca; color: var(--dark); padding: 8px 14px; font-size: 16px; }
+  .levels button.on { background: var(--brown); color: var(--cream); }
+  table.sum { border-collapse: collapse; font-size: 22px; margin: 0 auto; }
+  table.sum td, table.sum th { padding: 8px 18px; border-bottom: 2px solid #e5dac6; text-align: center; }
+  .hint { font-size: 17px; text-align: center; color: #6b5a45; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Cut the Sub</h1>
+    <div class="right">
+      <button class="icon-btn" id="homeBtn" title="Home">Home</button>
+      <button class="icon-btn" id="muteBtn" title="Sound on/off">Sound: On</button>
+    </div>
+  </header>
+  <div class="card" id="screen"></div>
+</div>
+
+<script>
+"use strict";
+/* ---------------- sound (synthesized, no files) ---------------- */
+let muted = false, actx = null;
+function tone(freq, dur, type = "sine", vol = 0.15, when = 0) {
+  if (muted) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime + when, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + dur);
+  } catch (e) {}
+}
+const sfx = {
+  chop() { tone(180, 0.12, "triangle", 0.25); tone(90, 0.15, "square", 0.06, 0.02); },
+  hop() { tone(520, 0.08, "sine", 0.08); },
+  good() { [660, 880, 1100].forEach((f, i) => tone(f, 0.25, "sine", 0.12, i * 0.09)); },
+  ok() { tone(660, 0.2, "sine", 0.1); },
+  miss() { tone(260, 0.25, "triangle", 0.12); }
+};
+document.getElementById("muteBtn").onclick = (e) => {
+  muted = !muted; e.target.textContent = "Sound: " + (muted ? "Off" : "On");
+};
+document.getElementById("homeBtn").onclick = () => home();
+
+/* ---------------- helpers ---------------- */
+const $ = (h) => { const s = document.getElementById("screen"); s.innerHTML = h; return s; };
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const fracHTML = (n, d) => `<span class="frac"><span class="n">${n}</span><span class="d">${d}</span></span>`;
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function svgFrac(parent, x, y, n, d, size, color) {
+  el("text", { x, y, "text-anchor": "middle", "font-size": size, "font-weight": 800, fill: color }, parent).textContent = n;
+  el("line", { x1: x - size * 0.45, x2: x + size * 0.45, y1: y + size * 0.22, y2: y + size * 0.22, stroke: color, "stroke-width": size * 0.09 }, parent);
+  el("text", { x, y: y + size * 1.1, "text-anchor": "middle", "font-size": size, "font-weight": 800, fill: color }, parent).textContent = d;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/* ---------------- home ---------------- */
+const session = { compare: { right: 0, total: 0 }, est: {} };
+function home() {
+  $(`
+    <div class="center modepick">
+      <h2>Pick a game</h2>
+      <p class="sub">Every sub is 1 whole. Every fraction names where you cut.</p>
+      <div class="row">
+        <button class="big" id="cmp">Compare<small>Which fraction is bigger?</small></button>
+        <button class="big alt" id="est">Estimate<small>Cut the sub in the right spot</small></button>
+      </div>
+      <button class="icon-btn" id="sum" style="margin-top:10px">Show my teacher</button>
+    </div>`);
+  document.getElementById("cmp").onclick = () => compareGame();
+  document.getElementById("est").onclick = () => estimateGame(1);
+  document.getElementById("sum").onclick = () => summary();
+}
+
+/* ---------------- COMPARE MODE ---------------- */
+const DENS = [2, 3, 4, 6, 8];
+function randFrac() { const d = pick(DENS); return [rnd(1, d - 1), d]; }
+function comparePair() {
+  const r = Math.random();
+  if (r < 0.25) { const n = rnd(1, 3); const ds = DENS.filter((d) => d > n); const a = pick(ds); let b = pick(ds); while (b === a) b = pick(ds); return [[n, a], [n, b]]; }
+  if (r < 0.45) { const d = pick(DENS.filter((x) => x > 2)); const a = rnd(1, d - 1); let b = rnd(1, d - 1); while (b === a) b = rnd(1, d - 1); return [[a, d], [b, d]]; }
+  if (r < 0.55) { const a = randFrac(); const k = 24 * a[0] / a[1]; const eq = []; DENS.forEach((d) => { const n = k * d / 24; if (Number.isInteger(n) && d !== a[1] && n > 0 && n < d) eq.push([n, d]); }); if (eq.length) return [a, pick(eq)]; }
+  let a = randFrac(), b = randFrac();
+  while (a[0] * b[1] === b[0] * a[1] && Math.random() < 0.8) b = randFrac();
+  return [a, b];
+}
+function reason(a, b) {
+  const A = 24 * a[0] / a[1], B = 24 * b[0] / b[1];
+  if (A === B) return `Same spot! Both are ${A} bites.`;
+  const big = A > B ? a : b, small = A > B ? b : a;
+  const NAMES = { 2: "halves", 3: "thirds", 4: "fourths", 6: "sixths", 8: "eighths" };
+  if (a[0] === b[0]) return `${a[0]} shares either way, but ${NAMES[big[1]]} are bigger than ${NAMES[small[1]]}. ${big[0]}/${big[1]} wins.`;
+  if (a[1] === b[1]) return `Same size shares, so more shares win. ${big[0]}/${big[1]} wins.`;
+  return `${a[0]}/${a[1]} = ${A} bites, ${b[0]}/${b[1]} = ${B} bites. ${big[0]}/${big[1]} is bigger.`;
+}
+async function compareGame() {
+  let round = 0, right = 0;
+  const ROUNDS = 10;
+  async function next() {
+    round++;
+    if (round > ROUNDS) return compareDone(right, ROUNDS);
+    const [a, b] = comparePair();
+    $(`
+      <div class="status"><span>Compare</span><span>Round ${round} of ${ROUNDS} &nbsp;·&nbsp; ${right} right</span></div>
+      <h2>Which is bigger?</h2>
+      <div class="row" id="choices">
+        <button class="big choice" data-v="a">${fracHTML(a[0], a[1])}</button>
+        <button class="big choice alt" data-v="same">Same</button>
+        <button class="big choice" data-v="b">${fracHTML(b[0], b[1])}</button>
+      </div>
+      <svg id="bars" viewBox="0 0 1000 300"></svg>
+      <div class="feedback" id="fb"><span class="hint">Make a guess. Then watch the subs to check.</span></div>
+      <div class="row"><button class="big" id="go" style="visibility:hidden">Next</button></div>`);
+    const svg = document.getElementById("bars");
+    drawBar(svg, 70, a, "A"); drawBar(svg, 185, b, "B");
+    document.querySelectorAll(".choice").forEach((btn) => btn.onclick = async () => {
+      document.querySelectorAll(".choice").forEach((x) => x.disabled = true);
+      const A = a[0] / a[1], B = b[0] / b[1];
+      const truth = Math.abs(A - B) < 1e-9 ? "same" : A > B ? "a" : "b";
+      await fillBars(svg, [[70, a], [185, b]]);
+      const ok = btn.dataset.v === truth;
+      if (ok) { right++; sfx.good(); } else sfx.miss();
+      session.compare.total++; if (ok) session.compare.right++;
+      document.getElementById("fb").innerHTML =
+        `<span style="color:${ok ? "var(--green)" : "var(--red)"}">${ok ? "Yes!" : "Not quite."}</span> ${reason(a, b)}`;
+      const go = document.getElementById("go"); go.style.visibility = "visible"; go.onclick = next;
+    });
+  }
+  next();
+}
+const BX = 120, BW = 820;
+function drawBar(svg, y, f, letter) {
+  el("text", { x: 40, y: y + 42, "font-size": 34, "font-weight": 800, fill: "#312a21" }, svg).textContent = letter;
+  el("rect", { x: BX, y, width: BW, height: 60, fill: "#fff", stroke: "#312a21", "stroke-width": 4 }, svg);
+  const fill = el("rect", { x: BX, y, width: 0, height: 60, fill: "#e2b26a", class: "fill" }, svg);
+  fill.dataset.y = y;
+  for (let i = 1; i < 24; i++) el("line", { x1: BX + i * BW / 24, x2: BX + i * BW / 24, y1: y, y2: y + 60, stroke: "#9b8f7c", "stroke-width": 1.5 }, svg);
+  for (let k = 1; k < f[1]; k++) el("line", { x1: BX + k * BW / f[1], x2: BX + k * BW / f[1], y1: y, y2: y + 60, stroke: "#312a21", "stroke-width": 3 }, svg);
+  el("rect", { x: BX, y, width: BW, height: 60, fill: "none", stroke: "#312a21", "stroke-width": 4 }, svg);
+  if (y > 150) {
+    el("text", { x: BX, y: y + 98, "text-anchor": "middle", "font-size": 28, "font-weight": 800, fill: "#312a21" }, svg).textContent = "0";
+    el("text", { x: BX + BW, y: y + 98, "text-anchor": "middle", "font-size": 28, "font-weight": 800, fill: "#312a21" }, svg).textContent = "1";
+  }
+}
+async function fillBars(svg, list) {
+  const fills = svg.querySelectorAll(".fill");
+  const steps = 30;
+  for (let s = 1; s <= steps; s++) {
+    list.forEach(([y, f], i) => fills[i].setAttribute("width", BW * (f[0] / f[1]) * s / steps));
+    await sleep(22);
+  }
+  // re-draw grid lines on top of fill
+  list.forEach(([y, f]) => {
+    for (let i = 1; i < 24; i++) el("line", { x1: BX + i * BW / 24, x2: BX + i * BW / 24, y1: y, y2: y + 60, stroke: "#9b8f7c", "stroke-width": 1.5 }, svg);
+    for (let k = 1; k < f[1]; k++) el("line", { x1: BX + k * BW / f[1], x2: BX + k * BW / f[1], y1: y, y2: y + 60, stroke: "#312a21", "stroke-width": 3 }, svg);
+    el("rect", { x: BX, y, width: BW, height: 60, fill: "none", stroke: "#312a21", "stroke-width": 4 }, svg);
+    const boxes = 24 * f[0] / f[1];
+    el("text", { x: BX + BW * f[0] / f[1] / 2, y: y + 40, "text-anchor": "middle", "font-size": 24, "font-weight": 800, fill: "#312a21" }, svg).textContent = boxes + " bites";
+  });
+  const xs = list.map(([y, f]) => BX + BW * f[0] / f[1]);
+  const x = Math.max(...xs);
+  el("line", { x1: x, x2: x, y1: 50, y2: 260, stroke: "#c0392b", "stroke-width": 4, "stroke-dasharray": "8 7" }, svg);
+}
+function compareDone(right, total) {
+  $(`<div class="center"><h2>Compare: ${right} out of ${total}</h2>
+      <div class="stars">${"★".repeat(Math.round(3 * right / total))}<span class="off">${"★".repeat(3 - Math.round(3 * right / total))}</span></div>
+      <div class="row"><button class="big" id="again">Play again</button><button class="big alt" id="toEst">Try Estimate</button></div></div>`);
+  document.getElementById("again").onclick = compareGame;
+  document.getElementById("toEst").onclick = () => estimateGame(1);
+}
+
+/* ---------------- ESTIMATE MODE ---------------- */
+const LEVELS = {
+  1: { name: "Halves, fourths, eighths", dens: [2, 4, 8], max: 1 },
+  2: { name: "Thirds and sixths", dens: [3, 6], max: 1 },
+  3: { name: "Any fraction", dens: [2, 3, 4, 6, 8], max: 1 },
+  4: { name: "Past 1 (0 to 2)", dens: [2, 3, 4], max: 2 }
+};
+function estTarget(level) {
+  const L = LEVELS[level], d = pick(L.dens);
+  if (L.max === 2) { let n = rnd(1, 2 * d - 1); if (Math.random() < 0.6) n = rnd(d + 1, 2 * d - 1); return [n, d]; }
+  if (level === 1 || level === 2) { return Math.random() < 0.6 ? [1, d] : [rnd(1, d - 1), d]; }
+  return [rnd(1, d - 1), d];
+}
+function estimateGame(level) {
+  const st = (session.est[level] = session.est[level] || { misses: [], best: 0 });
+  let streak = 0, count = 0;
+  function next() {
+    count++;
+    const target = estTarget(level);
+    const L = LEVELS[level];
+    // random whole length: 45%..100% of track
+    const W = 1000, x0 = 80, track = 840;
+    const unitPx = (track / L.max) * (0.45 + Math.random() * 0.55);
+    const lineLen = unitPx * L.max;
+    $(`
+      <div class="levels">${[1, 2, 3, 4].map((l) => `<button data-l="${l}" class="${l === level ? "on" : ""}">Level ${l}</button>`).join("")}</div>
+      <div class="status"><span>Level ${level}: ${L.name}</span><span>Streak ${streak}/5</span></div>
+      <h2>Cut at ${fracHTML(target[0], target[1])}</h2>
+      <svg id="est" viewBox="0 0 ${W} 360"></svg>
+      <div class="feedback" id="fb"><span class="hint">Drag the knife (or tap the sub) to where you would cut. Then press Cut!</span></div>
+      <div class="row"><button class="big" id="cut">Cut!</button><button class="big alt" id="go" style="display:none">Next</button></div>`);
+    document.querySelectorAll(".levels button").forEach((b) => b.onclick = () => estimateGame(+b.dataset.l));
+    const svg = document.getElementById("est");
+    const y = 230;
+    // sub (bread) on top of the line
+    for (let w = 0; w < L.max; w++) {
+      const sx = x0 + w * unitPx + (w ? 3 : 0), sw = unitPx - (L.max > 1 ? 3 : 0);
+      el("rect", { x: sx, y: y - 150, width: sw, height: 56, rx: 28, fill: "#e2b26a", stroke: "#b97a35", "stroke-width": 4 }, svg);
+      el("rect", { x: sx + 10, y: y - 122, width: sw - 20, height: 10, rx: 5, fill: "#7fb56a" }, svg);
+      el("rect", { x: sx + 10, y: y - 112, width: sw - 20, height: 8, rx: 4, fill: "#d9534f" }, svg);
+    }
+    // number line
+    el("line", { x1: x0 - 30, x2: x0 + lineLen + 30, y1: y, y2: y, stroke: "#312a21", "stroke-width": 5 }, svg);
+    el("path", { d: `M${x0 - 46},${y} l18,-10 v20 z`, fill: "#312a21" }, svg);
+    el("path", { d: `M${x0 + lineLen + 46},${y} l-18,-10 v20 z`, fill: "#312a21" }, svg);
+    for (let w = 0; w <= L.max; w++) {
+      const x = x0 + w * unitPx;
+      el("line", { x1: x, x2: x, y1: y - 14, y2: y + 14, stroke: "#312a21", "stroke-width": 5 }, svg);
+      el("text", { x, y: y + 50, "text-anchor": "middle", "font-size": 32, "font-weight": 800, fill: "#312a21" }, svg).textContent = w;
+    }
+    // knife
+    let kx = x0 + lineLen * (0.15 + Math.random() * 0.7);
+    const knife = el("g", { style: "cursor:grab" }, svg);
+    const kline = el("line", { x1: 0, x2: 0, y1: y - 165, y2: y + 18, stroke: "#c0392b", "stroke-width": 5 }, knife);
+    el("path", { d: `M-14,${y - 190} h28 v26 l-14,10 l-14,-10 z`, fill: "#c0392b" }, knife);
+    const place = () => knife.setAttribute("transform", `translate(${kx},0)`);
+    place();
+    let locked = false, drag = false;
+    const toX = (ev) => { const r = svg.getBoundingClientRect(); return (ev.clientX - r.left) * (W / r.width); };
+    const clamp = (x) => Math.max(x0, Math.min(x0 + lineLen, x));
+    svg.addEventListener("pointerdown", (ev) => { if (locked) return; drag = true; svg.setPointerCapture(ev.pointerId); kx = clamp(toX(ev)); place(); });
+    svg.addEventListener("pointermove", (ev) => { if (!drag || locked) return; kx = clamp(toX(ev)); place(); });
+    svg.addEventListener("pointerup", () => { drag = false; });
+    document.getElementById("cut").onclick = async () => {
+      if (locked) return; locked = true;
+      document.getElementById("cut").disabled = true;
+      sfx.chop();
+      const val = target[0] / target[1];
+      const tx = x0 + val * unitPx;
+      // animate hops of 1/d from 0
+      const unit = unitPx / target[1];
+      for (let k = 0; k < target[0]; k++) {
+        const a = x0 + k * unit, b = a + unit, mid = (a + b) / 2, h = Math.min(32, unit * 0.45);
+        el("path", { d: `M${a},${y} Q${mid},${y - h * 2} ${b},${y}`, fill: "none", stroke: "#ae7c3d", "stroke-width": 4 }, svg);
+        el("line", { x1: b, x2: b, y1: y - 10, y2: y + 10, stroke: "#ae7c3d", "stroke-width": 4 }, svg);
+        sfx.hop();
+        await sleep(Math.max(120, 600 / target[0]));
+      }
+      el("line", { x1: tx, x2: tx, y1: y - 30, y2: y + 22, stroke: "#2e8b57", "stroke-width": 7 }, svg);
+      svgFrac(svg, tx, y + 82, target[0], target[1], 30, "#2e8b57");
+      const miss = Math.abs(kx - tx) / unitPx; // as fraction of one whole
+      const pct = Math.round(miss * 100);
+      const stars = miss <= 0.03 ? 3 : miss <= 0.07 ? 2 : miss <= 0.12 ? 1 : 0;
+      st.misses.push(miss); st.best = Math.max(st.best, stars);
+      if (stars >= 2) streak++; else streak = 0;
+      if (stars === 3) sfx.good(); else if (stars > 0) sfx.ok(); else sfx.miss();
+      const dir = kx < tx ? "short" : "too far";
+      let msg = `<div class="stars">${"★".repeat(stars)}<span class="off">${"★".repeat(3 - stars)}</span></div>`;
+      msg += stars === 3 ? "Perfect cut!" : `Your cut was ${dir} by ${pct}% of a whole sub. Watch the hops!`;
+      if (streak >= 5 && level < 4) msg += `<br><span style="color:var(--green)">5 in a row! Level ${level + 1} unlocked.</span>`;
+      document.getElementById("fb").innerHTML = msg;
+      const go = document.getElementById("go"); go.style.display = "inline-block";
+      if (streak >= 5 && level < 4) { go.textContent = `Go to Level ${level + 1}`; go.onclick = () => estimateGame(level + 1); }
+      else go.onclick = next;
+    };
+  }
+  next();
+}
+
+/* ---------------- teacher summary ---------------- */
+function summary() {
+  const rows = [1, 2, 3, 4].map((l) => {
+    const s = session.est[l];
+    if (!s || !s.misses.length) return `<tr><td>Level ${l}</td><td>–</td><td>–</td></tr>`;
+    const avg = Math.round(100 * s.misses.reduce((a, b) => a + b, 0) / s.misses.length);
+    return `<tr><td>Level ${l}</td><td>${s.misses.length}</td><td>${avg}%</td></tr>`;
+  }).join("");
+  const c = session.compare;
+  $(`<div class="center"><h2>Show your teacher</h2>
+      <p class="sub">Compare: <b>${c.right}</b> right out of <b>${c.total}</b></p>
+      <table class="sum"><tr><th>Estimate</th><th>Cuts</th><th>Average miss</th></tr>${rows}</table>
+      <p class="hint">Average miss = how far off the cuts were, as a part of the whole sub. Under 7% is strong.</p>
+      <button class="big" id="back">Back</button></div>`);
+  document.getElementById("back").onclick = home;
+}
+
+home();
+</script>
+</body>
+</html>
