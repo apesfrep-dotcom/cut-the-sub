@@ -341,6 +341,36 @@ for wk in range(1,5):
         it.setdefault('wholes', 1)
         boss.append(it)
 
+
+# ---- v3: remove "line them up" (too many fractions at once); replace with single-fraction orders.
+R3 = random.Random(4242)
+for idx, o in enumerate(new_orders):
+    if o['type'] != 'lineup': continue
+    wk = o['week']; cid = o['cust']; fw = FOODW[o['food']]; c = C[cid]
+    for key in ('fracs',): o.pop(key, None)
+    opener = c['open'][(idx+2) % 3]
+    if idx % 2 == 0:
+        d = R3.choice(DENS[wk]); n = R3.randrange(1, d)
+        cands = [(n+1,d) if n+1<d else (n-1,d)]
+        for m in DENS[wk]:
+            for k in range(1,m): cands.append((k,m))
+        out=[(n,d)]
+        for cc in cands:
+            if len(out)==3: break
+            if cc[0]>0 and cc[0]<cc[1] and all(F(*cc)!=F(*x) for x in out): out.append(cc)
+        R3.shuffle(out)
+        o.update(type='name', num=n, den=d, choices=[list(x) for x in out], answer=[n,d],
+                 line=f"{opener} Somebody already cut this {fw} for me. What fraction is my piece, from the left end?")
+    else:
+        d = R3.choice(DENS[wk]); n = R3.randrange(1, d)
+        o.update(type='cut', num=n, den=d, wholes=1, line=f"{opener} Could you cut me {say(n,d)} of this {fw}?")
+    o['id'] = o['id'].replace('_n', '_m')
+for o in boss:
+    if o['type'] != 'lineup': continue
+    o.pop('fracs', None); wk = o['week']
+    d = R3.choice(DENS[wk]); n = R3.randrange(1, d)
+    o.update(type='cut', num=n, den=d, wholes=1, id=o['id']+'b', line=f"Last one. Show me where {say(n,d)} goes on this number line.")
+
 # Surprise events: one per shift (none in the very first shift)
 EV = ['vip','outage','dog']
 events = {}

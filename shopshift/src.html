@@ -280,13 +280,13 @@ const SCENES = [
   {name:'The Ballpark', bg:'bg_ballpark', board:'board_tray', counter:'linear-gradient(#b3261e,#8e1d17 18px,#701612 60%,#4f0f0c)', lip:'linear-gradient(#e0574d,#b3261e)'},
   {name:'The Big Party', bg:'bg_catering', board:'board_slate', counter:'linear-gradient(#f4f1ea,#e4ded2 18px,#d8d1c3 60%,#c9c0af)', lip:'linear-gradient(#ffffff,#e9e3d8)'}];
 const WEEKS = [
-  {t:'Week 1 · The Deli', s:'Box strip under the sub · halves, fourths, eighths'},
+  {t:'Week 1 · The Deli', s:'Box strip + cut marks · halves, fourths, eighths'},
   {t:'Week 2 · Food Truck', s:'Number line with marks · thirds and sixths join'},
   {t:'Week 3 · Ballpark', s:'Only 0 and 1 are marked'},
   {t:'Week 4 · Big Party', s:'No marks at all · past one whole'}];
 const FRIDAY = '<p class="l">Every <b>Shift 5</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
 const WEEK_INTRO = [
-  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. Count boxes from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
+  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. The dark marks show where the equal pieces split. Count boxes or marks from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
   '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The boxes are gone. Now there\'s a <b>number line with marks</b>. Count the <b>spaces</b>, not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
   '<h2 class="t">Week 3: The Ballpark</h2><p class="l">Game day at the ballpark! Only <b>0</b> and <b>1</b> are marked now. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>'+FRIDAY,
   '<h2 class="t">Week 4: Catering the Big Party</h2><p class="l">No marks at all, just the food, like a real test. Big groups need <b>more than one sub</b>, so the line goes past <b>1</b>: one and a half subs means one whole, plus half of the next.</p>'+FRIDAY];
@@ -398,12 +398,16 @@ function cutInto(sub, cutsPx, gap=10){
 // Scaffold fades: boxes (wk1) -> number line with marks (wk2) -> 0 and 1 only (wk3) -> nothing (wk4). Inspector: bare test-style line.
 function ruler(sub, mode, den){
   if(cur && cur.outage && mode!=='bare') mode='none';
+  if(cur && cur.support){ if(mode==='bare') ruler(sub,'bare',0); mode='boxes'; }
   if(mode==='none') return;
   const x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
   if(mode==='boxes'){
     const by = sub.y + sub.h + 10, bh = 28;
-    for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); }
-    for(let w=0; w<=sub.wholes; w++) stext(x0+w*sub.L, by+bh+30, String(w), 26);
+    for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); const tn=svg('text',{x:x+sub.L/48, y:by+bh/2+Math.min(14,sub.L/24*.42)*.36, 'text-anchor':'middle', 'font-size':Math.min(14,sub.L/24*.42).toFixed(1), 'font-weight':700, 'font-family':'Trebuchet MS, sans-serif', fill:'#5a4a36'}); tn.textContent=String(k+1); }
+    // cut marks for this order's denominator, drawn right on the box strip
+    svg('line',{x1:x0,y1:by+bh,x2:X,y2:by+bh,stroke:'#241d15','stroke-width':4});
+    if(den) for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:by-8,x2:x,y2:by+bh+10,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); }
+    for(let w=0; w<=sub.wholes; w++){ const x=x0+w*sub.L; svg('line',{x1:x,y1:by-10,x2:x,y2:by+bh+12,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); stext(x, by+bh+34, String(w), 26); }
     return;
   }
   const y = mode==='bare' ? sub.y + sub.h/2 : sub.y + sub.h + 22, sw = mode==='bare' ? 6 : 5;
@@ -466,19 +470,19 @@ function subGeometry(o){
   return {L, x0: 900 - L/2};
 }
 const SUB_Y = 622;
-function boxTip(d){ return cur && cur.ruler==='boxes' && !cur.outage ? `<div style="text-align:center;margin-top:6px;font-size:20px">${frac(1,d)} = ${boxes(d)} boxes</div>` : ''; }
+function boxTip(d){ return cur && (cur.ruler==='boxes'||cur.support) && !cur.outage ? `<div style="text-align:center;margin-top:4px;font-size:19px">${frac(1,d)} = ${boxes(d)} boxes</div>` : ''; }
 function ticketHTML(o){
   const T = t => `<div class="tt">${o.vip?'★ VIP · DOUBLE TIPS ★<br>':''}${o.bare?'INSPECTION':'ORDER'} #${(cur.idx+1)} · ${t}</div>`;
   const fw = o.food ? FOODW[o.food] : 'sub';
   if(o.type==='split') return T('SPLIT IT') + `<div class="big">${WORDS[o.n]} equal pieces</div><div style="text-align:center;margin-top:6px">each piece = ${frac(1,o.n)}</div>` + boxTip(o.n);
   if(o.type==='cut') return T(o.bare?'MARK IT':'CUT IT') + `<div class="big">${o.wholes===2? mixed(o.num,o.den)+(o.bare?'':' subs') : frac(o.num,o.den)+(o.bare?'':' of the '+fw)}</div>` + boxTip(o.den);
-  if(o.type==='fair') return T('WHO GOT MORE?') + `<div style="font-size:24px;line-height:1.9">${cap(o.who_a)}: ${frac(o.a[0],o.a[1])}<br>${cap(o.who_b)}: ${frac(o.b[0],o.b[1])}</div>`;
-  if(o.type==='same') return T('SAME AMOUNT') + `<div class="big">serve ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">cut in ${DENW[o.pieces]}</div>`;
-  if(o.type==='left') return T('LEFTOVERS') + `<div class="big">ate ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">how much is left?</div>`;
+  if(o.type==='fair') return T('WHO GOT MORE?') + `<div style="font-size:24px;line-height:1.9">${cap(o.who_a)}: ${frac(o.a[0],o.a[1])}<br>${cap(o.who_b)}: ${frac(o.b[0],o.b[1])}</div>` + boxTip(o.a[1]) + (o.b[1]!==o.a[1]?boxTip(o.b[1]):'');
+  if(o.type==='same') return T('SAME AMOUNT') + `<div class="big">serve ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">cut in ${DENW[o.pieces]}</div>` + boxTip(o.den) + boxTip(o.pieces);
+  if(o.type==='left') return T('LEFTOVERS') + `<div class="big">ate ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">how much is left?</div>` + boxTip(o.den);
   if(o.type==='name') return T('NAME THE CUT') + `<div class="big">${o.bare?'point = ?':'my piece = ?'}</div>`;
   if(o.type==='fix') return T('CHECK THE ROOKIE') + `<div class="big">asked for ${frac(o.num,o.den)}</div>` + boxTip(o.den);
-  if(o.type==='two') return T('TWO PIECES') + `<div style="font-size:24px;line-height:1.9">1st: ${cap(o.who_a)} ${frac(...o.a)}<br>2nd: ${cap(o.who_b)} ${frac(...o.b)}</div>`;
-  if(o.type==='lineup') return T('LINE THEM UP') + `<div class="big">${o.fracs.map(f=>frac(...f)).join(' ')}</div>`;
+  if(o.type==='two') return T('TWO PIECES') + `<div style="font-size:24px;line-height:1.9">1st: ${cap(o.who_a)} ${frac(...o.a)}<br>2nd: ${cap(o.who_b)} ${frac(...o.b)}</div>` + boxTip(o.a[1]) + (o.b[1]!==o.a[1]?boxTip(o.b[1]):'');
+  if(o.type==='lineup') return T('LINE THEM UP') + `<div class="big">${o.fracs.map(f=>frac(...f)).join(' ')}</div>` + [...new Set(o.fracs.map(f=>f[1]))].map(boxTip).join('');
 }
 
 // ------------------------------------------------------------------ order modes
@@ -493,10 +497,11 @@ const MODES = {
       const ps = k.positions; k.done(); cutBtn.disabled=true; clr.disabled=true;
       for(let i=1;i<=ps.length;i++){ cutInto(sub, ps.slice(0,i), 8); chop(); await wait(170); }
       const unit = L/o.n, pts=[0,...ps,L], sizes=pts.slice(1).map((p,i)=>p-pts[i]);
-      for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
-      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const err = Math.max(...sizes.map(s=>Math.abs(s-unit)/unit));
       const stars = starsFor(err, [.15,.3,.45]);
+      if(gate(o, stars)) return;
+      for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
+      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
       const tip = o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
       finish(o, stars, stars===3 ? `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)}!`
@@ -513,9 +518,10 @@ const MODES = {
       if(sub.bare) cutMark(x0+x, sub); else cutInto(sub, [x], 14);
       await wait(300);
       const t = L*o.num/o.den, err = Math.abs(x-t)/L;
+      const stars = starsFor(err, [.03,.07,.12]);
+      if(gate(o, stars)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       markLine(x0+t, sub, '#3aa66a', null, true);
-      const stars = starsFor(err, [.03,.07,.12]);
       const nm = o.wholes===2 ? `${mixed(o.num,o.den)}` : frac(o.num,o.den);
       finish(o, stars, stars===3 ? `Right on ${nm}! ${cap(hopW(o.num))} of ${frac(1,o.den)} from 0.`
         : stars>0 ? `Close! ${nm} is the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`
@@ -527,9 +533,10 @@ const MODES = {
     const sa = makeSub(o, x0, 612, L, 1), sb = makeSub(o, x0, 728, L, 1);
     sa.y = 612; sb.y = 728; sa.h = sb.h = 90; sa.tag='a'; sb.tag='b'; drawWhole(sa); drawWhole(sb);
     stext(x0-24, 668, `${cap(o.who_a)} ${fracTxt(...o.a)}`, 26, '#fff9ea', 'end'); stext(x0-24, 784, `${cap(o.who_b)} ${fracTxt(...o.b)}`, 26, '#fff9ea', 'end');
-    if(o.week<=2){ smallTicks(sa, o.a[1]); smallTicks(sb, o.b[1]); }
+    if(o.week<=2 || cur.support){ smallTicks(sa, o.a[1]); smallTicks(sb, o.b[1]); }
     const reveal = async pick => {
       [...$('controls').children].forEach(b=>b.disabled=true);
+      if(gate(o, pick===o.answer?3:0)) return;
       const xa = L*o.a[0]/o.a[1], xb = L*o.b[0]/o.b[1];
       cutInto(sa,[xa],0); cutInto(sb,[xb],0); chop(); await wait(250);
       sa.pieces[1].classList.add('faded'); sb.pieces[1].classList.add('faded');
@@ -550,8 +557,9 @@ const MODES = {
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
     const unit = L/o.pieces, cuts=[]; for(let i=1;i<o.pieces;i++) cuts.push(unit*i);
     cutInto(sub, cuts, 8); let tries = 0;
+    ruler(sub, o.ruler, o.den);
     const sel = new Set();
-    const cnt = stext(900, sub.y+sub.h+44, '', 26);
+    const cnt = stext(900, sub.y-34, '', 26);
     sub.pieces.forEach((p,i)=>{ p.classList.add('tap'); p.onpointerdown = () => { sel.has(i)?sel.delete(i):sel.add(i); p.classList.toggle('sel'); pop(); serve.disabled = sel.size===0; cnt.textContent = sel.size ? `${sel.size} of ${o.pieces} pieces` : ''; }; });
     const serve = button('Serve 🍽️', 'btn green', async () => {
       tries++; const k = sel.size;
@@ -579,6 +587,7 @@ const MODES = {
     const choose = async c => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const ok = c[0]===o.answer[0] && c[1]===o.answer[1];
+      if(gate(o, ok?3:0)) return;
       await hops(sub, e, o.den-o.num, L/o.den, o.den, o.num, '#7be0a2', 220);
       finish(o, ok?3:0, `${ok?'Right! ':''}The whole is ${frac(o.den,o.den)}. ${frac(o.num,o.den)} was eaten, so ${frac(o.den-o.num,o.den)} is left: ${hopW(o.den-o.num)} more to the end.`);
     };
@@ -592,6 +601,7 @@ const MODES = {
     const choose = async c => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const ok = c[0]*o.den === c[1]*o.num;
+      if(gate(o, ok?3:0)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       finish(o, ok?3:0, ok ? `Yes! The cut is ${hopW(o.num)} of ${frac(1,o.den)} from 0: ${frac(o.num,o.den)}.`
         : `Count the <b>spaces</b> from 0, not the lines: ${hopW(o.num)} of ${frac(1,o.den)} makes ${frac(o.num,o.den)}.`);
@@ -605,18 +615,19 @@ const MODES = {
     cutInto(sub, [at], 8); const rook = cutMark(x0+at, sub, '#7a5cff'); stext(x0+at, sub.y-74, "rookie's cut", 22, '#e6dcff');
     const showRight = async () => { await hops(sub, 0, o.num, L/o.den, o.den, 0); markLine(x0+t, sub, '#3aa66a', null, true); };
     button('Looks right ✔', 'btn green', async () => {
-      [...$('controls').children].forEach(b=>b.disabled=true); await showRight();
+      [...$('controls').children].forEach(b=>b.disabled=true); if(gate(o, o.right?3:0)) return; await showRight();
       finish(o, o.right?3:0, o.right ? `Good eye! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)}, right where the rookie cut.`
         : `The rookie was off. ${frac(o.num,o.den)} is at the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`);
     });
     button('Fix it ✏️', 'btn red', async () => {
-      if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
+      if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); if(gate(o, 0)) return; await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
       $('controls').innerHTML=''; rook.setAttribute('opacity',.35);
       cutInto(sub, [], 0); coach('Right, it\'s off! Tap where the cut <b>should</b> go, then press <b>Cut!</b>');
       const k = knifeInput(sub, 1, ps => { cb.disabled = !ps.length; });
       const cb = button('Cut! 🔪','btn red', async () => {
-        const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250); await showRight();
+        const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250);
         const stars = starsFor(Math.abs(x-t)/L, [.03,.07,.12]);
+        if(gate(o, stars)) return; await showRight();
         finish(o, stars, stars===3 ? `Fixed! You spotted the mistake and cut ${frac(o.num,o.den)} exactly.` : `Good catch on the mistake. ${frac(o.num,o.den)} is at the green line.`);
       }, true);
     });
@@ -629,6 +640,7 @@ const MODES = {
     const k = knifeInput(sub, 2, ps => { cb.disabled = ps.length<2; cb.innerHTML = ps.length<2 ? `Cut! 🔪 (${ps.length}/2 marks)` : 'Cut! 🔪'; });
     const cb = button('Cut! 🔪 (0/2 marks)','btn red', async () => {
       const [p1,p2] = k.positions; k.done(); cb.disabled=true; clr.disabled=true; chop(); cutInto(sub,[p1,p2],14); await wait(250);
+      if(gate(o, starsFor(Math.max(Math.abs(p1-t1), Math.abs(p2-t2))/L, [.04,.08,.13]))) return;
       await hops(sub, 0, o.a[0], L/o.a[1], o.a[1], 0, '#ffd34d', 200);
       await hops(sub, t1, o.b[0], L/o.b[1], o.b[1], 0, '#9ad1ff', 200);
       markLine(x0+t1, sub, '#3aa66a', null, true); markLine(x0+t2, sub, '#3aa66a', null, true);
@@ -641,7 +653,7 @@ const MODES = {
   },
   lineup(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.bare?40:0), L, 1); drawWhole(sub);
-    ruler(sub, o.bare ? 'bare' : (o.ruler==='boxes'||o.ruler==='ticks') ? 'ends' : o.ruler, 2);
+    ruler(sub, o.bare ? 'bare' : o.ruler==='boxes' ? 'boxes' : o.ruler==='ticks' ? 'ends' : o.ruler, 0);
     const placed = {}, flags = {}; let active = null;
     const hit = $('hit'); hit.style.display='block'; hit.style.cursor='pointer';
     hit.style.left=(x0-30)+'px'; hit.style.top=(sub.y-90)+'px'; hit.style.width=(L+60)+'px'; hit.style.height=(sub.h+170)+'px';
@@ -666,9 +678,9 @@ const MODES = {
   }
 };
 function gcd(a,b){ return b ? gcd(b, a%b) : a; }
-function smallTicks(sub, den){ const y=sub.y+sub.h+4; for(let k=0;k<=den;k++){ const x=sub.x0+k*sub.L/den; svg('line',{x1:x,y1:y,x2:x,y2:y+(k%den===0?16:10),stroke:'#fff9ea','stroke-width':3}); } }
+function smallTicks(sub, den){ for(let k=1;k<den;k++){ const x=sub.x0+k*sub.L/den; svg('line',{x1:x,y1:sub.y+4,x2:x,y2:sub.y+sub.h+6,stroke:'#241d15','stroke-width':4,opacity:.75,'stroke-linecap':'round'}); } stext(sub.x0, sub.y+sub.h+22, '0', 20); stext(sub.x0+sub.L, sub.y+sub.h+22, '1', 20); }
 function button(label, cls, fn, disabled){ const b=document.createElement('button'); b.className=cls; b.innerHTML=label; b.onclick=()=>{ ac(); fn(); }; b.disabled=!!disabled; $('controls').appendChild(b); return b; }
-function coach(html){ const c=$('coach'); c.innerHTML=html; c.classList.remove('off'); clearTimeout(coach.t); coach.t=setTimeout(()=>c.classList.add('off'), 6500); }
+function coach(html){ const c=$('coach'); c.innerHTML=html; c.classList.remove('off'); clearTimeout(coach.t); if(!(cur&&cur.support)) coach.t=setTimeout(()=>c.classList.add('off'), 6500); }
 
 // ------------------------------------------------------------------ flow
 let cur = null;
@@ -704,7 +716,7 @@ async function nextOrder(){
   if(cur.idx>=cur.list.length) return endShift();
   dots();
   const o = cur.list[cur.idx];
-  cur.outage = false; cur.ruler = o.ruler;
+  cur.outage = false; cur.support = false; o.retry = false; cur.ruler = o.ruler;
   if(cur.ev && cur.idx===cur.ev.at && cur.idx<cur.nBase){
     if(cur.ev.kind==='vip') o.vip = true;
     if(cur.ev.kind==='outage' && o.ruler!=='none'){ cur.outage = true; $('bg').classList.add('dark'); $('neon').classList.add('dark'); setTimeout(()=>toast('⚡ Power flicker! The marks went dark for this order.', 3400), 900); }
@@ -732,13 +744,15 @@ async function nextOrder(){
   if(!o.bare && !S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
 }
 function finish(o, stars, msg){
-  const fast = !o.bare && stars>=2 && performance.now()-cur.t0 < cur.T;
+  if(o.retry) stars = Math.min(stars, 2);
+  const fast = !o.bare && !o.retry && stars>=2 && performance.now()-cur.t0 < cur.T;
   let tip = o.bare ? 0 : stars + (fast?1:0); if(o.vip) tip *= 2;
   const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
-  cur.results.push({o, stars, tip, fast});
+  cur.results.push({o, stars, tip, fast, retried:!!o.retry});
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
+  if(o.retry && stars<2) msg += `<div style="margin-top:8px;font-size:20px"><b>Remember:</b> ${hintFor(o)}</div>`;
   $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip${fast?' · ⚡ speedy!':''}${o.vip?' · VIP x2':''}</div>` : '');
   $('ticket').classList.add('off'); $('fb').classList.remove('off');
   setTimeout(()=>{ stars>=2 ? (react('happy',cur.idx), coinSnd()) : (react('unsure',cur.idx), sad()); }, 150);
@@ -748,6 +762,7 @@ function finish(o, stars, msg){
 function dogRun(){ const d=$('dog'); d.src=ART+'dog.webp'; d.style.transition='none'; d.style.left='-420px'; void d.offsetWidth; d.style.transition='left 2.8s linear'; d.style.left='1700px'; woof(); toast('🐕 A dog snuck in and stole the crumbs!', 3000); }
 $('fbNext').onclick = async () => {
   ac();
+  if(cur.retryPending){ cur.retryPending = false; return retryOrder(cur.list[cur.idx]); }
   if(cur.byos){ const r=cur.results[0]; ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off')); if(voiceEl) voiceEl.pause(); $('custWrap').classList.add('out'); showAd(r.o.byos.recipe, r.stars); return; } ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
   if(voiceEl) voiceEl.pause();
   const cw=$('custWrap'); const o=cur.list[cur.idx], nx=cur.list[cur.idx+1];
@@ -778,15 +793,54 @@ function endShift(){
   const pct = tot/max, rank = pct>=.88 ? 'HEAD CHEF' : pct>=.63 ? 'SUB PRO' : pct>=.38 ? 'LINE COOK' : 'TRAINEE';
   const byType = {}; cur.results.forEach(r=>{ const t=r.o.bare?'Inspection':TN[r.o.type]; byType[t]=byType[t]||[0,0]; byType[t][0]++; if(r.stars>=2) byType[t][1]++; });
   $('receipt').innerHTML = `<h2>${SCENES[cur.w].name.toUpperCase()}</h2><div class="c">Week ${cur.w+1} · Shift ${i%5+1}</div><div class="c">--------------------------------</div>` +
-    base.map(r=>`<div class="ln"><span>${name(r.o.cust)}${r.o.vip?' ★VIP':''}<br><small>${lab(r.o)}</small></span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}${r.fast?' ⚡':''}</span></div>`).join('') +
+    base.map(r=>`<div class="ln"><span>${name(r.o.cust)}${r.o.vip?' ★VIP':''}<br><small>${lab(r.o)}</small></span><span>${r.retried?'↻ ':''}${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}${r.fast?' ⚡':''}</span></div>`).join('') +
     `<div class="ln tot"><span>STARS</span><span>${tot}/${max}</span></div><div class="ln tot"><span>TIPS</span><span>$${tips}</span></div>` +
     (boss.length ? `<div class="c" style="margin-top:10px">--- FRIDAY INSPECTION ---</div>` + boss.map(r=>`<div class="ln"><span>${lab(r.o)}</span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}</span></div>`).join('') + `<div class="ln tot"><span>INSPECTION</span><span>${bossStars}/9 ${passed?'✅ BADGE':'❌'}</span></div>` : '') +
-    `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
-    `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${t}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
+    (base.some(r=>r.retried)?`<div class="c" style="font-size:18px">↻ = redone with help</div>`:'') + `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
+    `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary><div class="ln"><span>Needed a redo</span><span>${cur.results.filter(r=>r.retried).length} of ${cur.results.length}</span></div>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${t}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
     `<div class="c" style="margin-top:8px">THANK YOU! COME AGAIN</div>` +
     `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i<19?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
   $('receiptScr').classList.remove('hidden'); ding();
   $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1);
+}
+
+
+// ------------------------------------------------------------------ redo with supports
+function hintFor(o){
+  const bx = d => `${frac(1,d)} = <b>${24/d} boxes</b>`;
+  switch(o.type){
+    case 'split': return `Each piece is ${bx(o.n)}. Put a cut on <b>every</b> dark mark.`;
+    case 'cut': return o.wholes===2 ? `Each ${frac(1,o.den)} is ${24/o.den} boxes. Go past 1 whole, then count ${o.num%o.den*24/o.den} more boxes.` : `Each ${bx(o.den)}, so ${frac(o.num,o.den)} is <b>${o.num*24/o.den} boxes</b> from 0.`;
+    case 'fix': return `${frac(o.num,o.den)} is <b>${o.num*24/o.den} boxes</b> from 0. Is the rookie's cut there?`;
+    case 'left': return `The whole is 24 boxes. ${frac(o.num,o.den)} eaten is ${o.num*24/o.den} boxes. How many boxes are left, out of 24?`;
+    case 'name': return `Count the boxes from 0 to the cut, then see how many ${DEN1[o.den]}s that is (${bx(o.den)}).`;
+    case 'two': return `${cap(o.who_a)}: ${frac(...o.a)} = ${o.a[0]*24/o.a[1]} boxes from 0. ${cap(o.who_b)}: ${frac(...o.b)} = ${o.b[0]*24/o.b[1]} more boxes after that.`;
+    case 'lineup': return `Turn each fraction into boxes: ${o.fracs.map(f=>`${frac(...f)} = ${f[0]*24/f[1]}`).join(', ')}.`;
+    case 'fair': return `The marks show each person's pieces. Whose cut reaches farther from 0?`;
+  }
+  return 'Use the boxes and marks to check.';
+}
+function gate(o, stars){ if(stars<2 && !o.retry && o.type!=='same'){ offerRetry(o); return true; } return false; }
+function offerRetry(o){
+  const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
+  clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
+  $('fbStars').innerHTML = '<span>★</span><span>★</span><span>★</span>';
+  $('fbMsg').innerHTML = '<b>Not quite.</b> Try it one more time. This time you\'ll get the boxes, the cut marks, and a tip.';
+  $('fbNext').innerHTML = 'Try again with help ↻';
+  $('ticket').classList.add('off'); $('fb').classList.remove('off'); $('controls').innerHTML='';
+  cur.retryPending = true;
+  setTimeout(()=>{ react('unsure', cur.idx); sad(); }, 150);
+}
+function retryOrder(o){
+  clearBoard(); $('fb').classList.add('off'); $('fbNext').innerHTML = 'Next customer ➜';
+  o.retry = true; cur.support = true; cur.outage = false; $('bg').classList.remove('dark'); $('neon').classList.remove('dark');
+  setCustomer(o.cust, 'neutral');
+  speak(o.id, o.line, name(o.cust));
+  $('ticket').innerHTML = ticketHTML(o); $('ticket').classList.remove('off');
+  MODES[o.type](o);
+  $('speed').classList.add('off');
+  setTimeout(()=>coach('<b>Help is on:</b> ' + hintFor(o)), 500);
+  clearTimeout(coach.t); coach.t = null;
 }
 
 // ------------------------------------------------------------------ home, shop, settings
