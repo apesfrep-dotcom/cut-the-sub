@@ -112,6 +112,8 @@ button{font-family:inherit;cursor:pointer;border:none}
 @keyframes pulse{50%{outline-color:rgba(192,57,43,.25)}}
 .homeBar{display:flex;gap:16px;align-items:center;margin-top:18px}
 .homeBar .spacer{flex:1}
+.homeBar .btn{font-size:21px;padding:10px 16px}
+.homeBar .money{font-size:22px}
 .money{font-size:28px;font-weight:800}
 #receipt{width:560px;background:#fffdf6;font-family:"Courier New",monospace;font-size:21px;padding:26px 30px 40px;box-shadow:0 20px 50px rgba(0,0,0,.5);max-height:860px;overflow:auto;clip-path:polygon(0 0,100% 0,100% 97%,96% 100%,92% 97%,88% 100%,84% 97%,80% 100%,76% 97%,72% 100%,68% 97%,64% 100%,60% 97%,56% 100%,52% 97%,48% 100%,44% 97%,40% 100%,36% 97%,32% 100%,28% 97%,24% 100%,20% 97%,16% 100%,12% 97%,8% 100%,4% 97%,0 100%)}
 #receipt h2{text-align:center;margin:0;font-size:30px}
@@ -146,6 +148,35 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
 .chip.on{outline:5px solid #2f6f4f;transform:translateY(-4px)}
 #ticket.vip{background:#fff3c4;box-shadow:0 0 0 4px #f2b705,0 10px 24px rgba(0,0,0,.4)}
 .bossCard{left:560px;top:430px;width:680px;background:#1f2a36;color:#fff;border-radius:22px;padding:22px 28px;font-size:25px;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+
+#byos .card{width:1520px;padding:22px 30px}
+.byGrid{display:flex;gap:26px;margin-top:10px}
+.bins{width:470px}
+.bins h3{margin:6px 0 8px;font-size:22px}
+.binRow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bin{background:#fff;border-radius:14px;padding:6px;font-weight:800;font-size:17px;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 4px 0 #d8c9a8}
+.bin img{width:100%;height:46px;object-fit:contain}
+.bin.on{outline:4px solid #c0392b}
+.preview{flex:1;display:flex;flex-direction:column;gap:12px}
+#byCanvas{width:960px;height:330px;background:radial-gradient(ellipse at 50% 80%,#f2e6cc,#e6d6b3);border-radius:18px}
+.field{display:flex;gap:12px;align-items:center;font-size:22px;font-weight:700}
+.field input,.field select{font:inherit;font-size:24px;padding:8px 12px;border-radius:12px;border:3px solid #d8c9a8;flex:1;background:#fff}
+#ad{z-index:6}
+#poster{position:relative;width:1240px;height:740px;border-radius:26px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6);background:radial-gradient(circle at 50% 35%,#fff7e3 0,#f9e3b4 45%,#e7a94b 100%);text-align:center;font-family:"Trebuchet MS",sans-serif}
+#poster .rays{position:absolute;inset:-200px;background:repeating-conic-gradient(from 0deg at 50% 45%,rgba(255,255,255,.35) 0 8deg,rgba(255,255,255,0) 8deg 20deg)}
+#poster .kick{position:relative;margin-top:30px;font-size:30px;font-weight:900;letter-spacing:.2em;color:#c0392b}
+#poster .nm{position:relative;font-size:92px;font-weight:900;color:#312a21;line-height:1;margin:6px 40px 0;text-shadow:4px 4px 0 #fff}
+#poster img.sub{position:relative;width:980px;max-height:400px;object-fit:contain;margin-top:18px;filter:drop-shadow(0 22px 18px rgba(0,0,0,.35))}
+#poster .burst{position:absolute;right:26px;top:20px;width:190px;height:190px;transform:rotate(12deg)}
+#poster .tag{position:relative;font-size:40px;font-weight:800;color:#312a21;margin:12px 60px 0}
+#poster .by{position:absolute;left:0;right:0;bottom:22px;font-size:24px;color:#6a4a1c;font-weight:700}
+#adBtns{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:14px}
+#menu .card{width:1400px;max-height:840px;overflow:auto}
+.menuGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:14px 0}
+.mItem{background:#fff;border-radius:16px;padding:12px;position:relative;cursor:pointer;text-align:center}
+.mItem img{width:100%;height:120px;object-fit:contain}
+.mItem b{display:block;font-size:24px}
+.mItem .x{position:absolute;right:8px;top:6px;background:#eee;border-radius:50%;width:34px;height:34px;font-size:18px}
 </style>
 </head>
 <body>
@@ -192,6 +223,8 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
       <div class="homeBar">
         <div class="money" id="homeTips"></div>
         <button class="btn ghost" id="shopBtn">🛒 Shop upgrades</button>
+        <button class="btn ghost" id="byosBtn">🥪 Build Your Own Sub</button>
+        <button class="btn ghost hidden" id="menuBtn">📋 Menu</button>
         <div class="spacer"></div>
         <button class="btn ghost" id="muteHome">🔈 Sound</button>
         <button class="btn ghost" id="resetBtn" style="font-size:22px">Reset progress</button>
@@ -214,6 +247,21 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
 
   <div id="intro" class="screen dim hidden"><div class="card"><div id="introBody"></div><div style="text-align:right;margin-top:16px"><button class="btn green" id="introGo">Open the shop ➜</button></div></div></div>
 
+
+  <div id="byos" class="screen dim hidden"><div class="card">
+    <h2 class="t">🥪 Build Your Own Sub</h2><div style="font-size:21px;color:#6a5a44">You finished all four weeks! Now invent a sub for the menu, then cut it for your first customer.</div>
+    <div class="byGrid">
+      <div class="bins"><h3>1. Pick your bread</h3><div class="binRow" id="breadBins"></div>
+        <h3>2. Stack it up <small style="font-weight:400">(up to 6 layers, tap in order)</small></h3><div class="binRow" id="fillBins"></div>
+        <div style="display:flex;gap:10px;margin-top:12px"><button class="btn ghost" id="byUndo" style="font-size:20px;padding:8px 18px">↶ Undo</button><button class="btn ghost" id="byClear" style="font-size:20px;padding:8px 18px">Clear</button></div></div>
+      <div class="preview"><canvas id="byCanvas" width="1920" height="660"></canvas>
+        <div class="field">3. Name it: <input id="byName" maxlength="22" placeholder="The Mega Melt"></div>
+        <div class="field">Chef: <input id="byChef" maxlength="20" placeholder="Your name"></div>
+        <div class="field">Slogan: <select id="byTag"></select></div>
+        <div style="display:flex;gap:14px;justify-content:flex-end"><button class="btn ghost" id="byBack">Back to map</button><button class="btn red" id="byGo" disabled>Open the shop! ➜</button></div></div>
+    </div></div></div>
+  <div id="ad" class="screen dim hidden"><div style="position:relative"><div id="poster"></div><div id="adBtns" style="bottom:-78px"></div></div></div>
+  <div id="menu" class="screen dim hidden"><div class="card"><h2 class="t">📋 Menu Board</h2><div style="font-size:21px;color:#6a5a44">Every sub you've invented on this device.</div><div class="menuGrid" id="menuGrid"></div><div style="text-align:right"><button class="btn" id="menuClose">Done</button></div></div></div>
   <div id="loading" class="abs">Opening the deli…</div>
 </div></div>
 
@@ -326,6 +374,7 @@ function clearBoard(){ $('subLayer').innerHTML=''; $('fx').innerHTML=''; $('cont
 const ASPECT = {sub_italian:.295, sub_party:.137};
 function makeSub(o, x0, y, L, wholes, art){
   if(o.bare) return {x0, y, L, wholes, img:null, h:40, pieces:[], bare:true};
+  if(o.byos){ const h = Math.round(L*o.byos.asp); return {x0, y: 790-h, L, wholes, img:'custom', src:o.byos.src, h, pieces:[]}; }
   let img = art || 'sub_party', asp = ASPECT[img] || .137;
   if(!art && o.food){ [img, asp] = FOOD_ART[o.food]; }
   const h = Math.round(Math.max(46, Math.min(L*asp, 150)));
@@ -334,7 +383,7 @@ function makeSub(o, x0, y, L, wholes, art){
 function piece(sub, a, b, cls=''){
   const el = document.createElement('div'); el.className = 'piece ' + cls;
   el.style.left = (sub.x0+a)+'px'; el.style.top = sub.y+'px'; el.style.width = (b-a)+'px'; el.style.height = sub.h+'px';
-  if(sub.img) for(let k=0; k<sub.wholes; k++){ const im = new Image(); im.src = ART+sub.img+'.webp'; im.style.left = (k*sub.L - a)+'px'; im.style.width = sub.L+'px'; el.appendChild(im); }
+  if(sub.img) for(let k=0; k<sub.wholes; k++){ const im = new Image(); im.src = sub.src || ART+sub.img+'.webp'; im.style.left = (k*sub.L - a)+'px'; im.style.width = sub.L+'px'; el.appendChild(im); }
   $('subLayer').appendChild(el); return el;
 }
 function drawWhole(sub){ if(sub.bare) return; const p = piece(sub, 0, sub.L*sub.wholes); p.dataset.sub = sub.tag||''; sub.pieces=[p]; return p; }
@@ -412,6 +461,7 @@ function subGeometry(o){
   const r = (hash(o.id+'L')%1000)/1000;
   if(o.wholes===2){ const L = 520 + Math.round(r*40); return {L, x0: 900 - L}; }
   if(o.bare) return {L:900, x0:450};
+  if(o.byos) return {L:1000, x0:400};
   const L = o.week===1 ? 1000 : o.week===2 ? 820+Math.round(r*180) : 640+Math.round(r*360);
   return {L, x0: 900 - L/2};
 }
@@ -697,7 +747,8 @@ function finish(o, stars, msg){
 }
 function dogRun(){ const d=$('dog'); d.src=ART+'dog.webp'; d.style.transition='none'; d.style.left='-420px'; void d.offsetWidth; d.style.transition='left 2.8s linear'; d.style.left='1700px'; woof(); toast('🐕 A dog snuck in and stole the crumbs!', 3000); }
 $('fbNext').onclick = async () => {
-  ac(); ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
+  ac();
+  if(cur.byos){ const r=cur.results[0]; ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off')); if(voiceEl) voiceEl.pause(); $('custWrap').classList.add('out'); showAd(r.o.byos.recipe, r.stars); return; } ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
   if(voiceEl) voiceEl.pause();
   const cw=$('custWrap'); const o=cur.list[cur.idx], nx=cur.list[cur.idx+1];
   if(!(o.cust==='inspector' && nx && nx.cust==='inspector')){ cw.classList.add('out','right'); await wait(450); }
@@ -750,6 +801,7 @@ function renderHome(){
       return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===4?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
   $('weeks').querySelectorAll('.tile').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
   $('homeTips').textContent = `Tip jar: $${S.tips-S.spent}`; scene(); jar();
+  $('byosBtn').innerHTML = S.done[19] ? '🥪 Build Your Own Sub' : '🔒 Build Your Own Sub'; $('menuBtn').classList.toggle('hidden', !(S.menu&&S.menu.length));
 }
 function scene(){
   $('plants').classList.toggle('hidden', !S.owned.plants);
@@ -773,6 +825,95 @@ const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted && voiceE
 $('muteBtn').onclick = toggleMute; $('muteHome').onclick = toggleMute;
 $('homeBtn').onclick = goHome;
 $('bell').onclick = ding;
+
+
+// ------------------------------------------------------------------ Build Your Own Sub (unlocks after Week 4)
+const BREADS = {italian:'Sesame Italian', wheat:'Honey Wheat'};
+const FILLS = {salami:'Salami', turkey:'Turkey', ham:'Ham', cheese:'Swiss', lettuce:'Lettuce', tomato:'Tomato', pickles:'Pickles', onion:'Onion', peppers:'Peppers'};
+const TAGS = ['So good you\'ll want more than {f}!', 'Just {f} will fill you up!', 'The best {f} in town!', 'Ask for {f}. You\'ll be back for the rest!', 'Fair cuts, every time.', 'Cut it right, bite it right!'];
+const BY = {bread:'italian', layers:[]};
+const IMG = {};
+function bimg(k){ if(!IMG[k]){ IMG[k] = new Image(); IMG[k].src = ART+'bys/'+k+'.webp'; } return IMG[k]; }
+function loadAll(keys){ return Promise.all(keys.map(k=>{ const im=bimg(k); return im.complete&&im.naturalWidth ? 0 : new Promise(r=>{ im.onload=im.onerror=r; }); })); }
+async function renderSub(r, W=1400){
+  const keys = [`bun_bottom_${r.bread}`, `bun_top_${r.bread}`, ...r.layers]; await loadAll(keys);
+  const k = W/1400, LH = 104*k, step = 50*k, bot = 110*k, top = 160*k;
+  const H = top*0.62 + r.layers.length*step + LH*0.6 + bot + 20*k;
+  const c = document.createElement('canvas'); c.width = W; c.height = Math.round(H); const g = c.getContext('2d');
+  const b = bimg(`bun_bottom_${r.bread}`), t = bimg(`bun_top_${r.bread}`);
+  let y = H - bot - 10*k; g.drawImage(b, 0, y, W, bot);
+  r.layers.forEach((key,i)=>{ const im = bimg(key), h = LH, w = h*im.naturalWidth/im.naturalHeight; y -= step;
+    const ly = y - h*0.35, x0 = 26*k, x1 = W-26*k; g.save(); g.beginPath(); g.roundRect ? g.roundRect(x0, ly-10*k, x1-x0, h+20*k, 30*k) : g.rect(x0, ly-10*k, x1-x0, h+20*k); g.clip();
+    for(let x = x0 - (i*37)%Math.max(40,w); x < x1; x += w*0.96) g.drawImage(im, x, ly, w, h); g.restore(); });
+  g.drawImage(t, 8*k, y - top*0.62 - 6*k, W-16*k, top);
+  return c;
+}
+function tagText(t, f, html){ const ft = html ? frac(f[0],f[1]) : `${f[0]}/${f[1]}`; return t.replace('{f}', ft); }
+async function drawPreview(){
+  const cv = $('byCanvas'), g = cv.getContext('2d'); g.clearRect(0,0,cv.width,cv.height);
+  const c = await renderSub(BY, 1700); const h = Math.min(600, c.height); g.drawImage(c, 110, cv.height-h-30, 1700, h);
+  $('byGo').disabled = !BY.layers.length || !$('byName').value.trim();
+}
+function bins(){
+  $('breadBins').innerHTML = Object.entries(BREADS).map(([k,n])=>`<button class="bin ${BY.bread===k?'on':''}" data-b="${k}"><img src="${ART}bys/bun_top_${k}.webp" alt="">${n}</button>`).join('');
+  $('fillBins').innerHTML = Object.entries(FILLS).map(([k,n])=>`<button class="bin" data-f="${k}"><img src="${ART}bys/${k}.webp" alt="">${n}</button>`).join('');
+  $('breadBins').querySelectorAll('.bin').forEach(b=>b.onclick=()=>{ BY.bread=b.dataset.b; pop(); bins(); drawPreview(); });
+  $('fillBins').querySelectorAll('.bin').forEach(b=>b.onclick=()=>{ if(BY.layers.length>=6){ toast('Six layers max: that sub is tall enough!'); return; } BY.layers.push(b.dataset.f); pop(); drawPreview(); });
+}
+function openBuilder(){
+  if(!S.done[19]){ toast('🔒 Finish Week 4 (and the Big Party inspection) to unlock this!'); return; }
+  ac(); setScene(0); BY.layers = []; BY.bread = 'italian'; $('byName').value=''; $('byChef').value = S.chef||'';
+  $('byTag').innerHTML = TAGS.map((t,i)=>`<option value="${i}">${t.replace('{f}','___')}</option>`).join('');
+  bins(); drawPreview(); $('home').classList.add('hidden'); $('byos').classList.remove('hidden');
+}
+$('byUndo').onclick = ()=>{ BY.layers.pop(); drawPreview(); };
+$('byClear').onclick = ()=>{ BY.layers = []; drawPreview(); };
+$('byName').oninput = ()=> $('byGo').disabled = !BY.layers.length || !$('byName').value.trim();
+$('byBack').onclick = ()=>{ $('byos').classList.add('hidden'); goHome(); };
+$('byGo').onclick = async ()=>{
+  const recipe = {bread:BY.bread, layers:BY.layers.slice(), name:$('byName').value.trim(), chef:$('byChef').value.trim(), tag:+$('byTag').value};
+  S.chef = recipe.chef; save();
+  const ds = [2,3,4,6,8], d = ds[Math.floor(Math.random()*ds.length)], n = 1+Math.floor(Math.random()*(d-1));
+  recipe.f = [n,d];
+  const canvas = await renderSub(recipe, 1400);
+  const pool = Object.keys(D.cast); const cust = pool[Math.floor(Math.random()*pool.length)];
+  const o = decorate({id:'byos_'+Date.now(), cust, week:4, shift:6, type:'cut', num:n, den:d, wholes:1, ruler:'none', byos:{src:canvas.toDataURL('image/png'), asp:canvas.height/canvas.width, recipe},
+    line:`I heard you invented the ${recipe.name}! I'll take ${say2(n,d)} of it, please.`});
+  $('byos').classList.add('hidden');
+  cur = {i:-1, w:3, list:[o], nBase:1, idx:0, results:[], ev:null, byos:true};
+  setScene(3); $('play').classList.remove('hidden'); $('hud').classList.remove('hidden'); $('hudShift').innerHTML = `Your Shop · <b>${recipe.name}</b>`;
+  dots(); nextOrder();
+};
+function say2(n,d){ return (n===1 && d===2) ? 'one half' : `${WORDS[n]} ${n===1?DEN1[d]:DENW[d]}`; }
+async function showAd(recipe, stars, fromMenu){
+  const c = await renderSub(recipe, 1400), g = document.createElement('canvas');
+  const cut = c.width*recipe.f[0]/recipe.f[1], gap = 70; g.width = c.width+gap; g.height = c.height;
+  const x = g.getContext('2d'); x.drawImage(c, 0,0,cut,c.height, 0,0,cut,c.height); x.drawImage(c, cut,0,c.width-cut,c.height, cut+gap,0,c.width-cut,c.height);
+  const f = recipe.f;
+  $('poster').innerHTML = `<div class="rays"></div><div class="kick">NOW SERVING AT THE SUB SHOP</div><div class="nm">${esc(recipe.name)}</div>
+    <img class="sub" src="${g.toDataURL('image/png')}" alt="">
+    <svg class="burst" viewBox="0 0 200 200"><polygon fill="#c0392b" stroke="#fff" stroke-width="6" points="${Array.from({length:32},(_,i)=>{const a=i*Math.PI/16, r=i%2?78:98; return (100+r*Math.cos(a)).toFixed(1)+','+(100+r*Math.sin(a)).toFixed(1);}).join(' ')}"/>
+      <text x="100" y="78" text-anchor="middle" fill="#fff" font-size="22" font-weight="800" font-family="Trebuchet MS">TRY</text>
+      <text x="100" y="118" text-anchor="middle" fill="#fff" font-size="48" font-weight="900" font-family="Trebuchet MS">${f[0]}/${f[1]}</text>
+      <text x="100" y="146" text-anchor="middle" fill="#fff" font-size="20" font-weight="800" font-family="Trebuchet MS">OF A SUB!</text></svg>
+    <div class="tag">${tagText(esc(TAGS[recipe.tag]), f, true)}</div>
+    <div class="by">${BREADS[recipe.bread]} · ${recipe.layers.map(k=>FILLS[k]).join(' · ')}${recipe.chef?` &nbsp;|&nbsp; Invented by Chef ${esc(recipe.chef)}`:''} ${stars!=null?'&nbsp;|&nbsp; '+'★'.repeat(stars)+'☆'.repeat(3-stars):''}</div>`;
+  $('adBtns').innerHTML = fromMenu ? '<button class="btn" id="adClose">Back to menu</button>' : '<button class="btn green" id="adSave">📋 Add to Menu Board</button><button class="btn ghost" id="adAgain">Build another</button><button class="btn ghost" id="adMap">Map</button>';
+  $('ad').classList.remove('hidden'); ding();
+  if(fromMenu){ $('adClose').onclick = ()=>{ $('ad').classList.add('hidden'); }; return; }
+  const close = ()=>{ $('ad').classList.add('hidden'); $('play').classList.add('hidden'); $('hud').classList.add('hidden'); };
+  $('adSave').onclick = ()=>{ S.menu = S.menu||[]; S.menu.unshift(Object.assign({stars}, recipe)); S.menu = S.menu.slice(0,30); save(); $('adSave').disabled=true; $('adSave').textContent='Added ✔'; coinSnd(); };
+  $('adAgain').onclick = ()=>{ close(); openBuilder(); };
+  $('adMap').onclick = ()=>{ close(); goHome(); };
+}
+function esc(t){ return String(t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function openMenu(){
+  const m = S.menu||[]; $('menuGrid').innerHTML = m.map((r,i)=>`<div class="mItem" data-i="${i}"><button class="x" data-x="${i}" title="Remove">✕</button><img data-r="${i}" alt=""><b>${esc(r.name)}</b><span>${r.f[0]}/${r.f[1]} · ${'★'.repeat(r.stars||0)}</span></div>`).join('') || '<p class="l">No subs yet!</p>';
+  $('menu').classList.remove('hidden');
+  for(let i=0;i<m.length;i++){ const c = await renderSub(m[i], 700); const im = $('menuGrid').querySelector(`img[data-r="${i}"]`); if(im) im.src = c.toDataURL(); }
+  $('menuGrid').querySelectorAll('.mItem').forEach(el=>el.onclick=e=>{ if(e.target.dataset.x!=null){ e.stopPropagation(); S.menu.splice(+e.target.dataset.x,1); save(); openMenu(); renderHome(); return; } const r=S.menu[+el.dataset.i]; showAd(r, r.stars, true); });
+}
+$('byosBtn').onclick = openBuilder; $('menuBtn').onclick = openMenu; $('menuClose').onclick = ()=> $('menu').classList.add('hidden');
 
 // ------------------------------------------------------------------ boot
 load(); fit();

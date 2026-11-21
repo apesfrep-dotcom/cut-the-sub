@@ -12,7 +12,7 @@ One self-contained `index.html`, no external libraries, fonts, or tracking. Work
 
 ## Cut the Sub: Shop Shift
 
-A bigger game version at `/shopshift/`: 4 weeks × 5 shifts as the sub business grows (deli → food truck → ballpark → catering a party). 20 voiced customers and 200 orders across nine order types: split it, cut it, who got more, same amount, leftovers, name the cut, check the rookie, two pieces, and line them up. The scaffold fades from a 24-box strip (like the Fraction Sleeve) to a marked number line, to 0 and 1 only, to nothing. Every Friday, Inspector Hale gives a 3-question check on a bare number line. Rush-hour speed tips (bonus only), surprise events, upgrades, and local saving.
+A bigger game version at `/shopshift/`: 4 weeks × 5 shifts as the sub business grows (deli → food truck → ballpark → catering a party). 20 voiced customers and 200 orders across nine order types: split it, cut it, who got more, same amount, leftovers, name the cut, check the rookie, two pieces, and line them up. The scaffold fades from a 24-box strip (like the Fraction Sleeve) to a marked number line, to 0 and 1 only, to nothing. Every Friday, Inspector Hale gives a 3-question check on a bare number line. Rush-hour speed tips (bonus only), surprise events, upgrades, and local saving. After Week 4, kids unlock Build Your Own Sub: stack a custom sub, name it, cut a customer's fraction of it, and get an advertisement poster saved to a Menu Board.
 
 - `shopshift/index.html` – the game (built from `src.html` with the order data inlined)
 - `shopshift/art/` – customer cutouts and props (WebP)
