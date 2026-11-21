@@ -403,7 +403,7 @@ function ruler(sub, mode, den){
   const x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
   if(mode==='boxes'){
     const by = sub.y + sub.h + 10, bh = 28;
-    for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); const tn=svg('text',{x:x+sub.L/48, y:by+bh/2+Math.min(14,sub.L/24*.42)*.36, 'text-anchor':'middle', 'font-size':Math.min(14,sub.L/24*.42).toFixed(1), 'font-weight':700, 'font-family':'Trebuchet MS, sans-serif', fill:'#5a4a36'}); tn.textContent=String(k+1); }
+    sub.boxRects=[]; sub.boxY=by; sub.boxH=bh; for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; const br=svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); br.dataset.base=k%2?'#fff6df':'#ffffff'; sub.boxRects.push(br); const tn=svg('text',{x:x+sub.L/48, y:by+bh/2+Math.min(14,sub.L/24*.42)*.36, 'text-anchor':'middle', 'font-size':Math.min(14,sub.L/24*.42).toFixed(1), 'font-weight':700, 'font-family':'Trebuchet MS, sans-serif', fill:'#5a4a36'}); tn.textContent=String(k+1); }
     // cut marks for this order's denominator, drawn right on the box strip
     svg('line',{x1:x0,y1:by+bh,x2:X,y2:by+bh,stroke:'#241d15','stroke-width':4});
     if(den) for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:by-8,x2:x,y2:by+bh+10,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); }
@@ -488,9 +488,10 @@ function ticketHTML(o){
 // ------------------------------------------------------------------ order modes
 function starsFor(err, t){ return err<=t[0]?3: err<=t[1]?2: err<=t[2]?1:0; }
 const MODES = {
-  split(o){
+  async split(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
     ruler(sub, o.ruler, o.n);
+    if(sub.boxRects){ await colorBoxes(sub, o, 24/o.n, 24/o.n, frac(1,o.n), o.n); }
     const need = o.n-1;
     const k = knifeInput(sub, need, ps => { cutBtn.disabled = ps.length<need; cutBtn.innerHTML = ps.length<need ? `Cut! 🔪 (${ps.length}/${need} marks)` : 'Cut! 🔪'; });
     const cutBtn = button(`Cut! 🔪 (0/${need} marks)`,'btn red', async () => {
@@ -509,9 +510,10 @@ const MODES = {
     }, true);
     const clr = button('Clear', 'btn ghost', ()=>k.clear());
   },
-  cut(o){
+  async cut(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.wholes===2?30:0) + (o.bare?40:0), L, o.wholes, o.wholes===2&&!o.bare?'sub_italian':null); drawWhole(sub);
     ruler(sub, o.ruler, o.den);
+    if(sub.boxRects && !o.bare){ await colorBoxes(sub, o, 24/o.den, o.num*24/o.den, frac(o.num,o.den), o.den); }
     const k = knifeInput(sub, 1, ps => { cutBtn.disabled = !ps.length; });
     const cutBtn = button(o.bare?'Mark it ✏️':'Cut! 🔪','btn red', async () => {
       const x = k.positions[0]; k.done(); cutBtn.disabled=true; chop();
@@ -804,6 +806,52 @@ function endShift(){
   $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1);
 }
 
+
+
+// ------------------------------------------------------------------ color in the boxes (mirrors the Fraction Sleeve)
+function colorBoxes(sub, o, unit, target, fracHTML, den){
+  return new Promise(resolve => {
+    const N = sub.boxRects.length, bw = sub.L/24, x0 = sub.x0, hit = $('hit');
+    clearTimeout(cur.coachT);
+    const fill = new Array(N).fill(0);  // 0 empty, 1 unit (gold), 2 rest (orange)
+    const COL = ['', '#ffd34d', '#f6a04d'];
+    let phase = 1, paint = null, misses = 0;
+    const paintBox = i => { const r = sub.boxRects[i]; r.setAttribute('fill', fill[i] ? COL[fill[i]] : r.dataset.base); };
+    const count = stext(x0 + sub.L*sub.wholes + 20, sub.boxY + sub.boxH - 4, '', 24, '#fff9ea', 'start');
+    const upd = () => { const c = fill.filter(v=>v).length; count.textContent = c ? `${c} box${c>1?'es':''}` : ''; };
+    hit.style.display='block'; hit.style.cursor='pointer'; hit.style.left=x0+'px'; hit.style.top=(sub.boxY-8)+'px'; hit.style.width=(sub.L*sub.wholes)+'px'; hit.style.height=(sub.boxH+16)+'px';
+    const idx = e => Math.max(0, Math.min(N-1, Math.floor((toStage(e).x - x0)/bw)));
+    const setBox = i => { if(phase===2 && fill[i]===1) return; const v = paint ? phase : 0; if(fill[i]!==v){ fill[i]=v; paintBox(i); pop(); upd(); } };
+    hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); const i = idx(e); if(phase===2 && fill[i]===1) return; paint = fill[i]!==phase; setBox(i); hit.dragging = true; };
+    hit.onpointermove = e => { if(hit.dragging) setBox(idx(e)); };
+    hit.onpointerup = () => { hit.dragging = false; };
+    const msg1 = `<b>Color it in:</b> color <b>one</b> ${frac(1,den)} of the sub, starting at box 1. Drag across to color fast. ${frac(1,den)} = ${unit} boxes.`;
+    const msg2 = `<b>Keep going:</b> ${fracHTML} is ${target/unit} pieces of ${frac(1,den)}. Color more boxes (orange) until you reach ${fracHTML}.`;
+    const showCoach = h => { const c=$('coach'); c.innerHTML=h; c.classList.remove('off'); clearTimeout(coach.t); };
+    showCoach(msg1);
+    $('controls').innerHTML='';
+    const clr = button('Clear', 'btn ghost', () => { for(let i=0;i<N;i++) if(fill[i]===phase){ fill[i]=0; paintBox(i); } upd(); });
+    const chk = button('Check ✔', 'btn green', () => {
+      const want = phase===1 ? unit : target;
+      const ok = fill.every((v,i)=> i<want ? v>0 : v===0);
+      if(!ok){
+        misses++; sad();
+        if(misses<2){ showCoach(`<b>Not quite.</b> ${phase===1 ? `One ${frac(1,den)} is <b>${unit} boxes</b>, starting at box 1.` : `${fracHTML} is <b>${target} boxes</b> from box 1 (${target/unit} groups of ${unit}).`} Fix your coloring and check again.`); return; }
+        for(let i=0;i<N;i++){ fill[i] = i<want ? (i<unit?1:2) : 0; paintBox(i); } upd();
+        showCoach(`Here it is: ${phase===1 ? `${frac(1,den)} = boxes 1 to ${unit}` : `${fracHTML} = boxes 1 to ${target}`}.`);
+      } else { coinSnd(); }
+      setTimeout(() => {
+        if(phase===1 && target>unit){ phase=2; misses=0; showCoach(msg2); return; }
+        hit.onpointerdown=hit.onpointermove=hit.onpointerup=null; hit.style.display='none'; hit.style.cursor='none';
+        $('controls').innerHTML='';
+        showCoach(o.type==='split' ? `Now cut! Put a cut at the end of your gold piece, then at every mark after it.` : `Now cut right at the end of your coloring!`);
+        coach.t = setTimeout(()=>$('coach').classList.add('off'), 5000);
+        cur.t0 = performance.now();
+        resolve();
+      }, ok ? 300 : 1400);
+    });
+  });
+}
 
 // ------------------------------------------------------------------ redo with supports
 function hintFor(o){
