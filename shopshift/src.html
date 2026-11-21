@@ -280,13 +280,13 @@ const SCENES = [
   {name:'The Ballpark', bg:'bg_ballpark', board:'board_tray', counter:'linear-gradient(#b3261e,#8e1d17 18px,#701612 60%,#4f0f0c)', lip:'linear-gradient(#e0574d,#b3261e)'},
   {name:'The Big Party', bg:'bg_catering', board:'board_slate', counter:'linear-gradient(#f4f1ea,#e4ded2 18px,#d8d1c3 60%,#c9c0af)', lip:'linear-gradient(#ffffff,#e9e3d8)'}];
 const WEEKS = [
-  {t:'Week 1 · The Deli', s:'Box strip under the sub · halves, fourths, eighths'},
+  {t:'Week 1 · The Deli', s:'Box strip + cut marks · halves, fourths, eighths'},
   {t:'Week 2 · Food Truck', s:'Number line with marks · thirds and sixths join'},
   {t:'Week 3 · Ballpark', s:'Only 0 and 1 are marked'},
   {t:'Week 4 · Big Party', s:'No marks at all · past one whole'}];
 const FRIDAY = '<p class="l">Every <b>Shift 5</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
 const WEEK_INTRO = [
-  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. Count boxes from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
+  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. The dark marks show where the equal pieces split. Count boxes or marks from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
   '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The boxes are gone. Now there\'s a <b>number line with marks</b>. Count the <b>spaces</b>, not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
   '<h2 class="t">Week 3: The Ballpark</h2><p class="l">Game day at the ballpark! Only <b>0</b> and <b>1</b> are marked now. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>'+FRIDAY,
   '<h2 class="t">Week 4: Catering the Big Party</h2><p class="l">No marks at all, just the food, like a real test. Big groups need <b>more than one sub</b>, so the line goes past <b>1</b>: one and a half subs means one whole, plus half of the next.</p>'+FRIDAY];
@@ -403,7 +403,10 @@ function ruler(sub, mode, den){
   if(mode==='boxes'){
     const by = sub.y + sub.h + 10, bh = 28;
     for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); }
-    for(let w=0; w<=sub.wholes; w++) stext(x0+w*sub.L, by+bh+30, String(w), 26);
+    // cut marks for this order's denominator, drawn right on the box strip
+    svg('line',{x1:x0,y1:by+bh,x2:X,y2:by+bh,stroke:'#241d15','stroke-width':4});
+    if(den) for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:by-8,x2:x,y2:by+bh+10,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); }
+    for(let w=0; w<=sub.wholes; w++){ const x=x0+w*sub.L; svg('line',{x1:x,y1:by-10,x2:x,y2:by+bh+12,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); stext(x, by+bh+34, String(w), 26); }
     return;
   }
   const y = mode==='bare' ? sub.y + sub.h/2 : sub.y + sub.h + 22, sw = mode==='bare' ? 6 : 5;
@@ -641,7 +644,7 @@ const MODES = {
   },
   lineup(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.bare?40:0), L, 1); drawWhole(sub);
-    ruler(sub, o.bare ? 'bare' : (o.ruler==='boxes'||o.ruler==='ticks') ? 'ends' : o.ruler, 2);
+    ruler(sub, o.bare ? 'bare' : o.ruler==='boxes' ? 'boxes' : o.ruler==='ticks' ? 'ends' : o.ruler, 0);
     const placed = {}, flags = {}; let active = null;
     const hit = $('hit'); hit.style.display='block'; hit.style.cursor='pointer';
     hit.style.left=(x0-30)+'px'; hit.style.top=(sub.y-90)+'px'; hit.style.width=(L+60)+'px'; hit.style.height=(sub.h+170)+'px';
