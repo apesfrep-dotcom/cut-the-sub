@@ -87,8 +87,8 @@ button{font-family:inherit;cursor:pointer;border:none}
 #fb .stars span.on{color:#f2b705;text-shadow:0 2px 0 #b07e00}
 #fb .row{display:flex;flex-direction:column;gap:6px}
 #fb .msg{flex:1}
-#coach{left:500px;top:440px;width:760px;background:#2f6f4f;color:#fff;border-radius:20px;padding:16px 24px;font-size:24px;box-shadow:0 10px 26px rgba(0,0,0,.4);transition:opacity .3s}
-#coach.off{opacity:0;pointer-events:none}
+#coach{left:500px;bottom:372px;pointer-events:none;width:760px;background:#2f6f4f;color:#fff;border-radius:20px;padding:16px 24px;font-size:24px;box-shadow:0 10px 26px rgba(0,0,0,.4);transition:opacity .3s}
+#coach.off{opacity:0}
 #coach b{color:#ffe08a}
 
 /* ---------- overlays ---------- */
@@ -420,7 +420,7 @@ function ruler(sub, mode, den){
   const x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
   if(mode==='boxes'){
     const by = sub.y + sub.h + 10, bh = 28;
-    sub.boxRects=[]; sub.boxY=by; sub.boxH=bh; for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; const br=svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); br.dataset.base=k%2?'#fff6df':'#ffffff'; sub.boxRects.push(br); const tn=svg('text',{x:x+sub.L/48, y:by+bh/2+Math.min(14,sub.L/24*.42)*.36, 'text-anchor':'middle', 'font-size':Math.min(14,sub.L/24*.42).toFixed(1), 'font-weight':700, 'font-family':'Trebuchet MS, sans-serif', fill:'#5a4a36'}); tn.textContent=String(k+1); }
+    sub.boxRects=[]; sub.boxY=by; sub.boxH=bh; for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; const br=svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); br.dataset.base=k%2?'#fff6df':'#ffffff'; sub.boxRects.push(br); const tn=svg('text',{x:x+sub.L/48, y:by+bh/2+Math.min(14,sub.L/24*.42)*.36, 'text-anchor':'middle', 'font-size':Math.min(14,sub.L/24*.42).toFixed(1), 'font-weight':700, 'font-family':'Trebuchet MS, sans-serif', fill:'#5a4a36'}); tn.textContent=String(w*24+k+1); }
     // cut marks for this order's denominator, drawn right on the box strip
     svg('line',{x1:x0,y1:by+bh,x2:X,y2:by+bh,stroke:'#241d15','stroke-width':4});
     if(den) for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:by-8,x2:x,y2:by+bh+10,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'}); }
@@ -452,7 +452,8 @@ function cutMark(x, sub, color='#e2574c'){ const g = svg('g',{}); svg('line',{x1
 // ------------------------------------------------------------------ knife input: place up to `max` marks, drag any to adjust
 function knifeInput(sub, max, onChange){
   const hit = $('hit'), total = sub.L*sub.wholes;
-  hit.style.display='block'; hit.style.left=(sub.x0-30)+'px'; hit.style.top=(sub.y-70)+'px'; hit.style.width=(total+60)+'px'; hit.style.height=(sub.h+150)+'px';
+  hit.style.display='block'; hit.style.left=(sub.x0-30)+'px'; hit.style.top=(sub.y-70)+'px'; hit.style.width=(total+60)+'px'; hit.style.height=(Math.max(sub.h+150, sub.boxY ? sub.boxY+sub.boxH+14-(sub.y-70) : 0))+'px';
+  let boxDrag = false;
   const guide = svg('line',{x1:0,y1:sub.y-34,x2:0,y2:sub.y+sub.h+14,stroke:'#fff','stroke-width':3,'stroke-dasharray':'6 6',opacity:0});
   const kn = svg('g',{opacity:0});
   if(S.owned.knife) svg('image',{href:ART+'knife.webp',x:-150,y:-34,width:300,height:36,transform:'rotate(-90)'},kn);
@@ -464,11 +465,11 @@ function knifeInput(sub, max, onChange){
   const nearest = x => marks.reduce((b,m)=> !b || Math.abs(m.x-x)<Math.abs(b.x-x) ? m : b, null);
   const changed = () => onChange(marks.map(m=>m.x).sort((a,b)=>a-b));
   const setGuide = x => { guide.setAttribute('x1',sub.x0+x); guide.setAttribute('x2',sub.x0+x); guide.setAttribute('opacity',.8); kn.setAttribute('transform',`translate(${sub.x0+x},${sub.y-30})`); kn.setAttribute('opacity',1); };
-  hit.onpointermove = e => { const x = clamp(toStage(e).x-sub.x0); setGuide(x); if(drag){ drag.x = x; draw(drag); changed(); } };
-  hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); const x = clamp(toStage(e).x-sub.x0); const n = nearest(x);
+  hit.onpointermove = e => { if(boxDrag){ sub.free.move(e); return; } const x = clamp(toStage(e).x-sub.x0); if(sub.free && sub.free.inStrip(e)){ guide.setAttribute('opacity',0); kn.setAttribute('opacity',0); return; } setGuide(x); if(drag){ drag.x = x; draw(drag); changed(); } };
+  hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); if(sub.free && sub.free.inStrip(e)){ boxDrag = true; sub.free.down(e); return; } const x = clamp(toStage(e).x-sub.x0); const n = nearest(x);
     if(n && (Math.abs(n.x-x) < 34 || marks.length>=max)){ drag = n; n.x = x; draw(n); } else { drag = newMark(x); }
     pop(); changed(); };
-  hit.onpointerup = () => { drag = null; };
+  hit.onpointerup = () => { drag = null; boxDrag = false; };
   hit.onpointerleave = () => { guide.setAttribute('opacity',0); kn.setAttribute('opacity',0); };
   const key = e => { const m = marks[marks.length-1]; if(!m) return; if(e.key==='ArrowLeft'){ m.x=clamp(m.x-2); draw(m); changed(); e.preventDefault(); } if(e.key==='ArrowRight'){ m.x=clamp(m.x+2); draw(m); changed(); e.preventDefault(); } };
   addEventListener('keydown', key);
@@ -508,7 +509,7 @@ const MODES = {
   async split(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
     ruler(sub, o.ruler, o.n);
-    if(sub.boxRects){ await colorBoxes(sub, o, 24/o.n, 24/o.n, frac(1,o.n), o.n); }
+    if(sub.boxRects){ if(o.guided) await colorBoxes(sub, o, 24/o.n, 24/o.n, frac(1,o.n), o.n); else sub.free = freeColor(sub, 24/o.n); }
     const need = o.n-1;
     const k = knifeInput(sub, need, ps => { cutBtn.disabled = ps.length<need; cutBtn.innerHTML = ps.length<need ? `Cut! 🔪 (${ps.length}/${need} marks)` : 'Cut! 🔪'; });
     const cutBtn = button(`Cut! 🔪 (0/${need} marks)`,'btn red', async () => {
@@ -517,7 +518,7 @@ const MODES = {
       const unit = L/o.n, pts=[0,...ps,L], sizes=pts.slice(1).map((p,i)=>p-pts[i]);
       const err = Math.max(...sizes.map(s=>Math.abs(s-unit)/unit));
       const stars = starsFor(err, [.15,.3,.45]);
-      if(gate(o, stars)) return;
+      if(gate(o, stars) || guide(o, stars)) return;
       for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
       await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
@@ -530,7 +531,7 @@ const MODES = {
   async cut(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.wholes===2?30:0) + (o.bare?40:0), L, o.wholes, o.wholes===2&&!o.bare?'sub_italian':null); drawWhole(sub);
     ruler(sub, o.ruler, o.den);
-    if(sub.boxRects && !o.bare){ await colorBoxes(sub, o, 24/o.den, o.num*24/o.den, frac(o.num,o.den), o.den); }
+    if(sub.boxRects && !o.bare){ if(o.guided) await colorBoxes(sub, o, 24/o.den, o.num*24/o.den, frac(o.num,o.den), o.den); else sub.free = freeColor(sub, 24/o.den); }
     const k = knifeInput(sub, 1, ps => { cutBtn.disabled = !ps.length; });
     const cutBtn = button(o.bare?'Mark it ✏️':'Cut! 🔪','btn red', async () => {
       const x = k.positions[0]; k.done(); cutBtn.disabled=true; chop();
@@ -538,7 +539,7 @@ const MODES = {
       await wait(300);
       const t = L*o.num/o.den, err = Math.abs(x-t)/L;
       const stars = starsFor(err, [.03,.07,.12]);
-      if(gate(o, stars)) return;
+      if(gate(o, stars) || guide(o, stars)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       markLine(x0+t, sub, '#3aa66a', null, true);
       const nm = o.wholes===2 ? `${mixed(o.num,o.den)}` : frac(o.num,o.den);
@@ -588,9 +589,9 @@ const MODES = {
         await hops(sub, 0, o.answer, unit, o.pieces, 0, '#7be0a2', 200);
         finish(o, tries===1?3:1, `${frac(o.num,o.den)} is the same as ${frac(o.answer,o.pieces)}. ${cap(WORDS[o.answer])} ${o.answer===1?DEN1[o.pieces]:DENW[o.pieces]} reach the ${frac(o.num,o.den)} mark.`);
       } else if(tries===1){
-        sad(); react('unsure', 1); chefSay(['chef_same_hint']);
+        sad(); react('unsure', 1);
         markLine(x0+L*o.num/o.den, sub, '#ffd34d', `${o.num}/${o.den} is here`, true);
-        coach(`Not quite. The yellow line shows where ${frac(o.num,o.den)} ends. Pick the pieces that reach it.`);
+        chefCoach('chef_same_hint', true);
       } else {
         sub.pieces.forEach((p,i)=>{ p.onpointerdown=null; p.classList.toggle('sel', i<o.answer); });
         finish(o, 0, `It takes ${WORDS[o.answer]} ${DENW[o.pieces]} to make ${frac(o.num,o.den)}. ${frac(o.num,o.den)} = ${frac(o.answer,o.pieces)}.`);
@@ -641,7 +642,7 @@ const MODES = {
     button('Fix it ✏️', 'btn red', async () => {
       if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); if(gate(o, 0)) return; await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
       $('controls').innerHTML=''; rook.setAttribute('opacity',.35);
-      cutInto(sub, [], 0); coach('Right, it\'s off! Tap where the cut <b>should</b> go, then press <b>Cut!</b>');
+      cutInto(sub, [], 0); chefCoach('chef_fixit');
       const k = knifeInput(sub, 1, ps => { cb.disabled = !ps.length; });
       const cb = button('Cut! 🔪','btn red', async () => {
         const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250);
@@ -736,7 +737,7 @@ async function nextOrder(){
   if(cur.idx>=cur.list.length) return endShift();
   dots();
   const o = cur.list[cur.idx];
-  cur.outage = false; cur.support = false; o.retry = false; cur.ruler = o.ruler;
+  cur.outage = false; cur.support = false; cur.coloring = false; o.retry = false; o.guided = false; cur.ruler = o.ruler;
   if(cur.ev && cur.idx===cur.ev.at && cur.idx<cur.nBase){
     if(cur.ev.kind==='vip') o.vip = true;
     if(cur.ev.kind==='outage' && o.ruler!=='none'){ cur.outage = true; $('bg').classList.add('dark'); $('neon').classList.add('dark'); setTimeout(()=>toast('⚡ Power flicker! The marks went dark for this order.', 3400), 900); }
@@ -761,10 +762,11 @@ async function nextOrder(){
   // rush hour: speed bonus only, never a penalty
   if(!o.bare){ const T = ({split:20+o.n*3, two:30, lineup:35, same:25, fix:25})[o.type] || 20; cur.t0 = performance.now(); cur.T = T*1000;
     const sp=$('speed'), bar=sp.firstChild; sp.classList.remove('off'); bar.style.transition='none'; bar.style.width='100%'; void bar.offsetWidth; bar.style.transition=`width ${T}s linear`; bar.style.width='0%'; }
-  if(!o.bare && !S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
+  const tipKey = (o.type==='cut'||o.type==='split') && o.ruler==='boxes' ? 'box'+o.type : o.type;
+  if(!o.bare && !S.seen[tipKey]) cur.coachT = setTimeout(()=>{ if(cur.coloring) return; S.seen[tipKey]=1; save(); chefCoach('chef_coach_'+tipKey, true, false); }, 1200);
 }
 function finish(o, stars, msg){
-  if(o.retry) stars = Math.min(stars, 2);
+  const raw = stars; if(o.retry) stars = Math.min(stars, o.guided ? 1 : 2);
   const fast = !o.bare && !o.retry && stars>=2 && performance.now()-cur.t0 < cur.T;
   let tip = o.bare ? 0 : stars + (fast?1:0); if(o.vip) tip *= 2;
   const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
@@ -772,8 +774,8 @@ function finish(o, stars, msg){
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
-  if((o.retry && stars<2) || (o.type==='same' && stars===0)) chefSay(chefCorrection(o));
-  if(o.retry && stars<2) msg += `<div style="margin-top:8px;font-size:20px"><b>Remember:</b> ${hintFor(o)}</div>`;
+  if((o.retry && raw<2) || (o.type==='same' && stars===0)) chefSay(chefCorrection(o));
+  if((o.retry && raw<2) || (o.type==='same' && stars===0)) msg += `<div style="margin-top:8px;font-size:20px;color:#2f6f4f">👨‍🍳 ${chefCorrection(o).map(chefText).join(' ')}</div>`;
   $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip${fast?' · ⚡ speedy!':''}${o.vip?' · VIP x2':''}</div>` : '');
   $('ticket').classList.add('off'); $('fb').classList.remove('off');
   setTimeout(()=>{ stars>=2 ? (react('happy',cur.idx), coinSnd()) : (react('unsure',cur.idx), sad()); }, 150);
@@ -784,6 +786,7 @@ function dogRun(){ const d=$('dog'); d.src=ART+'dog.webp'; d.style.transition='n
 $('fbNext').onclick = async () => {
   ac(); stopChef();
   if(cur.retryPending){ cur.retryPending = false; return retryOrder(cur.list[cur.idx]); }
+  if(cur.guidedPending){ cur.guidedPending = false; cur.list[cur.idx].guided = true; return retryOrder(cur.list[cur.idx]); }
   if(cur.byos){ const r=cur.results[0]; ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off')); if(voiceEl) voiceEl.pause(); $('custWrap').classList.add('out'); showAd(r.o.byos.recipe, r.stars); return; } ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
   if(voiceEl) voiceEl.pause();
   const cw=$('custWrap'); const o=cur.list[cur.idx], nx=cur.list[cur.idx+1];
@@ -859,13 +862,40 @@ function chefCorrection(o){
   }
   return [];
 }
+const NUMW = (()=>{ const o=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'], m={}; o.forEach((w,i)=>m[w]=i); ['twenty','thirty','forty'].forEach((t,j)=>{ m[t]=20+10*j; o.slice(1,10).forEach((w,i)=>m[t+'-'+w]=20+10*j+i+1); }); return m; })();
+function chefText(id){
+  let t = (D.chef && D.chef[id]) || '';
+  const n = w => NUMW[w.toLowerCase()] ?? w;
+  t = t.replace(/\b(box(?:es)?) ([a-z-]+)( through box )?([a-z-]+)?/gi, (m,b,a,th,c)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${b} ${n(a)}${th?th+n(c):''}</b>` : m);
+  t = t.replace(/\b([a-z-]+) (boxes)\b/gi, (m,a,b)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${n(a)} ${b}</b>` : m);
+  t = t.replace(/^Not quite\./,'<b>Not quite.</b>').replace(/\b(press) (Check|Cut|Serve|Fix it)\b/g,'$1 <b>$2</b>');
+  return t;
+}
+// show the green box with exactly what the Head Chef says, and say it
+function chefCoach(ids, waitForCustomer=false, keep=true){
+  ids = [].concat(ids).filter(id=>D.chef && D.chef[id]); if(!ids.length) return;
+  const c=$('coach'); c.innerHTML = ids.map(chefText).join(' '); c.classList.remove('off'); clearTimeout(coach.t);
+  if(!keep && !(cur&&cur.support)) coach.t=setTimeout(()=>c.classList.add('off'), 9000);
+  chefSay(ids, waitForCustomer);
+}
 const CHEF_HINT = {name:'chef_x_name', fix:'chef_x_fix', two:'chef_x_two', left:'chef_x_left', fair:'chef_x_fair'};
+
+// ------------------------------------------------------------------ optional coloring: tap boxes any time, or just cut
+function freeColor(sub, unit){
+  const N = sub.boxRects.length, bw = sub.L/24, x0 = sub.x0, fill = new Array(N).fill(0); let paint = true;
+  const count = stext(x0 + sub.L*sub.wholes + 20, sub.boxY + sub.boxH - 4, '', 24, '#fff9ea', 'start');
+  const idx = e => Math.max(0, Math.min(N-1, Math.floor((toStage(e).x - x0)/bw)));
+  const set = i => { const v = paint?1:0; if(fill[i]===v) return; fill[i]=v; const r=sub.boxRects[i]; r.setAttribute('fill', v ? (i<unit?'#ffd34d':'#f6a04d') : r.dataset.base); pop();
+    const c = fill.filter(Boolean).length; count.textContent = c ? `${c} box${c>1?'es':''}` : ''; };
+  return { inStrip(e){ const p = toStage(e); return p.y >= sub.boxY-6 && p.y <= sub.boxY+sub.boxH+14 && p.x >= x0 && p.x <= x0+sub.L*sub.wholes; },
+    down(e){ const i = idx(e); paint = !fill[i]; set(i); }, move(e){ set(idx(e)); } };
+}
 
 // ------------------------------------------------------------------ color in the boxes (mirrors the Fraction Sleeve)
 function colorBoxes(sub, o, unit, target, fracHTML, den){
   return new Promise(resolve => {
     const N = sub.boxRects.length, bw = sub.L/24, x0 = sub.x0, hit = $('hit');
-    clearTimeout(cur.coachT);
+    clearTimeout(cur.coachT); cur.coloring = true;
     const fill = new Array(N).fill(0);  // 0 empty, 1 unit (gold), 2 rest (orange)
     const COL = ['', '#ffd34d', '#f6a04d'];
     let phase = 1, paint = null, misses = 0;
@@ -878,28 +908,25 @@ function colorBoxes(sub, o, unit, target, fracHTML, den){
     hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); const i = idx(e); if(phase===2 && fill[i]===1) return; paint = fill[i]!==phase; setBox(i); hit.dragging = true; };
     hit.onpointermove = e => { if(hit.dragging) setBox(idx(e)); };
     hit.onpointerup = () => { hit.dragging = false; };
-    const msg1 = `<b>Color it in:</b> color <b>one</b> ${frac(1,den)} of the sub, starting at box 1. Drag across to color fast. ${frac(1,den)} = ${unit} boxes.`;
-    const msg2 = `<b>Keep going:</b> ${fracHTML} is ${target/unit} pieces of ${frac(1,den)}. Color more boxes (orange) until you reach ${fracHTML}.`;
-    const showCoach = h => { const c=$('coach'); c.innerHTML=h; c.classList.remove('off'); clearTimeout(coach.t); };
-    showCoach(msg1); chefSay([`chef_unit_${den}`], o.retry);
+    chefCoach(`chef_unit_${den}`, o.retry);
     $('controls').innerHTML='';
     const clr = button('Clear', 'btn ghost', () => { for(let i=0;i<N;i++) if(fill[i]===phase){ fill[i]=0; paintBox(i); } upd(); });
     const chk = button('Check ✔', 'btn green', () => {
-      const want = phase===1 ? unit : target;
-      const ok = fill.every((v,i)=> i<want ? v>0 : v===0);
+      let want = phase===1 ? unit : target;
+      let ok = fill.every((v,i)=> i<want ? v>0 : v===0);
+      // colored the whole order in one go? that's right too: show the gold unit and orange rest, skip ahead
+      if(!ok && phase===1 && target>unit && fill.every((v,i)=> i<target ? v>0 : v===0)){ ok = true; want = target; phase = 2; for(let i=0;i<target;i++){ fill[i] = i<unit?1:2; paintBox(i); } }
       if(!ok){
         misses++; sad();
-        if(misses<2){ chefSay(['chef_color_miss'], false); showCoach(`<b>Not quite.</b> ${phase===1 ? `One ${frac(1,den)} is <b>${unit} boxes</b>, starting at box 1.` : `${fracHTML} is <b>${target} boxes</b> from box 1 (${target/unit} groups of ${unit}).`} Fix your coloring and check again.`); return; }
+        if(misses<2){ chefCoach('chef_color_miss'); return; }
         for(let i=0;i<N;i++){ fill[i] = i<want ? (i<unit?1:2) : 0; paintBox(i); } upd();
-        chefSay(['chef_color_show'], false); showCoach(`Here it is: ${phase===1 ? `${frac(1,den)} = boxes 1 to ${unit}` : `${fracHTML} = boxes 1 to ${target}`}.`);
+        chefCoach('chef_color_show');
       } else { coinSnd(); }
       setTimeout(() => {
-        if(phase===1 && target>unit){ phase=2; misses=0; showCoach(msg2); chefSay([`chef_more_${target/unit}_${den}`], false); return; }
+        if(phase===1 && target>unit){ phase=2; misses=0; chefCoach(`chef_more_${target/unit}_${den}`); return; }
         hit.onpointerdown=hit.onpointermove=hit.onpointerup=null; hit.style.display='none'; hit.style.cursor='none';
         $('controls').innerHTML='';
-        chefSay([o.type==='split'?'chef_cutsplit':'chef_cutnow'], false);
-        showCoach(o.type==='split' ? `Now cut! Put a cut at the end of your gold piece, then at every mark after it.` : `Now cut right at the end of your coloring!`);
-        coach.t = setTimeout(()=>$('coach').classList.add('off'), 5000);
+        chefCoach(o.type==='split' ? `chef_cutsplit_${den}` : `chef_cutat_${target}`);
         cur.t0 = performance.now();
         resolve();
       }, ok ? 300 : 1400);
@@ -927,11 +954,21 @@ function offerRetry(o){
   const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = '<span>★</span><span>★</span><span>★</span>';
-  $('fbMsg').innerHTML = '<b>Not quite.</b> Try it one more time. This time you\'ll get the boxes, the cut marks, and a tip.';
+  $('fbMsg').innerHTML = chefText('chef_try');
   $('fbNext').innerHTML = 'Try again with help ↻';
   $('ticket').classList.add('off'); $('fb').classList.remove('off'); $('controls').innerHTML='';
   cur.retryPending = true; chefSay(['chef_try']);
   setTimeout(()=>{ react('unsure', cur.idx); sad(); }, 150);
+}
+function guide(o, stars){
+  if(!(o.retry && !o.guided && stars<2 && !o.bare && (o.type==='cut'||o.type==='split'))) return false;
+  clearTimeout(coach.t); $('coach').classList.add('off');
+  $('fbStars').innerHTML = '<span>★</span><span>★</span><span>★</span>';
+  $('fbMsg').innerHTML = chefText('chef_together'); $('fbNext').innerHTML = "Let's do it together ↻";
+  $('ticket').classList.add('off'); $('fb').classList.remove('off'); $('controls').innerHTML='';
+  cur.guidedPending = true; chefSay(['chef_together']);
+  setTimeout(()=>{ react('unsure', cur.idx+1); sad(); }, 150);
+  return true;
 }
 function retryOrder(o){
   clearBoard(); $('fb').classList.add('off'); $('fbNext').innerHTML = 'Next customer ➜';
@@ -941,9 +978,10 @@ function retryOrder(o){
   $('ticket').innerHTML = ticketHTML(o); $('ticket').classList.remove('off');
   MODES[o.type](o);
   $('speed').classList.add('off');
-  setTimeout(()=>coach('<b>Help is on:</b> ' + hintFor(o)), 500);
-  if(CHEF_HINT[o.type]) chefSay([CHEF_HINT[o.type]]);
-  clearTimeout(coach.t); coach.t = null;
+  if(o.guided) return;  // the coloring steps narrate themselves
+  if(o.type==='cut') chefCoach(o.bare ? [chefFrac(o.num,o.den)] : [chefFrac(o.num,o.den), 'chef_redo_boxes'], true);
+  else if(o.type==='split') chefCoach(`chef_splithint_${o.n}`, true);
+  else if(CHEF_HINT[o.type]) chefCoach(CHEF_HINT[o.type], true);
 }
 
 // ------------------------------------------------------------------ home, shop, settings
