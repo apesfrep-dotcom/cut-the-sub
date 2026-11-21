@@ -834,13 +834,14 @@ function endShift(){
 // ------------------------------------------------------------------ Head Chef narration
 let chefEl = null, chefQ = [], chefTimer = null;
 function stopChef(){ chefQ = []; clearTimeout(chefTimer); if(chefEl){ chefEl.pause(); chefEl = null; } $('chefBadge').classList.remove('on','talk'); }
+const CHEF_RATE = 1.2; // chef narration speed (1 = as recorded)
 function chefSay(ids, waitForCustomer=true){
   stopChef(); if(S.muted || !ids.length) return;
   chefQ = ids.slice(); const b = $('chefBadge'); b.src = ART+'chef.webp';
   let waited = 0;
   const next = () => {
     if(!chefQ.length){ b.classList.remove('talk'); chefTimer = setTimeout(()=>b.classList.remove('on'), 900); return; }
-    const id = chefQ.shift(); const a = new Audio(VOX+id+'.mp3'); chefEl = a;
+    const id = chefQ.shift(); const a = new Audio(VOX+id+'.mp3'); a.preservesPitch = true; a.playbackRate = CHEF_RATE; chefEl = a;
     b.classList.add('on','talk');
     a.onended = () => setTimeout(next, 250); a.onerror = () => next();
     a.play().catch(()=>next());
