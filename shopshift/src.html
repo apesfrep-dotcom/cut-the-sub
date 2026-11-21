@@ -497,10 +497,11 @@ const MODES = {
       const ps = k.positions; k.done(); cutBtn.disabled=true; clr.disabled=true;
       for(let i=1;i<=ps.length;i++){ cutInto(sub, ps.slice(0,i), 8); chop(); await wait(170); }
       const unit = L/o.n, pts=[0,...ps,L], sizes=pts.slice(1).map((p,i)=>p-pts[i]);
-      for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
-      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const err = Math.max(...sizes.map(s=>Math.abs(s-unit)/unit));
       const stars = starsFor(err, [.15,.3,.45]);
+      if(gate(o, stars)) return;
+      for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
+      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
       const tip = o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
       finish(o, stars, stars===3 ? `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)}!`
@@ -517,9 +518,10 @@ const MODES = {
       if(sub.bare) cutMark(x0+x, sub); else cutInto(sub, [x], 14);
       await wait(300);
       const t = L*o.num/o.den, err = Math.abs(x-t)/L;
+      const stars = starsFor(err, [.03,.07,.12]);
+      if(gate(o, stars)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       markLine(x0+t, sub, '#3aa66a', null, true);
-      const stars = starsFor(err, [.03,.07,.12]);
       const nm = o.wholes===2 ? `${mixed(o.num,o.den)}` : frac(o.num,o.den);
       finish(o, stars, stars===3 ? `Right on ${nm}! ${cap(hopW(o.num))} of ${frac(1,o.den)} from 0.`
         : stars>0 ? `Close! ${nm} is the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`
@@ -534,6 +536,7 @@ const MODES = {
     if(o.week<=2 || cur.support){ smallTicks(sa, o.a[1]); smallTicks(sb, o.b[1]); }
     const reveal = async pick => {
       [...$('controls').children].forEach(b=>b.disabled=true);
+      if(gate(o, pick===o.answer?3:0)) return;
       const xa = L*o.a[0]/o.a[1], xb = L*o.b[0]/o.b[1];
       cutInto(sa,[xa],0); cutInto(sb,[xb],0); chop(); await wait(250);
       sa.pieces[1].classList.add('faded'); sb.pieces[1].classList.add('faded');
@@ -584,6 +587,7 @@ const MODES = {
     const choose = async c => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const ok = c[0]===o.answer[0] && c[1]===o.answer[1];
+      if(gate(o, ok?3:0)) return;
       await hops(sub, e, o.den-o.num, L/o.den, o.den, o.num, '#7be0a2', 220);
       finish(o, ok?3:0, `${ok?'Right! ':''}The whole is ${frac(o.den,o.den)}. ${frac(o.num,o.den)} was eaten, so ${frac(o.den-o.num,o.den)} is left: ${hopW(o.den-o.num)} more to the end.`);
     };
@@ -597,6 +601,7 @@ const MODES = {
     const choose = async c => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const ok = c[0]*o.den === c[1]*o.num;
+      if(gate(o, ok?3:0)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       finish(o, ok?3:0, ok ? `Yes! The cut is ${hopW(o.num)} of ${frac(1,o.den)} from 0: ${frac(o.num,o.den)}.`
         : `Count the <b>spaces</b> from 0, not the lines: ${hopW(o.num)} of ${frac(1,o.den)} makes ${frac(o.num,o.den)}.`);
@@ -610,18 +615,19 @@ const MODES = {
     cutInto(sub, [at], 8); const rook = cutMark(x0+at, sub, '#7a5cff'); stext(x0+at, sub.y-74, "rookie's cut", 22, '#e6dcff');
     const showRight = async () => { await hops(sub, 0, o.num, L/o.den, o.den, 0); markLine(x0+t, sub, '#3aa66a', null, true); };
     button('Looks right ✔', 'btn green', async () => {
-      [...$('controls').children].forEach(b=>b.disabled=true); await showRight();
+      [...$('controls').children].forEach(b=>b.disabled=true); if(gate(o, o.right?3:0)) return; await showRight();
       finish(o, o.right?3:0, o.right ? `Good eye! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)}, right where the rookie cut.`
         : `The rookie was off. ${frac(o.num,o.den)} is at the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`);
     });
     button('Fix it ✏️', 'btn red', async () => {
-      if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
+      if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); if(gate(o, 0)) return; await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
       $('controls').innerHTML=''; rook.setAttribute('opacity',.35);
       cutInto(sub, [], 0); coach('Right, it\'s off! Tap where the cut <b>should</b> go, then press <b>Cut!</b>');
       const k = knifeInput(sub, 1, ps => { cb.disabled = !ps.length; });
       const cb = button('Cut! 🔪','btn red', async () => {
-        const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250); await showRight();
+        const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250);
         const stars = starsFor(Math.abs(x-t)/L, [.03,.07,.12]);
+        if(gate(o, stars)) return; await showRight();
         finish(o, stars, stars===3 ? `Fixed! You spotted the mistake and cut ${frac(o.num,o.den)} exactly.` : `Good catch on the mistake. ${frac(o.num,o.den)} is at the green line.`);
       }, true);
     });
@@ -634,6 +640,7 @@ const MODES = {
     const k = knifeInput(sub, 2, ps => { cb.disabled = ps.length<2; cb.innerHTML = ps.length<2 ? `Cut! 🔪 (${ps.length}/2 marks)` : 'Cut! 🔪'; });
     const cb = button('Cut! 🔪 (0/2 marks)','btn red', async () => {
       const [p1,p2] = k.positions; k.done(); cb.disabled=true; clr.disabled=true; chop(); cutInto(sub,[p1,p2],14); await wait(250);
+      if(gate(o, starsFor(Math.max(Math.abs(p1-t1), Math.abs(p2-t2))/L, [.04,.08,.13]))) return;
       await hops(sub, 0, o.a[0], L/o.a[1], o.a[1], 0, '#ffd34d', 200);
       await hops(sub, t1, o.b[0], L/o.b[1], o.b[1], 0, '#9ad1ff', 200);
       markLine(x0+t1, sub, '#3aa66a', null, true); markLine(x0+t2, sub, '#3aa66a', null, true);
@@ -737,7 +744,6 @@ async function nextOrder(){
   if(!o.bare && !S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
 }
 function finish(o, stars, msg){
-  if(stars<2 && !o.retry && o.type!=='same'){ return offerRetry(o, msg); }
   if(o.retry) stars = Math.min(stars, 2);
   const fast = !o.bare && !o.retry && stars>=2 && performance.now()-cur.t0 < cur.T;
   let tip = o.bare ? 0 : stars + (fast?1:0); if(o.vip) tip *= 2;
@@ -746,6 +752,7 @@ function finish(o, stars, msg){
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
+  if(o.retry && stars<2) msg += `<div style="margin-top:8px;font-size:20px"><b>Remember:</b> ${hintFor(o)}</div>`;
   $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip${fast?' · ⚡ speedy!':''}${o.vip?' · VIP x2':''}</div>` : '');
   $('ticket').classList.add('off'); $('fb').classList.remove('off');
   setTimeout(()=>{ stars>=2 ? (react('happy',cur.idx), coinSnd()) : (react('unsure',cur.idx), sad()); }, 150);
@@ -813,11 +820,12 @@ function hintFor(o){
   }
   return 'Use the boxes and marks to check.';
 }
-function offerRetry(o, msg){
+function gate(o, stars){ if(stars<2 && !o.retry && o.type!=='same'){ offerRetry(o); return true; } return false; }
+function offerRetry(o){
   const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = '<span>★</span><span>★</span><span>★</span>';
-  $('fbMsg').innerHTML = msg + '<div style="font-size:21px;color:#c0392b;margin-top:8px;font-weight:700">Let\'s try that one again with some help.</div>';
+  $('fbMsg').innerHTML = '<b>Not quite.</b> Try it one more time. This time you\'ll get the boxes, the cut marks, and a tip.';
   $('fbNext').innerHTML = 'Try again with help ↻';
   $('ticket').classList.add('off'); $('fb').classList.remove('off'); $('controls').innerHTML='';
   cur.retryPending = true;
