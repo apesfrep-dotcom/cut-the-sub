@@ -177,6 +177,16 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
 .mItem img{width:100%;height:120px;object-fit:contain}
 .mItem b{display:block;font-size:24px}
 .mItem .x{position:absolute;right:8px;top:6px;background:#eee;border-radius:50%;width:34px;height:34px;font-size:18px}
+
+#chefBadge{position:absolute;left:400px;top:405px;width:104px;height:104px;border-radius:50%;border:5px solid #fff;box-shadow:0 8px 20px rgba(0,0,0,.45);z-index:3;transition:transform .25s,opacity .25s;transform:scale(.4);opacity:0;pointer-events:none}
+#chefBadge.on{transform:scale(1);opacity:1}
+#chefBadge.talk{animation:chefTalk .35s ease-in-out infinite}
+@keyframes chefTalk{50%{translate:0 -4px}}
+
+#ready .card{width:1180px;display:flex;gap:30px;align-items:center;padding:26px 34px}
+#ready img{width:640px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.25);background:#fff}
+#ready h2{font-size:44px;margin:0 0 10px}
+#ready p{font-size:25px;line-height:1.4;margin:8px 0}
 </style>
 </head>
 <body>
@@ -201,7 +211,7 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     <div id="bossCard" class="abs bossCard hidden"></div>
     <div id="ticket" class="abs off"></div>
     <div id="controls" class="abs"></div>
-    <div id="coach" class="abs off"></div>
+    <div id="coach" class="abs off"></div><img id="chefBadge" alt="Head Chef">
     <div id="fb" class="abs off"><div class="row"><div class="stars" id="fbStars"></div><div class="msg" id="fbMsg"></div></div><div style="text-align:center;margin-top:12px"><button class="btn green" id="fbNext" style="font-size:24px;padding:10px 22px">Next customer ➜</button></div></div>
   </div>
 
@@ -211,6 +221,7 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     <div class="pill" id="queuePill"><span style="font-size:18px">Next:</span><div id="queue"></div></div>
     <div style="flex:1"></div>
     <div class="pill">Tips <b id="hudTips">$0</b></div>
+    <button class="icon-btn" id="sheetBtn" title="See the cheat sheet">📄</button>
     <button class="icon-btn" id="muteBtn" title="Sound on/off">🔈</button>
     <button class="icon-btn" id="homeBtn" title="Back to the map">⌂</button>
   </div>
@@ -262,6 +273,12 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     </div></div></div>
   <div id="ad" class="screen dim hidden"><div style="position:relative"><div id="poster"></div><div id="adBtns" style="bottom:-78px"></div></div></div>
   <div id="menu" class="screen dim hidden"><div class="card"><h2 class="t">📋 Menu Board</h2><div style="font-size:21px;color:#6a5a44">Every sub you've invented on this device.</div><div class="menuGrid" id="menuGrid"></div><div style="text-align:right"><button class="btn" id="menuClose">Done</button></div></div></div>
+  <div id="ready" class="screen dim hidden"><div class="card"><img src="art/ladder_sheet.webp" alt="Fraction Sleeve, Side A"><div>
+    <h2>📄 Get your Fraction Ladder ready!</h2>
+    <p>Grab <b>Side A</b> of your Fraction Sleeve (the cheat sheet) and a marker.</p>
+    <p>Use the <b>HELPER</b> ladder at the bottom: it tells you <b>how many boxes</b> one piece is. One fourth = 6 boxes.</p>
+    <p>The game uses the same <b>24 boxes</b>, so you can check your sheet anytime.</p>
+    <div style="text-align:right;margin-top:16px"><button class="btn green" id="readyGo">I have it! ✔</button></div></div></div></div>
   <div id="loading" class="abs">Opening the deli…</div>
 </div></div>
 
@@ -504,7 +521,7 @@ const MODES = {
       for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
       await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
-      const tip = o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
+      const tip = o.n===2 ? 'Tip: the half is at box 12.' : o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
       finish(o, stars, stars===3 ? `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)}!`
         : `Each piece should be ${frac(1,o.n)} (the green lines). Piece ${big} came out biggest and piece ${small} smallest. ${tip}`);
     }, true);
@@ -571,7 +588,7 @@ const MODES = {
         await hops(sub, 0, o.answer, unit, o.pieces, 0, '#7be0a2', 200);
         finish(o, tries===1?3:1, `${frac(o.num,o.den)} is the same as ${frac(o.answer,o.pieces)}. ${cap(WORDS[o.answer])} ${o.answer===1?DEN1[o.pieces]:DENW[o.pieces]} reach the ${frac(o.num,o.den)} mark.`);
       } else if(tries===1){
-        sad(); react('unsure', 1);
+        sad(); react('unsure', 1); chefSay(['chef_same_hint']);
         markLine(x0+L*o.num/o.den, sub, '#ffd34d', `${o.num}/${o.den} is here`, true);
         coach(`Not quite. The yellow line shows where ${frac(o.num,o.den)} ends. Pick the pieces that reach it.`);
       } else {
@@ -695,6 +712,7 @@ async function startShift(i){
   const w = Math.floor(i/5);
   setScene(w); $('receiptScr').classList.add('hidden'); $('home').classList.add('hidden');
   if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); await showIntro(WEEK_INTRO[w]); }
+  if(w===0 || !S.readySeen || !S.readySeen[w]){ S.readySeen = S.readySeen||{}; S.readySeen[w]=1; save(); await showReady(true); }
   const sh = SHIFTS[i];
   cur = {i, w, list: sh.list.map(decorate).concat(sh.boss.map(decorate)), nBase: sh.list.length, idx:0, results:[], ev: D.events[i]||null};
   $('home').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('bossCard').classList.add('hidden');
@@ -754,6 +772,7 @@ function finish(o, stars, msg){
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
+  if((o.retry && stars<2) || (o.type==='same' && stars===0)) chefSay(chefCorrection(o));
   if(o.retry && stars<2) msg += `<div style="margin-top:8px;font-size:20px"><b>Remember:</b> ${hintFor(o)}</div>`;
   $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip${fast?' · ⚡ speedy!':''}${o.vip?' · VIP x2':''}</div>` : '');
   $('ticket').classList.add('off'); $('fb').classList.remove('off');
@@ -763,7 +782,7 @@ function finish(o, stars, msg){
 }
 function dogRun(){ const d=$('dog'); d.src=ART+'dog.webp'; d.style.transition='none'; d.style.left='-420px'; void d.offsetWidth; d.style.transition='left 2.8s linear'; d.style.left='1700px'; woof(); toast('🐕 A dog snuck in and stole the crumbs!', 3000); }
 $('fbNext').onclick = async () => {
-  ac();
+  ac(); stopChef();
   if(cur.retryPending){ cur.retryPending = false; return retryOrder(cur.list[cur.idx]); }
   if(cur.byos){ const r=cur.results[0]; ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off')); if(voiceEl) voiceEl.pause(); $('custWrap').classList.add('out'); showAd(r.o.byos.recipe, r.stars); return; } ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
   if(voiceEl) voiceEl.pause();
@@ -808,6 +827,40 @@ function endShift(){
 
 
 
+
+// ------------------------------------------------------------------ Head Chef narration
+let chefEl = null, chefQ = [], chefTimer = null;
+function stopChef(){ chefQ = []; clearTimeout(chefTimer); if(chefEl){ chefEl.pause(); chefEl = null; } $('chefBadge').classList.remove('on','talk'); }
+function chefSay(ids, waitForCustomer=true){
+  stopChef(); if(S.muted || !ids.length) return;
+  chefQ = ids.slice(); const b = $('chefBadge'); b.src = ART+'chef.webp';
+  let waited = 0;
+  const next = () => {
+    if(!chefQ.length){ b.classList.remove('talk'); chefTimer = setTimeout(()=>b.classList.remove('on'), 900); return; }
+    const id = chefQ.shift(); const a = new Audio(VOX+id+'.mp3'); chefEl = a;
+    b.classList.add('on','talk');
+    a.onended = () => setTimeout(next, 250); a.onerror = () => next();
+    a.play().catch(()=>next());
+  };
+  const start = () => { if(waitForCustomer && voiceEl && !voiceEl.paused && !voiceEl.ended && waited < 5000){ waited += 200; chefTimer = setTimeout(start, 200); return; } next(); };
+  chefTimer = setTimeout(start, waitForCustomer ? 400 : 0);
+}
+function chefFrac(n,d){ return `chef_f_${n}_${d}`; }
+function chefCorrection(o){
+  switch(o.type){
+    case 'cut': return [chefFrac(o.num,o.den)];
+    case 'split': return [`chef_x_split_${o.n}`];
+    case 'fix': return ['chef_x_fix', chefFrac(o.num,o.den)];
+    case 'name': return ['chef_x_name', chefFrac(o.num,o.den)];
+    case 'left': return ['chef_x_left', chefFrac(o.den-o.num,o.den)];
+    case 'two': return ['chef_x_two', chefFrac(o.a[0],o.a[1])];
+    case 'fair': return ['chef_x_fair'];
+    case 'same': return ['chef_x_same', chefFrac(o.num,o.den)];
+  }
+  return [];
+}
+const CHEF_HINT = {name:'chef_x_name', fix:'chef_x_fix', two:'chef_x_two', left:'chef_x_left', fair:'chef_x_fair'};
+
 // ------------------------------------------------------------------ color in the boxes (mirrors the Fraction Sleeve)
 function colorBoxes(sub, o, unit, target, fracHTML, den){
   return new Promise(resolve => {
@@ -828,7 +881,7 @@ function colorBoxes(sub, o, unit, target, fracHTML, den){
     const msg1 = `<b>Color it in:</b> color <b>one</b> ${frac(1,den)} of the sub, starting at box 1. Drag across to color fast. ${frac(1,den)} = ${unit} boxes.`;
     const msg2 = `<b>Keep going:</b> ${fracHTML} is ${target/unit} pieces of ${frac(1,den)}. Color more boxes (orange) until you reach ${fracHTML}.`;
     const showCoach = h => { const c=$('coach'); c.innerHTML=h; c.classList.remove('off'); clearTimeout(coach.t); };
-    showCoach(msg1);
+    showCoach(msg1); chefSay([`chef_unit_${den}`], o.retry);
     $('controls').innerHTML='';
     const clr = button('Clear', 'btn ghost', () => { for(let i=0;i<N;i++) if(fill[i]===phase){ fill[i]=0; paintBox(i); } upd(); });
     const chk = button('Check ✔', 'btn green', () => {
@@ -836,14 +889,15 @@ function colorBoxes(sub, o, unit, target, fracHTML, den){
       const ok = fill.every((v,i)=> i<want ? v>0 : v===0);
       if(!ok){
         misses++; sad();
-        if(misses<2){ showCoach(`<b>Not quite.</b> ${phase===1 ? `One ${frac(1,den)} is <b>${unit} boxes</b>, starting at box 1.` : `${fracHTML} is <b>${target} boxes</b> from box 1 (${target/unit} groups of ${unit}).`} Fix your coloring and check again.`); return; }
+        if(misses<2){ chefSay(['chef_color_miss'], false); showCoach(`<b>Not quite.</b> ${phase===1 ? `One ${frac(1,den)} is <b>${unit} boxes</b>, starting at box 1.` : `${fracHTML} is <b>${target} boxes</b> from box 1 (${target/unit} groups of ${unit}).`} Fix your coloring and check again.`); return; }
         for(let i=0;i<N;i++){ fill[i] = i<want ? (i<unit?1:2) : 0; paintBox(i); } upd();
-        showCoach(`Here it is: ${phase===1 ? `${frac(1,den)} = boxes 1 to ${unit}` : `${fracHTML} = boxes 1 to ${target}`}.`);
+        chefSay(['chef_color_show'], false); showCoach(`Here it is: ${phase===1 ? `${frac(1,den)} = boxes 1 to ${unit}` : `${fracHTML} = boxes 1 to ${target}`}.`);
       } else { coinSnd(); }
       setTimeout(() => {
-        if(phase===1 && target>unit){ phase=2; misses=0; showCoach(msg2); return; }
+        if(phase===1 && target>unit){ phase=2; misses=0; showCoach(msg2); chefSay([`chef_more_${target/unit}_${den}`], false); return; }
         hit.onpointerdown=hit.onpointermove=hit.onpointerup=null; hit.style.display='none'; hit.style.cursor='none';
         $('controls').innerHTML='';
+        chefSay([o.type==='split'?'chef_cutsplit':'chef_cutnow'], false);
         showCoach(o.type==='split' ? `Now cut! Put a cut at the end of your gold piece, then at every mark after it.` : `Now cut right at the end of your coloring!`);
         coach.t = setTimeout(()=>$('coach').classList.add('off'), 5000);
         cur.t0 = performance.now();
@@ -876,7 +930,7 @@ function offerRetry(o){
   $('fbMsg').innerHTML = '<b>Not quite.</b> Try it one more time. This time you\'ll get the boxes, the cut marks, and a tip.';
   $('fbNext').innerHTML = 'Try again with help ↻';
   $('ticket').classList.add('off'); $('fb').classList.remove('off'); $('controls').innerHTML='';
-  cur.retryPending = true;
+  cur.retryPending = true; chefSay(['chef_try']);
   setTimeout(()=>{ react('unsure', cur.idx); sad(); }, 150);
 }
 function retryOrder(o){
@@ -888,12 +942,13 @@ function retryOrder(o){
   MODES[o.type](o);
   $('speed').classList.add('off');
   setTimeout(()=>coach('<b>Help is on:</b> ' + hintFor(o)), 500);
+  if(CHEF_HINT[o.type]) chefSay([CHEF_HINT[o.type]]);
   clearTimeout(coach.t); coach.t = null;
 }
 
 // ------------------------------------------------------------------ home, shop, settings
 function goHome(){
-  if(voiceEl) voiceEl.pause();
+  if(voiceEl) voiceEl.pause(); stopChef();
   $('play').classList.add('hidden'); $('hud').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('home').classList.remove('hidden');
   $('custWrap').classList.add('out'); setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/5)))); renderHome();
 }
@@ -918,12 +973,15 @@ function renderShop(){
   $('items').querySelectorAll('button[data-u]').forEach(b=>b.onclick=()=>{ const u=UPGRADES.find(x=>x.id===b.dataset.u); if(S.tips-S.spent<u.cost) return; S.spent+=u.cost; S.owned[u.id]=1; save(); coinSnd(); renderShop(); scene(); jar(); $('homeTips').textContent=`Tip jar: $${S.tips-S.spent}`; });
 }
 function showIntro(html){ return new Promise(res=>{ $('introBody').innerHTML=html; $('intro').classList.remove('hidden'); $('introGo').onclick=()=>{ $('intro').classList.add('hidden'); res(); }; }); }
+
+function showReady(narrate){ return new Promise(res=>{ $('ready').classList.remove('hidden'); if(narrate) chefSay(['chef_ready'], false); $('readyGo').onclick=()=>{ ac(); stopChef(); $('ready').classList.add('hidden'); res(); }; }); }
+$('sheetBtn').onclick = ()=> showReady(false);
 $('shopBtn').onclick = ()=>{ renderShop(); $('shop').classList.remove('hidden'); };
 $('shopClose').onclick = ()=> $('shop').classList.add('hidden');
 $('resetBtn').onclick = ()=> $('confirm').classList.remove('hidden');
 $('cNo').onclick = ()=> $('confirm').classList.add('hidden');
 $('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}, badges:{}}; save(); $('confirm').classList.add('hidden'); renderHome(); };
-const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted && voiceEl) voiceEl.pause(); };
+const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted){ if(voiceEl) voiceEl.pause(); stopChef(); } };
 $('muteBtn').onclick = toggleMute; $('muteHome').onclick = toggleMute;
 $('homeBtn').onclick = goHome;
 $('bell').onclick = ding;
