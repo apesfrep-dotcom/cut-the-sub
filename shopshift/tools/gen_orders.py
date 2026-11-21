@@ -186,6 +186,7 @@ MIX = ['split','cut','cut','fair','same','left','fair','cut']
 for wk in (2,3,4):
     for sh in range(1,6): PLAN[(wk,sh)] = MIX[:]
 
+RULER = {1:'boxes',2:'ticks',3:'ends',4:'none'}
 # -------------------------------------------------------------------- lines
 def line(cid, t, p, k):
     c = C[cid]; o = c['open'][k % 3]
@@ -227,8 +228,126 @@ for wk in range(1,5):
             seen[key] = 1
             k = sum(1 for o in orders if o['cust'] == cid)
             orders.append(dict(id=f"{cid}_o{k+1}", cust=cid, week=wk, shift=sh, type=t,
-                               ruler={1:'full',2:'halves',3:'none',4:'none'}[wk], **p,
+                               ruler=RULER[wk], **p,
                                line=line(cid, t, p, k)))
+
+
+# ============================================================ NEW ORDER TYPES (v2)
+# Added on top of the original 160 so their voice lines stay valid.
+R2 = random.Random(777)
+FOODS = {1:['baguette'], 2:['flatbread','churro'], 3:['hot_dog','licorice','churro'], 4:['baguette','flatbread','hot_dog']}
+FOODW = {'baguette':'baguette','flatbread':'flatbread','churro':'churro','hot_dog':'hot dog','licorice':'licorice rope'}
+NEWPLAN = {(1,1):[], (1,2):['name','name'], (1,3):['fix','fix'], (1,4):['two','two'], (1,5):['lineup','lineup']}
+ROT = ['name','fix','two','lineup']
+for wk in (2,3,4):
+    for sh in range(1,6):
+        k = (wk*5+sh)*2
+        NEWPLAN[(wk,sh)] = [ROT[k%4], ROT[(k+1)%4]]
+
+def p_name(w):
+    d = R2.choice(DENS[w]); n = R2.randrange(1, d)
+    cands = []
+    if n+1 < d: cands.append((n+1, d))        # counted the lines, not the spaces
+    if n-1 > 0: cands.append((n-1, d))
+    if n+1 <= d: cands.append((n, d+1) if d+1 in (3,4,5,6,7,8,9) else (n+1, d+2))
+    for m in DENS[w]:
+        for k in range(1, m): cands.append((k, m))
+    out = [(n, d)]
+    for c in cands:
+        if len(out) == 3: break
+        if c[0] < c[1] and F(*c) != F(n, d) and all(F(*c) != F(*x) for x in out): out.append(c)
+    R2.shuffle(out)
+    return dict(num=n, den=d, choices=[list(x) for x in out], answer=[n, d])
+
+def p_fix(w):
+    d = R2.choice(DENS[w]); n = R2.randrange(1, d)
+    right = R2.random() < 0.35
+    if right: at = n/d
+    else:
+        err = R2.choice(['lines', 'over', 'under'])
+        if err == 'lines' and n < d-1: at = n/(d+1)*1.0 if R2.random()<.5 else (n+1)/d
+        elif err == 'over': at = min(.97, n/d + R2.choice([.08, .12]))
+        else: at = max(.03, n/d - R2.choice([.08, .12]))
+        if abs(at - n/d) < .05: at = min(.97, n/d + .1)
+    return dict(num=n, den=d, at=round(at, 4), right=right)
+
+PAIRS = {1:[((1,4),(2,4)),((1,2),(1,4)),((1,4),(1,2)),((1,8),(3,8)),((3,8),(2,8)),((2,4),(1,4))],
+         2:[((1,3),(1,3)),((1,6),(3,6)),((2,6),(2,6)),((1,3),(2,6)),((1,4),(2,4)),((1,6),(2,6))],
+         3:[((1,4),(1,2)),((2,8),(3,8)),((1,3),(1,6)),((1,2),(1,3)),((3,8),(1,2)),((1,6),(1,2))],
+         4:[((1,2),(1,3)),((1,4),(5,8)),((2,6),(1,2)),((3,8),(1,4)),((1,3),(1,2)),((1,8),(3,4))]}
+def p_two(w):
+    a, b = R2.choice(PAIRS[w]); assert F(*a) + F(*b) < 1
+    return dict(a=list(a), b=list(b))
+
+def p_lineup(w):
+    while True:
+        ds = [R2.choice(DENS[w]) for _ in range(3)]
+        fr = [(R2.randrange(1, d), d) for d in ds]
+        vals = [F(*x) for x in fr]
+        if len(set(vals)) == 3 and min(abs(a-b) for i,a in enumerate(vals) for b in vals[i+1:]) >= F(1,8):
+            return dict(fracs=[list(x) for x in fr])
+
+NEWPICK = dict(name=p_name, fix=p_fix, two=p_two, lineup=p_lineup)
+
+def new_line(cid, t, p, k, food):
+    c = C[cid]; o = c['open'][(k+1) % 3]; fw = FOODW[food]
+    if t == 'name':
+        return f"{o} Somebody already cut this {fw} for me. What fraction is my piece, from the left end?"
+    if t == 'fix':
+        return f"{o} I asked for {say(p['num'],p['den'])} of the {fw}, and the new kid cut it. Is that cut right?"
+    if t == 'two':
+        A = c['a'][0].upper()+c['a'][1:]; B = c['b']
+        bw = "I want" if B == 'me' else f"{B} wants"
+        return f"{o} {A} wants {say(*p['a'])} of the {fw}, and {bw} {say(*p['b'])}. Cut {c['a']}'s piece first, then the next piece right after it."
+    if t == 'lineup':
+        f = [say(*x) for x in p['fracs']]
+        return f"{o} Three orders for this {fw}: {f[0]}, {f[1]}, and {f[2]}. Can you put each ticket where its cut goes?"
+
+new_orders = []
+nk = {}
+for wk in range(1,5):
+    for sh in range(1,6):
+        s = (wk-1)*5 + (sh-1)
+        for j, t in enumerate(NEWPLAN[(wk,sh)]):
+            cid = ORDER[(s*2 + j + 7) % 20]
+            k = nk.get(cid, 0); nk[cid] = k + 1
+            food = FOODS[wk][(s + j) % len(FOODS[wk])]
+            p = NEWPICK[t](wk)
+            new_orders.append(dict(id=f"{cid}_n{k+1}", cust=cid, week=wk, shift=sh, type=t, food=food,
+                                   ruler=RULER[wk], pos=[3, 6][j], **p, line=new_line(cid, t, p, k, food)))
+
+# Friday inspector: bare number line, like a test question
+INSP = dict(name='Inspector Hale',
+            intro=["Inspection time. No food today, just a number line. Show me what you learned this week.",
+                   "Hello again. Same rules: a plain number line. Let's see how you do.",
+                   "Inspection day. No ruler marks, no food. Just you and the number line.",
+                   "Final inspection. This number line goes from zero to two. Take your time."],
+            happy=["Excellent. That passes inspection.", "Very good. I'm impressed."],
+            unsure=["Hmm. That won't pass inspection.", "Let's look at that more carefully."])
+boss = []
+for wk in range(1,5):
+    items = []
+    if wk < 4:
+        d = R2.choice(DENS[wk]); n = R2.randrange(1, d)
+        items.append(dict(type='cut', num=n, den=d, wholes=1, line=f"Show me where {say(n,d)} goes on this number line."))
+    else:
+        d = R2.choice([2,3,4]); n = R2.randrange(d+1, 2*d)
+        items.append(dict(type='cut', num=n, den=d, wholes=2, line=f"Show me where {say_mixed(n,d)} goes on this number line."))
+    pn = p_name(wk); items.append(dict(type='name', **pn, line="What fraction is at this point on the number line?"))
+    pl = p_lineup(wk); f = [say(*x) for x in pl['fracs']]
+    items.append(dict(type='lineup', **pl, line=f"Put {f[0]}, {f[1]}, and {f[2]} where they belong on the number line."))
+    for i, it in enumerate(items):
+        it.update(id=f"inspector_w{wk}_{i+1}", cust='inspector', week=wk, shift=5, bare=True, ruler='bare', food=None)
+        it.setdefault('wholes', 1)
+        boss.append(it)
+
+# Surprise events: one per shift (none in the very first shift)
+EV = ['vip','outage','dog']
+events = {}
+for s in range(1, 20):
+    wk = s//5 + 1
+    kinds = [e for e in EV if not (e == 'outage' and wk == 4)]
+    events[s] = dict(kind=R2.choice(kinds), at=R2.randrange(1, 9))
 
 # --------------------------------------------------------------- self-check
 from collections import Counter
@@ -247,6 +366,13 @@ for o in orders:
 
 reactions = {cid: dict(happy=C[cid]['happy'], unsure=C[cid]['unsure']) for cid in ORDER}
 names = {cid: C[cid]['name'] for cid in ORDER}
-json.dump(dict(orders=orders, reactions=reactions, names=names), open('orders.json','w'), indent=1)
+for o in new_orders:
+    if o['type']=='two': assert F(*o['a'])+F(*o['b'])<1
+    if o['type']=='name': assert o['answer'] in o['choices'] and len(o['choices'])==3, o
+reactions['inspector'] = dict(happy=INSP['happy'], unsure=INSP['unsure'])
+names['inspector'] = INSP['name']
+json.dump(dict(orders=orders, new=new_orders, boss=boss, insp_intro=INSP['intro'], events=events,
+               reactions=reactions, names=names), open('orders.json','w'), indent=1)
+print('new', len(new_orders), Counter(o['type'] for o in new_orders), 'boss', len(boss))
 print(len(orders), 'orders;', Counter(o['type'] for o in orders))
 for o in orders[:3] + orders[-3:]: print(o['id'], o['type'], o['line'])
