@@ -276,8 +276,8 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
   <div id="ready" class="screen dim hidden"><div class="card"><img src="art/ladder_sheet.webp" alt="Fraction Sleeve, Side A"><div>
     <h2>📄 Get your Fraction Ladder ready!</h2>
     <p>Grab <b>Side A</b> of your Fraction Sleeve (the cheat sheet) and a marker.</p>
-    <p>Use the <b>HELPER</b> ladder at the bottom: it tells you <b>how many boxes</b> one piece is. One fourth = 6 boxes.</p>
-    <p>The game uses the same <b>24 boxes</b>, so you can check your sheet anytime.</p>
+    <p>Use the <b>HELPER</b> ladder at the bottom: it tells you <b>how many bites</b> one piece is. One fourth = 6 bites.</p>
+    <p>The game uses the same <b>24 bites</b>, so you can check your sheet anytime.</p>
     <div style="text-align:right;margin-top:16px"><button class="btn green" id="readyGo">I have it! ✔</button></div></div></div></div>
   <div id="loading" class="abs">Opening the deli…</div>
 </div></div>
@@ -303,9 +303,9 @@ const WEEKS = [
   {t:'Week 4 · Big Party', s:'No marks at all · past one whole'}];
 const FRIDAY = '<p class="l">Every <b>Shift 5</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
 const WEEK_INTRO = [
-  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. The dark marks show where the equal pieces split. Count boxes or marks from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
-  '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The boxes are gone. Now there\'s a <b>number line with marks</b>. Count the <b>spaces</b>, not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
-  '<h2 class="t">Week 3: The Ballpark</h2><p class="l">Game day at the ballpark! Only <b>0</b> and <b>1</b> are marked now. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>'+FRIDAY,
+  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 bites</b>, just like your Fraction Sleeve. The <b>bottom number</b> tells how many equal <b>jumps</b> fit in the whole sub; the <b>top number</b> tells how many jumps to take from 0. Half a sub is <b>12 bites</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. The dark marks show where the equal pieces split. Count bites or marks from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
+  '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The bites are gone, but the <b>jumps</b> are still there. Look at the <b>bottom number</b>: that\'s how many equal jumps fit in the whole sub. Then take as many jumps as the <b>top number</b> says, starting at 0. Now there\'s a <b>number line with marks</b>. Count the <b>jumps</b> (spaces), not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
+  '<h2 class="t">Week 3: The Ballpark</h2><p class="l">Game day at the ballpark! Only <b>0</b> and <b>1</b> are marked now. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and jump</b>.</p>'+FRIDAY,
   '<h2 class="t">Week 4: Catering the Big Party</h2><p class="l">No marks at all, just the food, like a real test. Big groups need <b>more than one sub</b>, so the line goes past <b>1</b>: one and a half subs means one whole, plus half of the next.</p>'+FRIDAY];
 const COACH = {
   split:'<b>Split it:</b> tap to place <b>every</b> cut, then press <b>Cut!</b> Drag any knife mark to fix it. Tip: find the half first.',
@@ -383,7 +383,7 @@ function stext(x,y,t,size=26,fill='#fff9ea',anchor='middle',weight=800){ const e
 const wait = ms => new Promise(r=>setTimeout(r,ms));
 function hash(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); }
 const cap = s => s[0].toUpperCase()+s.slice(1);
-const hopW = n => n===1 ? 'one hop' : `${WORDS[n]||n} hops`;
+const hopW = n => n===1 ? 'one jump' : `${WORDS[n]||n} jumps`;
 const boxes = d => 24/d;
 function clearBoard(){ $('subLayer').innerHTML=''; $('fx').innerHTML=''; $('controls').innerHTML=''; const h=$('hit'); h.onpointerdown=h.onpointermove=h.onpointerup=h.onpointerleave=null; h.style.display='none'; }
 
@@ -488,7 +488,7 @@ function subGeometry(o){
   return {L, x0: 900 - L/2};
 }
 const SUB_Y = 622;
-function boxTip(d){ return cur && (cur.ruler==='boxes'||cur.support) && !cur.outage ? `<div style="text-align:center;margin-top:4px;font-size:19px">${frac(1,d)} = ${boxes(d)} boxes</div>` : ''; }
+function boxTip(d){ return cur && (cur.ruler==='bites'||cur.support) && !cur.outage ? `<div style="text-align:center;margin-top:4px;font-size:19px">${frac(1,d)} = ${boxes(d)} bites</div>` : ''; }
 function ticketHTML(o){
   const T = t => `<div class="tt">${o.vip?'★ VIP · DOUBLE TIPS ★<br>':''}${o.bare?'INSPECTION':'ORDER'} #${(cur.idx+1)} · ${t}</div>`;
   const fw = o.food ? FOODW[o.food] : 'sub';
@@ -522,7 +522,7 @@ const MODES = {
       for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
       await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
       const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
-      const tip = o.n===2 ? 'Tip: the half is at box 12.' : o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
+      const tip = o.n===2 ? 'Tip: the half is at bite 12.' : o.n%3===0 ? 'Tip: guess one third, then picture three equal jumps.' : 'Tip: cut the half first, then halve each half.';
       finish(o, stars, stars===3 ? `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)}!`
         : `Each piece should be ${frac(1,o.n)} (the green lines). Piece ${big} came out biggest and piece ${small} smallest. ${tip}`);
     }, true);
@@ -624,7 +624,7 @@ const MODES = {
       if(gate(o, ok?3:0)) return;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       finish(o, ok?3:0, ok ? `Yes! The cut is ${hopW(o.num)} of ${frac(1,o.den)} from 0: ${frac(o.num,o.den)}.`
-        : `Count the <b>spaces</b> from 0, not the lines: ${hopW(o.num)} of ${frac(1,o.den)} makes ${frac(o.num,o.den)}.`);
+        : `Count the <b>jumps</b> from 0, not the lines: ${hopW(o.num)} of ${frac(1,o.den)} makes ${frac(o.num,o.den)}.`);
     };
     o.choices.forEach(c => button(`${c[0]}/${c[1]}`, 'btn chip', ()=>choose(c)));
   },
@@ -667,7 +667,7 @@ const MODES = {
       stext(x0+t1/2, sub.y+sub.h+50, cap(o.who_a), 24); stext(x0+(t1+t2)/2, sub.y+sub.h+50, cap(o.who_b), 24, '#cfe9ff');
       const err = Math.max(Math.abs(p1-t1), Math.abs(p2-t2))/L, stars = starsFor(err, [.04,.08,.13]);
       finish(o, stars, stars===3 ? `Two perfect pieces: ${frac(...o.a)} for ${o.who_a}, then ${frac(...o.b)} for ${o.who_b}.`
-        : `${cap(o.who_a)}'s piece ends at ${frac(...o.a)}. ${cap(o.who_b)}'s piece starts there and is ${frac(...o.b)} long (blue hops).`);
+        : `${cap(o.who_a)}'s piece ends at ${frac(...o.a)}. ${cap(o.who_b)}'s piece starts there and is ${frac(...o.b)} long (blue jumps).`);
     }, true);
     const clr = button('Clear', 'btn ghost', ()=>k.clear());
   },
@@ -686,7 +686,7 @@ const MODES = {
       o.fracs.forEach((f,i)=>{ const x=x0+vals[i]*L; svg('line',{x1:x,y1:sub.y-20,x2:x,y2:sub.y+sub.h+10,stroke:'#3aa66a','stroke-width':5,'stroke-dasharray':'9 7'}); stext(x, sub.y+sub.h+52, `${f[0]}/${f[1]}`, 24, '#c9f5d8'); });
       const stars = !orderOK ? 0 : err<=.06 ? 3 : 2;
       const sorted = o.fracs.slice().sort((a,b)=>a[0]/a[1]-b[0]/b[1]).map(f=>frac(...f)).join(' &lt; ');
-      finish(o, stars, stars===3 ? `Perfect! In order: ${sorted}.` : stars===2 ? `Right order: ${sorted}. The green marks show exactly where each one goes.` : `Smallest to biggest: ${sorted}. Picture each one as hops from 0.`);
+      finish(o, stars, stars===3 ? `Perfect! In order: ${sorted}.` : stars===2 ? `Right order: ${sorted}. The green marks show exactly where each one goes.` : `Smallest to biggest: ${sorted}. Picture each one as jumps from 0.`);
     }, true);
     hit.onpointerdown = e => { if(active===null) return; const x = Math.max(0, Math.min(L, toStage(e).x - x0)); placed[active] = x;
       if(flags[active]) flags[active].remove();
@@ -712,7 +712,7 @@ async function startShift(i){
   ac();
   const w = Math.floor(i/5);
   setScene(w); $('receiptScr').classList.add('hidden'); $('home').classList.add('hidden');
-  if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); await showIntro(WEEK_INTRO[w]); }
+  if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); if(w===1) chefSay(['chef_week2'], false); await showIntro(WEEK_INTRO[w]); stopChef(); }
   if(w===0 || !S.readySeen || !S.readySeen[w]){ S.readySeen = S.readySeen||{}; S.readySeen[w]=1; save(); await showReady(true); }
   const sh = SHIFTS[i];
   cur = {i, w, list: sh.list.map(decorate).concat(sh.boss.map(decorate)), nBase: sh.list.length, idx:0, results:[], ev: D.events[i]||null};
@@ -866,8 +866,8 @@ const NUMW = (()=>{ const o=['zero','one','two','three','four','five','six','sev
 function chefText(id){
   let t = (D.chef && D.chef[id]) || '';
   const n = w => NUMW[w.toLowerCase()] ?? w;
-  t = t.replace(/\b(box(?:es)?) ([a-z-]+)( through box )?([a-z-]+)?/gi, (m,b,a,th,c)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${b} ${n(a)}${th?th+n(c):''}</b>` : m);
-  t = t.replace(/\b([a-z-]+) (boxes)\b/gi, (m,a,b)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${n(a)} ${b}</b>` : m);
+  t = t.replace(/\b(bites?) ([a-z-]+)( through bite )?([a-z-]+)?/gi, (m,b,a,th,c)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${b} ${n(a)}${th?th+n(c):''}</b>` : m);
+  t = t.replace(/\b([a-z-]+) (bites)\b/gi, (m,a,b)=> NUMW[a.toLowerCase()]!==undefined ? `<b>${n(a)} ${b}</b>` : m);
   t = t.replace(/^Not quite\./,'<b>Not quite.</b>').replace(/\b(press) (Check|Cut|Serve|Fix it)\b/g,'$1 <b>$2</b>');
   return t;
 }
@@ -886,7 +886,7 @@ function freeColor(sub, unit){
   const count = stext(x0 + sub.L*sub.wholes + 20, sub.boxY + sub.boxH - 4, '', 24, '#fff9ea', 'start');
   const idx = e => Math.max(0, Math.min(N-1, Math.floor((toStage(e).x - x0)/bw)));
   const set = i => { const v = paint?1:0; if(fill[i]===v) return; fill[i]=v; const r=sub.boxRects[i]; r.setAttribute('fill', v ? (i<unit?'#ffd34d':'#f6a04d') : r.dataset.base); pop();
-    const c = fill.filter(Boolean).length; count.textContent = c ? `${c} box${c>1?'es':''}` : ''; };
+    const c = fill.filter(Boolean).length; count.textContent = c ? `${c} bite${c>1?'es':''}` : ''; };
   return { inStrip(e){ const p = toStage(e); return p.y >= sub.boxY-6 && p.y <= sub.boxY+sub.boxH+14 && p.x >= x0 && p.x <= x0+sub.L*sub.wholes; },
     down(e){ const i = idx(e); paint = !fill[i]; set(i); }, move(e){ set(idx(e)); } };
 }
@@ -901,7 +901,7 @@ function colorBoxes(sub, o, unit, target, fracHTML, den){
     let phase = 1, paint = null, misses = 0;
     const paintBox = i => { const r = sub.boxRects[i]; r.setAttribute('fill', fill[i] ? COL[fill[i]] : r.dataset.base); };
     const count = stext(x0 + sub.L*sub.wholes + 20, sub.boxY + sub.boxH - 4, '', 24, '#fff9ea', 'start');
-    const upd = () => { const c = fill.filter(v=>v).length; count.textContent = c ? `${c} box${c>1?'es':''}` : ''; };
+    const upd = () => { const c = fill.filter(v=>v).length; count.textContent = c ? `${c} bite${c>1?'es':''}` : ''; };
     hit.style.display='block'; hit.style.cursor='pointer'; hit.style.left=x0+'px'; hit.style.top=(sub.boxY-8)+'px'; hit.style.width=(sub.L*sub.wholes)+'px'; hit.style.height=(sub.boxH+16)+'px';
     const idx = e => Math.max(0, Math.min(N-1, Math.floor((toStage(e).x - x0)/bw)));
     const setBox = i => { if(phase===2 && fill[i]===1) return; const v = paint ? phase : 0; if(fill[i]!==v){ fill[i]=v; paintBox(i); pop(); upd(); } };
@@ -936,18 +936,18 @@ function colorBoxes(sub, o, unit, target, fracHTML, den){
 
 // ------------------------------------------------------------------ redo with supports
 function hintFor(o){
-  const bx = d => `${frac(1,d)} = <b>${24/d} boxes</b>`;
+  const bx = d => `${frac(1,d)} = <b>${24/d} bites</b>`;
   switch(o.type){
     case 'split': return `Each piece is ${bx(o.n)}. Put a cut on <b>every</b> dark mark.`;
-    case 'cut': return o.wholes===2 ? `Each ${frac(1,o.den)} is ${24/o.den} boxes. Go past 1 whole, then count ${o.num%o.den*24/o.den} more boxes.` : `Each ${bx(o.den)}, so ${frac(o.num,o.den)} is <b>${o.num*24/o.den} boxes</b> from 0.`;
-    case 'fix': return `${frac(o.num,o.den)} is <b>${o.num*24/o.den} boxes</b> from 0. Is the rookie's cut there?`;
-    case 'left': return `The whole is 24 boxes. ${frac(o.num,o.den)} eaten is ${o.num*24/o.den} boxes. How many boxes are left, out of 24?`;
-    case 'name': return `Count the boxes from 0 to the cut, then see how many ${DEN1[o.den]}s that is (${bx(o.den)}).`;
-    case 'two': return `${cap(o.who_a)}: ${frac(...o.a)} = ${o.a[0]*24/o.a[1]} boxes from 0. ${cap(o.who_b)}: ${frac(...o.b)} = ${o.b[0]*24/o.b[1]} more boxes after that.`;
-    case 'lineup': return `Turn each fraction into boxes: ${o.fracs.map(f=>`${frac(...f)} = ${f[0]*24/f[1]}`).join(', ')}.`;
+    case 'cut': return o.wholes===2 ? `Each ${frac(1,o.den)} is ${24/o.den} bites. Go past 1 whole, then count ${o.num%o.den*24/o.den} more bites.` : `Each ${bx(o.den)}, so ${frac(o.num,o.den)} is <b>${o.num*24/o.den} bites</b> from 0.`;
+    case 'fix': return `${frac(o.num,o.den)} is <b>${o.num*24/o.den} bites</b> from 0. Is the rookie's cut there?`;
+    case 'left': return `The whole is 24 bites. ${frac(o.num,o.den)} eaten is ${o.num*24/o.den} bites. How many bites are left, out of 24?`;
+    case 'name': return `Count the bites from 0 to the cut, then see how many ${DEN1[o.den]}s that is (${bx(o.den)}).`;
+    case 'two': return `${cap(o.who_a)}: ${frac(...o.a)} = ${o.a[0]*24/o.a[1]} bites from 0. ${cap(o.who_b)}: ${frac(...o.b)} = ${o.b[0]*24/o.b[1]} more bites after that.`;
+    case 'lineup': return `Turn each fraction into bites: ${o.fracs.map(f=>`${frac(...f)} = ${f[0]*24/f[1]}`).join(', ')}.`;
     case 'fair': return `The marks show each person's pieces. Whose cut reaches farther from 0?`;
   }
-  return 'Use the boxes and marks to check.';
+  return 'Use the bites and marks to check.';
 }
 function gate(o, stars){ if(stars<2 && !o.retry && o.type!=='same'){ offerRetry(o); return true; } return false; }
 function offerRetry(o){
