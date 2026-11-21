@@ -12,7 +12,7 @@ One self-contained `index.html`, no external libraries, fonts, or tracking. Work
 
 ## Cut the Sub: Shop Shift
 
-A bigger game version at `/shopshift/`: 4 weeks × 5 shifts at a sub shop, 20 voiced customers, 160 orders across five order types (split it, cut it, who got more, same amount, leftovers). The ruler fades week by week; progress saves in the browser.
+A bigger game version at `/shopshift/`: 4 weeks × 5 shifts as the sub business grows (deli → food truck → ballpark → catering a party). 20 voiced customers and 200 orders across nine order types: split it, cut it, who got more, same amount, leftovers, name the cut, check the rookie, two pieces, and line them up. The scaffold fades from a 24-box strip (like the Fraction Sleeve) to a marked number line, to 0 and 1 only, to nothing. Every Friday, Inspector Hale gives a 3-question check on a bare number line. Rush-hour speed tips (bonus only), surprise events, upgrades, and local saving.
 
 - `shopshift/index.html` – the game (built from `src.html` with the order data inlined)
 - `shopshift/art/` – customer cutouts and props (WebP)

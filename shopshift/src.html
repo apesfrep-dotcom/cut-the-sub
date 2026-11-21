@@ -130,6 +130,22 @@ h2.t{margin:0 0 6px;font-size:40px}
 p.l{font-size:25px;line-height:1.4;margin:10px 0}
 #coin{position:absolute;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff2b0,#e0a82e 55%,#9a6c12);box-shadow:0 2px 6px rgba(0,0,0,.5);pointer-events:none;transition:left .8s cubic-bezier(.3,.1,.3,1),top .8s cubic-bezier(.5,-0.6,.6,1),opacity .2s;font-weight:900;color:#7a5200;display:flex;align-items:center;justify-content:center;font-size:24px}
 #loading{inset:0;background:#2b231b;color:var(--cream);font-size:34px;display:flex;align-items:center;justify-content:center}
+
+#counter:before{background:var(--lip,linear-gradient(#a57a4d,#6b4a2b))!important}
+#bg.dark,#neon.dark{filter:brightness(.32) saturate(.6) blur(1.5px)!important;transition:filter .4s}
+#queue{display:flex;gap:8px;align-items:center}
+#queue img{width:46px;height:46px;border-radius:50%;object-fit:cover;object-position:50% 6%;background:#d8c9a8;border:3px solid rgba(249,244,232,.8)}
+#queue span{font-size:18px;color:#d9c9a6}
+#speed{position:absolute;left:28px;right:70px;bottom:-14px;height:10px;border-radius:6px;background:rgba(0,0,0,.12);overflow:hidden}
+#speed i{display:block;height:100%;background:linear-gradient(90deg,#ffd34d,#f29e1a);border-radius:6px}
+#speed.off{display:none}
+#toast{left:50%;top:96px;transform:translateX(-50%);background:#241d15;color:#ffe08a;font-size:28px;font-weight:800;padding:12px 26px;border-radius:30px;box-shadow:0 8px 20px rgba(0,0,0,.4);transition:opacity .3s,transform .3s;z-index:5;white-space:nowrap}
+#toast.off{opacity:0;transform:translate(-50%,-20px);pointer-events:none}
+#dog{position:absolute;top:500px;height:160px;left:-420px;pointer-events:none;transition:left 2.6s linear;z-index:4}
+.chip{font-size:30px;padding:8px 22px}
+.chip.on{outline:5px solid #2f6f4f;transform:translateY(-4px)}
+#ticket.vip{background:#fff3c4;box-shadow:0 0 0 4px #f2b705,0 10px 24px rgba(0,0,0,.4)}
+.bossCard{left:560px;top:430px;width:680px;background:#1f2a36;color:#fff;border-radius:22px;padding:22px 28px;font-size:25px;box-shadow:0 14px 34px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -149,7 +165,9 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     <div id="subLayer" class="abs"></div>
     <svg id="fx" class="abs" viewBox="0 0 1600 900"></svg>
     <div id="hit"></div>
-    <div id="bubble" class="abs off"><div class="who" id="who"></div><div id="say"></div><button id="replay" title="Hear it again">🔊</button></div>
+    <div id="bubble" class="abs off"><div class="who" id="who"></div><div id="say"></div><button id="replay" title="Hear it again">🔊</button><div id="speed" class="off"><i></i></div></div>
+    <div id="toast" class="abs off"></div><img id="dog" alt="">
+    <div id="bossCard" class="abs bossCard hidden"></div>
     <div id="ticket" class="abs off"></div>
     <div id="controls" class="abs"></div>
     <div id="coach" class="abs off"></div>
@@ -159,6 +177,7 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
   <div id="hud" class="abs hidden">
     <div class="pill" id="hudShift"></div>
     <div class="pill"><div id="dots"></div></div>
+    <div class="pill" id="queuePill"><span style="font-size:18px">Next:</span><div id="queue"></div></div>
     <div style="flex:1"></div>
     <div class="pill">Tips <b id="hudTips">$0</b></div>
     <button class="icon-btn" id="muteBtn" title="Sound on/off">🔈</button>
@@ -207,37 +226,55 @@ const NS = 'http://www.w3.org/2000/svg';
 const WORDS = {1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight'};
 const DENW = {2:'halves',3:'thirds',4:'fourths',6:'sixths',8:'eighths'};
 const DEN1 = {2:'half',3:'third',4:'fourth',6:'sixth',8:'eighth'};
+const SCENES = [
+  {name:'The Deli', bg:'deli_bg', board:'board', counter:'linear-gradient(#6b4a2b,#4a3220 18px,#3b2818 60%,#2a1c11)', lip:'linear-gradient(#a57a4d,#6b4a2b)'},
+  {name:'The Food Truck', bg:'bg_truck', board:'board_steel', counter:'linear-gradient(#cfd5da,#9aa3ab 18px,#7d868e 60%,#5d656c)', lip:'linear-gradient(#f2f4f6,#b8c0c7)'},
+  {name:'The Ballpark', bg:'bg_ballpark', board:'board_tray', counter:'linear-gradient(#b3261e,#8e1d17 18px,#701612 60%,#4f0f0c)', lip:'linear-gradient(#e0574d,#b3261e)'},
+  {name:'The Big Party', bg:'bg_catering', board:'board_slate', counter:'linear-gradient(#f4f1ea,#e4ded2 18px,#d8d1c3 60%,#c9c0af)', lip:'linear-gradient(#ffffff,#e9e3d8)'}];
 const WEEKS = [
-  {t:'Week 1', s:'Halves, fourths, eighths · full ruler'},
-  {t:'Week 2', s:'Thirds and sixths join · ruler shows the halfway mark'},
-  {t:'Week 3', s:'No ruler · compare and match'},
-  {t:'Week 4', s:'Party subs past one whole · no ruler'}];
+  {t:'Week 1 · The Deli', s:'Box strip under the sub · halves, fourths, eighths'},
+  {t:'Week 2 · Food Truck', s:'Number line with marks · thirds and sixths join'},
+  {t:'Week 3 · Ballpark', s:'Only 0 and 1 are marked'},
+  {t:'Week 4 · Big Party', s:'No marks at all · past one whole'}];
+const FRIDAY = '<p class="l">Every <b>Shift 5</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
 const WEEK_INTRO = [
-  '<h2 class="t">Welcome to the deli!</h2><p class="l">Customers will ask for part of a sub. The ruler under the sub shows <b>0</b> at the left end and <b>1</b> at the right end. Tap where to cut, then press <b>Cut!</b></p><p class="l">Tip: a fraction names <b>how far from 0</b> the cut is. Count the equal spaces, not the lines.</p>',
-  '<h2 class="t">Week 2: thirds and sixths</h2><p class="l">Now the ruler only shows <b>0</b>, the <b>halfway mark</b>, and <b>1</b>. Thirds don\'t land on the half. Guess where one third goes, then picture hopping it three times to the end.</p>',
-  '<h2 class="t">Week 3: no ruler</h2><p class="l">The ruler is gone, just like on a test. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>',
-  '<h2 class="t">Week 4: party subs!</h2><p class="l">Big groups need <b>more than one sub</b>. Two subs go end to end, so the line runs from <b>0</b> to <b>2</b>. One and a half subs means one whole sub, plus half of the next.</p>'];
+  '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 boxes</b>, just like your Fraction Sleeve. Half a sub is <b>12 boxes</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. Count boxes from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
+  '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The boxes are gone. Now there\'s a <b>number line with marks</b>. Count the <b>spaces</b>, not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
+  '<h2 class="t">Week 3: The Ballpark</h2><p class="l">Game day at the ballpark! Only <b>0</b> and <b>1</b> are marked now. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>'+FRIDAY,
+  '<h2 class="t">Week 4: Catering the Big Party</h2><p class="l">No marks at all, just the food, like a real test. Big groups need <b>more than one sub</b>, so the line goes past <b>1</b>: one and a half subs means one whole, plus half of the next.</p>'+FRIDAY];
 const COACH = {
-  split:'<b>Split it:</b> tap where the <b>first</b> piece should end. We\'ll copy that piece down the sub, so make it just right!',
-  cut:'<b>Cut it:</b> tap where the cut goes, measured from the <b>left end (0)</b>. You can drag the knife to adjust. Then press <b>Cut!</b>',
-  fair:'<b>Who got more?</b> Both subs are the same size. Picture where each cut would land, then choose.',
-  same:'<b>Same amount, different cut:</b> the sub is already cut. Tap pieces to give the customer exactly what they asked for, then press <b>Serve</b>.',
-  left:'<b>Leftovers:</b> the gray part is already eaten. How much of the whole sub is left?'};
+  split:'<b>Split it:</b> tap to place <b>every</b> cut, then press <b>Cut!</b> Drag any knife mark to fix it. Tip: find the half first.',
+  cut:'<b>Cut it:</b> tap where the cut goes, measured from the <b>left end (0)</b>. Drag to adjust, then press <b>Cut!</b>',
+  fair:'<b>Who got more?</b> Both are the same size. Picture where each cut would land, then choose.',
+  same:'<b>Same amount, different cut:</b> it\'s already cut. Tap pieces to give exactly what they asked for, then <b>Serve</b>.',
+  left:'<b>Leftovers:</b> the gray part is already eaten. How much of the whole is left?',
+  name:'<b>Name the cut:</b> someone already cut it. How far from <b>0</b> is the cut? Pick the fraction.',
+  fix:'<b>Check the rookie:</b> is the cut in the right spot? If not, press <b>Fix it</b> and put it where it belongs.',
+  two:'<b>Two people, one order:</b> cut the first person\'s piece starting at <b>0</b>, then the second piece right after it.',
+  lineup:'<b>Line them up:</b> tap a ticket, then tap the line where that cut goes. Place all three, then press <b>Check</b>.'};
 const UPGRADES = [
   {id:'plants', name:'Counter plants', cost:10, img:'plants'},
   {id:'bell', name:'Service bell', cost:15, img:'bell'},
   {id:'neon', name:'Neon OPEN sign', cost:25, img:'neon_open'},
   {id:'knife', name:'Pro bread knife', cost:40, img:'knife'}];
+const FOOD_ART = {baguette:['food_baguette',.188], flatbread:['food_flatbread',.35], churro:['food_churro',.143], hot_dog:['food_hotdog',.184], licorice:['food_licorice',.062]};
+const FOODW = {baguette:'baguette', flatbread:'flatbread', churro:'churro', hot_dog:'hot dog', licorice:'licorice rope'};
 
 // ------------------------------------------------------------------ save
-let S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:false, seen:{}, weekSeen:{}};
+let S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:false, seen:{}, weekSeen:{}, badges:{}};
 function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY)||'null'); if(v) S = Object.assign(S, v); }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
-// ------------------------------------------------------------------ data
+// ------------------------------------------------------------------ data: base orders + 2 new orders per shift (+ Friday inspector)
 const SHIFTS = [];
-for(let w=1; w<=4; w++) for(let s=1; s<=5; s++) SHIFTS.push(D.orders.filter(o=>o.week===w && o.shift===s));
+for(let w=1; w<=4; w++) for(let s=1; s<=5; s++){
+  const base = D.orders.filter(o=>o.week===w && o.shift===s);
+  const add = D.new.filter(o=>o.week===w && o.shift===s).sort((a,b)=>b.pos-a.pos);
+  const list = base.slice(); add.forEach(o=>list.splice(o.pos, 0, o));
+  SHIFTS.push({list, boss: s===5 ? D.boss.filter(o=>o.week===w) : []});
+}
 const name = c => D.names[c];
+const shiftMax = i => SHIFTS[i].list.length*3;
 
 // ------------------------------------------------------------------ stage scale
 let scale = 1;
@@ -254,21 +291,23 @@ const coinSnd = () => { tone(988,0,.08,'square',.06); tone(1319,.07,.18,'square'
 const ding = () => { tone(1760,0,1.2,'sine',.12); tone(2637,0,.8,'sine',.05); };
 const pop = () => tone(660,0,.08,'triangle',.12);
 const sad = () => { tone(330,0,.18,'triangle',.1); tone(262,.15,.3,'triangle',.1); };
+const woof = () => { tone(220,0,.09,'sawtooth',.12); tone(180,.12,.12,'sawtooth',.12); };
 
 let voiceEl = null;
 function speak(id, text, who){
   $('who').textContent = who; $('say').innerHTML = text; $('bubble').classList.remove('off');
   $('custInner').classList.add('talk');
   if(voiceEl){ voiceEl.pause(); voiceEl = null; }
-  let done = () => $('custInner').classList.remove('talk');
-  let fallback = setTimeout(done, Math.min(6000, 900 + text.length*45));
+  const done = () => $('custInner').classList.remove('talk');
+  const fallback = setTimeout(done, Math.min(6000, 900 + text.length*45));
   if(S.muted) return;
   const a = new Audio(VOX + id + '.mp3'); voiceEl = a;
   a.onended = () => { clearTimeout(fallback); done(); };
-  a.onplay = () => { clearTimeout(fallback); };
+  a.onplay = () => clearTimeout(fallback);
   a.onerror = () => {};
   a.play().catch(()=>{});
 }
+function toast(t, ms=2600){ const e=$('toast'); e.innerHTML=t; e.classList.remove('off'); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.add('off'), ms); }
 
 // ------------------------------------------------------------------ helpers
 const frac = (n,d) => `<span class="frac"><span class="n">${n}</span><span class="d">${d}</span></span>`;
@@ -278,38 +317,55 @@ function svg(tag, attrs, parent=$('fx')){ const e=document.createElementNS(NS,ta
 function stext(x,y,t,size=26,fill='#fff9ea',anchor='middle',weight=800){ const e=svg('text',{x,y,'font-size':size,fill,'text-anchor':anchor,'font-weight':weight,'font-family':'Trebuchet MS, sans-serif',stroke:'#241d15','stroke-width':5,'paint-order':'stroke'}); e.textContent=t; return e; }
 const wait = ms => new Promise(r=>setTimeout(r,ms));
 function hash(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); }
-function clearBoard(){ $('subLayer').innerHTML=''; $('fx').innerHTML=''; $('controls').innerHTML=''; const h=$('hit'); h.onpointerdown=h.onpointermove=h.onpointerup=null; h.style.display='none'; }
+const cap = s => s[0].toUpperCase()+s.slice(1);
+const hopW = n => n===1 ? 'one hop' : `${WORDS[n]||n} hops`;
+const boxes = d => 24/d;
+function clearBoard(){ $('subLayer').innerHTML=''; $('fx').innerHTML=''; $('controls').innerHTML=''; const h=$('hit'); h.onpointerdown=h.onpointermove=h.onpointerup=h.onpointerleave=null; h.style.display='none'; }
 
-// ------------------------------------------------------------------ sub drawing
-const ASPECT = {sub_italian:.295, sub_wheat:.3, sub_herb:.301, sub_6in:.504, sub_party:.137};
-function makeSub(o, x0, y, L, wholes, bread){
-  const img = bread || 'sub_party';
-  const h = Math.round(L*ASPECT[img]);
-  return {x0, y, L, wholes, img, h, pieces:[]};
+// ------------------------------------------------------------------ food drawing
+const ASPECT = {sub_italian:.295, sub_party:.137};
+function makeSub(o, x0, y, L, wholes, art){
+  if(o.bare) return {x0, y, L, wholes, img:null, h:40, pieces:[], bare:true};
+  let img = art || 'sub_party', asp = ASPECT[img] || .137;
+  if(!art && o.food){ [img, asp] = FOOD_ART[o.food]; }
+  const h = Math.round(Math.max(46, Math.min(L*asp, 150)));
+  return {x0, y: y + Math.round((150-h)/3), L, wholes, img, h, pieces:[]};
 }
-function piece(sub, a, b, cls=''){ // a,b in px from x0
+function piece(sub, a, b, cls=''){
   const el = document.createElement('div'); el.className = 'piece ' + cls;
   el.style.left = (sub.x0+a)+'px'; el.style.top = sub.y+'px'; el.style.width = (b-a)+'px'; el.style.height = sub.h+'px';
-  for(let k=0; k<sub.wholes; k++){ const im = new Image(); im.src = ART+sub.img+'.webp'; im.style.left = (k*sub.L - a)+'px'; im.style.width = sub.L+'px'; el.appendChild(im); }
+  if(sub.img) for(let k=0; k<sub.wholes; k++){ const im = new Image(); im.src = ART+sub.img+'.webp'; im.style.left = (k*sub.L - a)+'px'; im.style.width = sub.L+'px'; el.appendChild(im); }
   $('subLayer').appendChild(el); return el;
 }
-function drawWhole(sub){ $('subLayer').querySelectorAll('.piece').forEach(e=>{ if(e.dataset.sub===sub.tag) e.remove(); }); const p = piece(sub, 0, sub.L*sub.wholes); p.dataset.sub = sub.tag||''; sub.pieces=[p]; return p; }
+function drawWhole(sub){ if(sub.bare) return; const p = piece(sub, 0, sub.L*sub.wholes); p.dataset.sub = sub.tag||''; sub.pieces=[p]; return p; }
 function cutInto(sub, cutsPx, gap=10){
+  if(sub.bare) return [];
   sub.pieces.forEach(p=>p.remove());
   const pts = [0, ...cutsPx.filter(c=>c>0 && c<sub.L*sub.wholes).sort((a,b)=>a-b), sub.L*sub.wholes];
   sub.pieces = [];
   for(let i=0;i<pts.length-1;i++){ const p = piece(sub, pts[i], pts[i+1]); p.dataset.sub=sub.tag||''; sub.pieces.push(p); requestAnimationFrame(()=>requestAnimationFrame(()=>{ p.style.transform = `translateX(${(i-(pts.length-2)/2)*gap}px)`; })); }
   return sub.pieces;
 }
+// Scaffold fades: boxes (wk1) -> number line with marks (wk2) -> 0 and 1 only (wk3) -> nothing (wk4). Inspector: bare test-style line.
 function ruler(sub, mode, den){
-  const y = sub.y + sub.h + 22, x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
-  svg('line',{x1:x0,y1:y,x2:X,y2:y,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'});
-  for(let w=0; w<=sub.wholes; w++){ const x=x0+w*sub.L; svg('line',{x1:x,y1:y-16,x2:x,y2:y+16,stroke:'#241d15','stroke-width':5}); stext(x,y+42,String(w),28); }
-  if(mode==='full'){ for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:y-10,x2:x,y2:y+10,stroke:'#241d15','stroke-width':3}); } }
-  if(mode==='halves'){ for(let w=0; w<sub.wholes; w++){ const x=x0+w*sub.L+sub.L/2; svg('line',{x1:x,y1:y-11,x2:x,y2:y+11,stroke:'#241d15','stroke-width':3.5}); } }
+  if(cur && cur.outage && mode!=='bare') mode='none';
+  if(mode==='none') return;
+  const x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
+  if(mode==='boxes'){
+    const by = sub.y + sub.h + 10, bh = 28;
+    for(let w=0; w<sub.wholes; w++) for(let k=0;k<24;k++){ const x=x0+w*sub.L+k*sub.L/24; svg('rect',{x, y:by, width:sub.L/24, height:bh, fill:k%2?'#fff6df':'#ffffff', stroke:'#3b3026','stroke-width':1.6}); }
+    for(let w=0; w<=sub.wholes; w++) stext(x0+w*sub.L, by+bh+30, String(w), 26);
+    return;
+  }
+  const y = mode==='bare' ? sub.y + sub.h/2 : sub.y + sub.h + 22, sw = mode==='bare' ? 6 : 5;
+  if(mode==='bare'){ svg('rect',{x:x0-90,y:y-120,width:X-x0+180,height:200,rx:6,fill:'#fdfcf7',stroke:'#cfc6b4','stroke-width':2,style:'filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))'}); const q=svg('text',{x:x0-66,y:y-84,'font-size':20,'font-family':'Courier New, monospace',fill:'#6b5f4c'}); q.textContent='Name: ______________   Fractions on a number line'; }
+  svg('line',{x1:x0-(mode==='bare'?30:0),y1:y,x2:X+(mode==='bare'?30:0),y2:y,stroke:'#241d15','stroke-width':sw,'stroke-linecap':'round'});
+  if(mode==='bare'){ svg('path',{d:`M${x0-44},${y} l16,-10 l0,20 z`,fill:'#241d15'}); svg('path',{d:`M${X+44},${y} l-16,-10 l0,20 z`,fill:'#241d15'}); }
+  for(let w=0; w<=sub.wholes; w++){ const x=x0+w*sub.L; svg('line',{x1:x,y1:y-16,x2:x,y2:y+16,stroke:'#241d15','stroke-width':5}); if(mode==='bare'){ const t=svg('text',{x,y:y+46,'text-anchor':'middle','font-size':30,'font-weight':800,'font-family':'Trebuchet MS, sans-serif',fill:'#241d15'}); t.textContent=String(w); } else stext(x,y+46,String(w),28); }
+  if(mode==='ticks'){ for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:y-11,x2:x,y2:y+11,stroke:'#241d15','stroke-width':3}); } }
 }
 function hops(sub, fromPx, count, unitPx, den, startK, color='#ffd34d', delay=260){
-  const y = sub.y - 6, ps=[];
+  const y = sub.y - 6;
   for(let k=0;k<count;k++){
     const a = sub.x0+fromPx+k*unitPx, b = a+unitPx, mid=(a+b)/2, hgt=Math.min(70, unitPx*.45+18);
     const p = svg('path',{d:`M${a},${y} Q${mid},${y-hgt*2} ${b},${y}`,fill:'none',stroke:color,'stroke-width':5,'stroke-linecap':'round',opacity:0});
@@ -317,112 +373,118 @@ function hops(sub, fromPx, count, unitPx, den, startK, color='#ffd34d', delay=26
     p.style.transition=`stroke-dashoffset .3s ease ${k*delay/1000}s, opacity .01s ${k*delay/1000}s`;
     const t = stext(b, y-hgt-14, `${startK+k+1}/${den}`, 24, '#ffe9a8'); t.style.opacity=0; t.style.transition=`opacity .2s ${k*delay/1000+.25}s`;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ p.setAttribute('opacity',1); p.style.strokeDashoffset=0; t.style.opacity=1; }));
-    ps.push(p);
   }
   return wait(count*delay+350);
 }
-function markLine(x, sub, color, label, dash){ const l = svg('line',{x1:x,y1:sub.y-26,x2:x,y2:sub.y+sub.h+8,stroke:color,'stroke-width':5,'stroke-dasharray':dash?'10 8':'none','stroke-linecap':'round'}); if(label) stext(x, sub.y-150, label, 26, color==='#3aa66a'?'#c9f5d8':'#fff'); return l; }
+function markLine(x, sub, color, label, dash){ const l = svg('line',{x1:x,y1:sub.y-26,x2:x,y2:sub.y+sub.h+8,stroke:color,'stroke-width':5,'stroke-dasharray':dash?'10 8':'none','stroke-linecap':'round'}); if(label) stext(x, sub.y-150, label, 26, '#c9f5d8'); return l; }
+function cutMark(x, sub, color='#e2574c'){ const g = svg('g',{}); svg('line',{x1:x,y1:sub.y-40,x2:x,y2:sub.y+sub.h+16,stroke:color,'stroke-width':6,'stroke-linecap':'round'},g); svg('path',{d:`M${x-16},${sub.y-62} L${x+16},${sub.y-62} L${x},${sub.y-40} Z`,fill:color,stroke:'#fff','stroke-width':3},g); return g; }
 
-// ------------------------------------------------------------------ knife input
-function knifeInput(sub, onSet){
+// ------------------------------------------------------------------ knife input: place up to `max` marks, drag any to adjust
+function knifeInput(sub, max, onChange){
   const hit = $('hit'), total = sub.L*sub.wholes;
-  hit.style.display='block'; hit.style.left=(sub.x0-30)+'px'; hit.style.top=(sub.y-60)+'px'; hit.style.width=(total+60)+'px'; hit.style.height=(sub.h+140)+'px';
+  hit.style.display='block'; hit.style.left=(sub.x0-30)+'px'; hit.style.top=(sub.y-70)+'px'; hit.style.width=(total+60)+'px'; hit.style.height=(sub.h+150)+'px';
   const guide = svg('line',{x1:0,y1:sub.y-34,x2:0,y2:sub.y+sub.h+14,stroke:'#fff','stroke-width':3,'stroke-dasharray':'6 6',opacity:0});
-  const mark = svg('g',{opacity:0});
-  svg('line',{x1:0,y1:sub.y-40,x2:0,y2:sub.y+sub.h+16,stroke:'#e2574c','stroke-width':6,'stroke-linecap':'round'},mark);
-  svg('path',{d:`M-16,${sub.y-62} L16,${sub.y-62} L0,${sub.y-40} Z`,fill:'#e2574c',stroke:'#fff','stroke-width':3},mark);
   const kn = svg('g',{opacity:0});
-  if(S.owned.knife){ const im = svg('image',{href:ART+'knife.webp',x:-150,y:-34,width:300,height:36,transform:'rotate(-90)'},kn); }
+  if(S.owned.knife) svg('image',{href:ART+'knife.webp',x:-150,y:-34,width:300,height:36,transform:'rotate(-90)'},kn);
   else { svg('rect',{x:-6,y:-120,width:12,height:46,rx:4,fill:'#4a3220'},kn); svg('path',{d:'M-9,-76 L9,-76 L9,-8 L0,0 L-9,-8 Z',fill:'#dfe4ea',stroke:'#7c8794','stroke-width':2},kn); }
-  let pos = null, dragging=false;
+  const marks = []; let drag = null;
   const clamp = v => Math.max(2, Math.min(total-2, v));
+  const draw = m => m.g.setAttribute('transform',`translate(${sub.x0+m.x},0)`);
+  const newMark = x => { const g = svg('g',{}); svg('line',{x1:0,y1:sub.y-40,x2:0,y2:sub.y+sub.h+16,stroke:'#e2574c','stroke-width':6,'stroke-linecap':'round'},g); svg('path',{d:`M-16,${sub.y-62} L16,${sub.y-62} L0,${sub.y-40} Z`,fill:'#e2574c',stroke:'#fff','stroke-width':3},g); const m={x,g}; marks.push(m); draw(m); return m; };
+  const nearest = x => marks.reduce((b,m)=> !b || Math.abs(m.x-x)<Math.abs(b.x-x) ? m : b, null);
+  const changed = () => onChange(marks.map(m=>m.x).sort((a,b)=>a-b));
   const setGuide = x => { guide.setAttribute('x1',sub.x0+x); guide.setAttribute('x2',sub.x0+x); guide.setAttribute('opacity',.8); kn.setAttribute('transform',`translate(${sub.x0+x},${sub.y-30})`); kn.setAttribute('opacity',1); };
-  const place = x => { pos = clamp(x); mark.setAttribute('transform',`translate(${sub.x0+pos},0)`); mark.setAttribute('opacity',1); onSet(pos); };
-  hit.onpointermove = e => { const p=toStage(e); const x=clamp(p.x-sub.x0); setGuide(x); if(dragging) place(x); };
-  hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); dragging=true; const p=toStage(e); place(p.x-sub.x0); setGuide(pos); pop(); };
-  hit.onpointerup = () => { dragging=false; };
+  hit.onpointermove = e => { const x = clamp(toStage(e).x-sub.x0); setGuide(x); if(drag){ drag.x = x; draw(drag); changed(); } };
+  hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); const x = clamp(toStage(e).x-sub.x0); const n = nearest(x);
+    if(n && (Math.abs(n.x-x) < 34 || marks.length>=max)){ drag = n; n.x = x; draw(n); } else { drag = newMark(x); }
+    pop(); changed(); };
+  hit.onpointerup = () => { drag = null; };
   hit.onpointerleave = () => { guide.setAttribute('opacity',0); kn.setAttribute('opacity',0); };
-  const key = e => { if(pos==null) return; if(e.key==='ArrowLeft'){ place(pos-2); e.preventDefault(); } if(e.key==='ArrowRight'){ place(pos+2); e.preventDefault(); } };
+  const key = e => { const m = marks[marks.length-1]; if(!m) return; if(e.key==='ArrowLeft'){ m.x=clamp(m.x-2); draw(m); changed(); e.preventDefault(); } if(e.key==='ArrowRight'){ m.x=clamp(m.x+2); draw(m); changed(); e.preventDefault(); } };
   addEventListener('keydown', key);
-  return { get pos(){ return pos; }, done(){ removeEventListener('keydown', key); hit.style.display='none'; guide.remove(); kn.remove(); mark.setAttribute('opacity',0); } };
+  return { get positions(){ return marks.map(m=>m.x).sort((a,b)=>a-b); },
+    clear(){ marks.splice(0).forEach(m=>m.g.remove()); changed(); },
+    done(){ removeEventListener('keydown', key); hit.style.display='none'; guide.remove(); kn.remove(); marks.forEach(m=>m.g.remove()); } };
 }
 
-// ------------------------------------------------------------------ order modes
+// ------------------------------------------------------------------ geometry + ticket
 function subGeometry(o){
-  // whole length varies by week so kids can't memorize pixel spots
   const r = (hash(o.id+'L')%1000)/1000;
   if(o.wholes===2){ const L = 520 + Math.round(r*40); return {L, x0: 900 - L}; }
+  if(o.bare) return {L:900, x0:450};
   const L = o.week===1 ? 1000 : o.week===2 ? 820+Math.round(r*180) : 640+Math.round(r*360);
   return {L, x0: 900 - L/2};
 }
 const SUB_Y = 622;
-
+function boxTip(d){ return cur && cur.ruler==='boxes' && !cur.outage ? `<div style="text-align:center;margin-top:6px;font-size:20px">${frac(1,d)} = ${boxes(d)} boxes</div>` : ''; }
 function ticketHTML(o){
-  const T = t => `<div class="tt">ORDER #${(cur.idx+1)} · ${t}</div>`;
-  if(o.type==='split') return T('SPLIT IT') + `<div class="big">${WORDS[o.n]} equal pieces</div><div style="text-align:center;margin-top:6px">each piece = ${frac(1,o.n)}</div>`;
-  if(o.type==='cut') return T('CUT IT') + `<div class="big">${o.wholes===2? mixed(o.num,o.den)+' subs' : frac(o.num,o.den)+' of the sub'}</div>`;
+  const T = t => `<div class="tt">${o.vip?'★ VIP · DOUBLE TIPS ★<br>':''}${o.bare?'INSPECTION':'ORDER'} #${(cur.idx+1)} · ${t}</div>`;
+  const fw = o.food ? FOODW[o.food] : 'sub';
+  if(o.type==='split') return T('SPLIT IT') + `<div class="big">${WORDS[o.n]} equal pieces</div><div style="text-align:center;margin-top:6px">each piece = ${frac(1,o.n)}</div>` + boxTip(o.n);
+  if(o.type==='cut') return T(o.bare?'MARK IT':'CUT IT') + `<div class="big">${o.wholes===2? mixed(o.num,o.den)+(o.bare?'':' subs') : frac(o.num,o.den)+(o.bare?'':' of the '+fw)}</div>` + boxTip(o.den);
   if(o.type==='fair') return T('WHO GOT MORE?') + `<div style="font-size:24px;line-height:1.9">${cap(o.who_a)}: ${frac(o.a[0],o.a[1])}<br>${cap(o.who_b)}: ${frac(o.b[0],o.b[1])}</div>`;
-  if(o.type==='same') return T('SAME AMOUNT') + `<div class="big">serve ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">sub is cut in ${DENW[o.pieces]}</div>`;
+  if(o.type==='same') return T('SAME AMOUNT') + `<div class="big">serve ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">cut in ${DENW[o.pieces]}</div>`;
   if(o.type==='left') return T('LEFTOVERS') + `<div class="big">ate ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">how much is left?</div>`;
+  if(o.type==='name') return T('NAME THE CUT') + `<div class="big">${o.bare?'point = ?':'my piece = ?'}</div>`;
+  if(o.type==='fix') return T('CHECK THE ROOKIE') + `<div class="big">asked for ${frac(o.num,o.den)}</div>` + boxTip(o.den);
+  if(o.type==='two') return T('TWO PIECES') + `<div style="font-size:24px;line-height:1.9">1st: ${cap(o.who_a)} ${frac(...o.a)}<br>2nd: ${cap(o.who_b)} ${frac(...o.b)}</div>`;
+  if(o.type==='lineup') return T('LINE THEM UP') + `<div class="big">${o.fracs.map(f=>frac(...f)).join(' ')}</div>`;
 }
-const cap = s => s[0].toUpperCase()+s.slice(1);
-const hopW = n => n===1 ? 'one hop' : `${WORDS[n]||n} hops`;
 
+// ------------------------------------------------------------------ order modes
+function starsFor(err, t){ return err<=t[0]?3: err<=t[1]?2: err<=t[2]?1:0; }
 const MODES = {
   split(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
     ruler(sub, o.ruler, o.n);
-    let x = null; const k = knifeInput(sub, v => { x=v; cutBtn.disabled=false; });
-    const cutBtn = button('Cut! 🔪','btn red', async () => {
-      k.done(); cutBtn.disabled=true; chop();
-      const unit = L/o.n, cuts=[]; for(let i=1;i<o.n;i++) cuts.push(x*i);
-      // copy the first piece down the sub, one chop at a time
-      for(let i=1;i<=o.n-1;i++){ cutInto(sub, cuts.slice(0,i), 6); if(i>1) chop(); await wait(260); }
-      const endAt = x*o.n, err = Math.abs(x-unit)/unit;
+    const need = o.n-1;
+    const k = knifeInput(sub, need, ps => { cutBtn.disabled = ps.length<need; cutBtn.innerHTML = ps.length<need ? `Cut! 🔪 (${ps.length}/${need} marks)` : 'Cut! 🔪'; });
+    const cutBtn = button(`Cut! 🔪 (0/${need} marks)`,'btn red', async () => {
+      const ps = k.positions; k.done(); cutBtn.disabled=true; clr.disabled=true;
+      for(let i=1;i<=ps.length;i++){ cutInto(sub, ps.slice(0,i), 8); chop(); await wait(170); }
+      const unit = L/o.n, pts=[0,...ps,L], sizes=pts.slice(1).map((p,i)=>p-pts[i]);
       for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
-      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', 180);
-      const stars = err<=.1?3: err<=.2?2: err<=.3?1:0;
-      let msg;
-      if(stars===3) msg = `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)} of the sub!`;
-      else if(endAt > L) msg = `Your first piece was a little <b>too big</b>. Copied ${WORDS[o.n]} times, it ran past the end. Each piece should be ${frac(1,o.n)}: the green lines.`;
-      else msg = `Your first piece was a little <b>too small</b>. Copied ${WORDS[o.n]} times, it left extra sub. Each piece should be ${frac(1,o.n)}: the green lines.`;
-      finish(o, stars, msg);
+      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', Math.max(90, 200 - o.n*12));
+      const err = Math.max(...sizes.map(s=>Math.abs(s-unit)/unit));
+      const stars = starsFor(err, [.15,.3,.45]);
+      const big = sizes.indexOf(Math.max(...sizes))+1, small = sizes.indexOf(Math.min(...sizes))+1;
+      const tip = o.n%3===0 ? 'Tip: guess one third, then picture three equal hops.' : 'Tip: cut the half first, then halve each half.';
+      finish(o, stars, stars===3 ? `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)}!`
+        : `Each piece should be ${frac(1,o.n)} (the green lines). Piece ${big} came out biggest and piece ${small} smallest. ${tip}`);
     }, true);
+    const clr = button('Clear', 'btn ghost', ()=>k.clear());
   },
   cut(o){
-    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.wholes===2?30:0), L, o.wholes, o.wholes===2?'sub_italian':null); drawWhole(sub);
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.wholes===2?30:0) + (o.bare?40:0), L, o.wholes, o.wholes===2&&!o.bare?'sub_italian':null); drawWhole(sub);
     ruler(sub, o.ruler, o.den);
-    let x=null; const k = knifeInput(sub, v => { x=v; cutBtn.disabled=false; });
-    const cutBtn = button('Cut! 🔪','btn red', async () => {
-      k.done(); cutBtn.disabled=true; chop();
-      cutInto(sub, [x], 14); await wait(300);
+    const k = knifeInput(sub, 1, ps => { cutBtn.disabled = !ps.length; });
+    const cutBtn = button(o.bare?'Mark it ✏️':'Cut! 🔪','btn red', async () => {
+      const x = k.positions[0]; k.done(); cutBtn.disabled=true; chop();
+      if(sub.bare) cutMark(x0+x, sub); else cutInto(sub, [x], 14);
+      await wait(300);
       const t = L*o.num/o.den, err = Math.abs(x-t)/L;
       await hops(sub, 0, o.num, L/o.den, o.den, 0);
       markLine(x0+t, sub, '#3aa66a', null, true);
-      const stars = err<=.03?3: err<=.07?2: err<=.12?1:0;
-      const name = o.wholes===2 ? `${mixed(o.num,o.den)} subs` : frac(o.num,o.den);
-      const msg = stars===3 ? `Right on the ${name} cut! ${cap(hopW(o.num))} of ${frac(1,o.den)} from 0.`
-        : stars>0 ? `Close! The ${name} cut is the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`
-        : `The ${name} cut is at the green line. Count ${hopW(o.num)} of ${frac(1,o.den)}, starting at 0.`;
-      finish(o, stars, msg);
+      const stars = starsFor(err, [.03,.07,.12]);
+      const nm = o.wholes===2 ? `${mixed(o.num,o.den)}` : frac(o.num,o.den);
+      finish(o, stars, stars===3 ? `Right on ${nm}! ${cap(hopW(o.num))} of ${frac(1,o.den)} from 0.`
+        : stars>0 ? `Close! ${nm} is the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`
+        : `${nm} is at the green line. Count ${hopW(o.num)} of ${frac(1,o.den)}, starting at 0.`);
     }, true);
   },
   fair(o){
     const L = o.week>=3 ? 760 : 900, x0 = 820 - L/2 + 60;
     const sa = makeSub(o, x0, 612, L, 1), sb = makeSub(o, x0, 728, L, 1);
-    sa.h = sb.h = 90; sa.tag='a'; sb.tag='b'; drawWhole(sa); drawWhole(sb);
-    tag(x0-24, 668, `${cap(o.who_a)} ${fracTxt(...o.a)}`, 'end'); tag(x0-24, 784, `${cap(o.who_b)} ${fracTxt(...o.b)}`, 'end');
+    sa.y = 612; sb.y = 728; sa.h = sb.h = 90; sa.tag='a'; sb.tag='b'; drawWhole(sa); drawWhole(sb);
+    stext(x0-24, 668, `${cap(o.who_a)} ${fracTxt(...o.a)}`, 26, '#fff9ea', 'end'); stext(x0-24, 784, `${cap(o.who_b)} ${fracTxt(...o.b)}`, 26, '#fff9ea', 'end');
     if(o.week<=2){ smallTicks(sa, o.a[1]); smallTicks(sb, o.b[1]); }
     const reveal = async pick => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const xa = L*o.a[0]/o.a[1], xb = L*o.b[0]/o.b[1];
       cutInto(sa,[xa],0); cutInto(sb,[xb],0); chop(); await wait(250);
       sa.pieces[1].classList.add('faded'); sb.pieces[1].classList.add('faded');
-      const far = Math.max(xa,xb);
-      svg('line',{x1:x0+far,y1:600,x2:x0+far,y2:830,stroke:'#ffd34d','stroke-width':4,'stroke-dasharray':'8 7'});
-      const A = o.a[0]/o.a[1], B = o.b[0]/o.b[1];
-      const ok = pick===o.answer;
-      let why;
+      svg('line',{x1:x0+Math.max(xa,xb),y1:600,x2:x0+Math.max(xa,xb),y2:830,stroke:'#ffd34d','stroke-width':4,'stroke-dasharray':'8 7'});
+      const ok = pick===o.answer; let why;
       if(o.answer==='same') why = `${frac(...o.a)} and ${frac(...o.b)} reach the <b>same spot</b>. They're equal!`;
       else { const [big,small] = o.answer==='a'? [o.a,o.b]:[o.b,o.a]; const bn = o.answer==='a'?o.who_a:o.who_b;
         if(big[1]===small[1]) why = `Same size pieces (${DENW[big[1]]}), and ${big[0]} pieces is more than ${small[0]}. ${cap(bn)} got more.`;
@@ -439,19 +501,19 @@ const MODES = {
     const unit = L/o.pieces, cuts=[]; for(let i=1;i<o.pieces;i++) cuts.push(unit*i);
     cutInto(sub, cuts, 8); let tries = 0;
     const sel = new Set();
-    sub.pieces.forEach((p,i)=>{ p.classList.add('tap'); p.onpointerdown = () => { sel.has(i)?sel.delete(i):sel.add(i); p.classList.toggle('sel'); pop(); serve.disabled = sel.size===0; cnt.textContent = sel.size ? `${sel.size} of ${o.pieces} pieces` : ''; }; });
     const cnt = stext(900, sub.y+sub.h+44, '', 26);
+    sub.pieces.forEach((p,i)=>{ p.classList.add('tap'); p.onpointerdown = () => { sel.has(i)?sel.delete(i):sel.add(i); p.classList.toggle('sel'); pop(); serve.disabled = sel.size===0; cnt.textContent = sel.size ? `${sel.size} of ${o.pieces} pieces` : ''; }; });
     const serve = button('Serve 🍽️', 'btn green', async () => {
       tries++; const k = sel.size;
       if(k===o.answer){
         sub.pieces.forEach(p=>p.onpointerdown=null);
-        const t = L*o.num/o.den; markLine(x0+t, sub, '#3aa66a', `${o.num}/${o.den} = ${o.answer}/${o.pieces}`, true);
+        markLine(x0+L*o.num/o.den, sub, '#3aa66a', `${o.num}/${o.den} = ${o.answer}/${o.pieces}`, true);
         await hops(sub, 0, o.answer, unit, o.pieces, 0, '#7be0a2', 200);
         finish(o, tries===1?3:1, `${frac(o.num,o.den)} is the same as ${frac(o.answer,o.pieces)}. ${cap(WORDS[o.answer])} ${o.answer===1?DEN1[o.pieces]:DENW[o.pieces]} reach the ${frac(o.num,o.den)} mark.`);
       } else if(tries===1){
         sad(); react('unsure', 1);
-        const t = L*o.num/o.den; markLine(x0+t, sub, '#ffd34d', `${o.num}/${o.den} is here`, true);
-        coach(`Not quite. The yellow line shows where ${frac(o.num,o.den)} of the sub ends. Pick the pieces that reach it.`);
+        markLine(x0+L*o.num/o.den, sub, '#ffd34d', `${o.num}/${o.den} is here`, true);
+        coach(`Not quite. The yellow line shows where ${frac(o.num,o.den)} ends. Pick the pieces that reach it.`);
       } else {
         sub.pieces.forEach((p,i)=>{ p.onpointerdown=null; p.classList.toggle('sel', i<o.answer); });
         finish(o, 0, `It takes ${WORDS[o.answer]} ${DENW[o.pieces]} to make ${frac(o.num,o.den)}. ${frac(o.num,o.den)} = ${frac(o.answer,o.pieces)}.`);
@@ -461,19 +523,99 @@ const MODES = {
   left(o){
     const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
     const e = L*o.num/o.den; cutInto(sub, [e], 0); sub.pieces[0].classList.add('faded');
-    for(let i=0;i<14;i++){ svg('circle',{cx:x0+ (hash(o.id+i)%Math.max(8,Math.round(e))), cy:SUB_Y+sub.h+ (hash(i+o.id)%22)-4, r:3+(i%3), fill:'#c89a5a', opacity:.8}); }
-    tag(x0+e/2, SUB_Y-24, `eaten: ${fracTxt(o.num,o.den)}`, 'middle');
-    if(o.ruler!=='none') ruler(sub, o.ruler, o.den);
+    for(let i=0;i<14;i++) svg('circle',{cx:x0+(hash(o.id+i)%Math.max(8,Math.round(e))), cy:sub.y+sub.h+(hash(i+o.id)%22)-4, r:3+(i%3), fill:'#c89a5a', opacity:.8});
+    stext(x0+e/2, sub.y-24, `eaten: ${fracTxt(o.num,o.den)}`, 26);
+    ruler(sub, o.ruler, o.den);
     const choose = async c => {
       [...$('controls').children].forEach(b=>b.disabled=true);
       const ok = c[0]===o.answer[0] && c[1]===o.answer[1];
       await hops(sub, e, o.den-o.num, L/o.den, o.den, o.num, '#7be0a2', 220);
-      finish(o, ok?3:0, `${ok?'Right! ':''}The whole sub is ${frac(o.den,o.den)}. ${frac(o.num,o.den)} was eaten, so ${frac(o.den-o.num,o.den)} is left: ${hopW(o.den-o.num)} more to the end.`);
+      finish(o, ok?3:0, `${ok?'Right! ':''}The whole is ${frac(o.den,o.den)}. ${frac(o.num,o.den)} was eaten, so ${frac(o.den-o.num,o.den)} is left: ${hopW(o.den-o.num)} more to the end.`);
     };
     o.choices.forEach(c => button(`${c[0]}/${c[1]} left`, 'btn', ()=>choose(c)));
+  },
+  name(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.bare?40:0), L, 1); drawWhole(sub);
+    const x = L*o.num/o.den;
+    if(sub.bare){ ruler(sub, 'bare'); const g=svg('circle',{cx:x0+x, cy:sub.y+sub.h/2, r:13, fill:'#e2574c', stroke:'#fff','stroke-width':4}); }
+    else { ruler(sub, o.ruler, o.den); cutInto(sub, [x], 14); cutMark(x0+x, sub); stext(x0+x/2, sub.y-70, 'my piece', 24); }
+    const choose = async c => {
+      [...$('controls').children].forEach(b=>b.disabled=true);
+      const ok = c[0]*o.den === c[1]*o.num;
+      await hops(sub, 0, o.num, L/o.den, o.den, 0);
+      finish(o, ok?3:0, ok ? `Yes! The cut is ${hopW(o.num)} of ${frac(1,o.den)} from 0: ${frac(o.num,o.den)}.`
+        : `Count the <b>spaces</b> from 0, not the lines: ${hopW(o.num)} of ${frac(1,o.den)} makes ${frac(o.num,o.den)}.`);
+    };
+    o.choices.forEach(c => button(`${c[0]}/${c[1]}`, 'btn chip', ()=>choose(c)));
+  },
+  fix(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
+    ruler(sub, o.ruler, o.den);
+    const at = L*o.at, t = L*o.num/o.den;
+    cutInto(sub, [at], 8); const rook = cutMark(x0+at, sub, '#7a5cff'); stext(x0+at, sub.y-74, "rookie's cut", 22, '#e6dcff');
+    const showRight = async () => { await hops(sub, 0, o.num, L/o.den, o.den, 0); markLine(x0+t, sub, '#3aa66a', null, true); };
+    button('Looks right ✔', 'btn green', async () => {
+      [...$('controls').children].forEach(b=>b.disabled=true); await showRight();
+      finish(o, o.right?3:0, o.right ? `Good eye! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)}, right where the rookie cut.`
+        : `The rookie was off. ${frac(o.num,o.den)} is at the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`);
+    });
+    button('Fix it ✏️', 'btn red', async () => {
+      if(o.right){ [...$('controls').children].forEach(b=>b.disabled=true); await showRight(); finish(o, 1, `That cut was already right! ${frac(o.num,o.den)} is ${hopW(o.num)} of ${frac(1,o.den)} from 0.`); return; }
+      $('controls').innerHTML=''; rook.setAttribute('opacity',.35);
+      cutInto(sub, [], 0); coach('Right, it\'s off! Tap where the cut <b>should</b> go, then press <b>Cut!</b>');
+      const k = knifeInput(sub, 1, ps => { cb.disabled = !ps.length; });
+      const cb = button('Cut! 🔪','btn red', async () => {
+        const x = k.positions[0]; k.done(); cb.disabled=true; chop(); cutInto(sub,[x],14); await wait(250); await showRight();
+        const stars = starsFor(Math.abs(x-t)/L, [.03,.07,.12]);
+        finish(o, stars, stars===3 ? `Fixed! You spotted the mistake and cut ${frac(o.num,o.den)} exactly.` : `Good catch on the mistake. ${frac(o.num,o.den)} is at the green line.`);
+      }, true);
+    });
+  },
+  two(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
+    const den = Math.max(o.a[1], o.b[1]) % Math.min(o.a[1], o.b[1]) === 0 ? Math.max(o.a[1], o.b[1]) : o.a[1]*o.b[1]/gcd(o.a[1],o.b[1]);
+    ruler(sub, o.ruler, den);
+    const t1 = L*o.a[0]/o.a[1], t2 = t1 + L*o.b[0]/o.b[1];
+    const k = knifeInput(sub, 2, ps => { cb.disabled = ps.length<2; cb.innerHTML = ps.length<2 ? `Cut! 🔪 (${ps.length}/2 marks)` : 'Cut! 🔪'; });
+    const cb = button('Cut! 🔪 (0/2 marks)','btn red', async () => {
+      const [p1,p2] = k.positions; k.done(); cb.disabled=true; clr.disabled=true; chop(); cutInto(sub,[p1,p2],14); await wait(250);
+      await hops(sub, 0, o.a[0], L/o.a[1], o.a[1], 0, '#ffd34d', 200);
+      await hops(sub, t1, o.b[0], L/o.b[1], o.b[1], 0, '#9ad1ff', 200);
+      markLine(x0+t1, sub, '#3aa66a', null, true); markLine(x0+t2, sub, '#3aa66a', null, true);
+      stext(x0+t1/2, sub.y+sub.h+50, cap(o.who_a), 24); stext(x0+(t1+t2)/2, sub.y+sub.h+50, cap(o.who_b), 24, '#cfe9ff');
+      const err = Math.max(Math.abs(p1-t1), Math.abs(p2-t2))/L, stars = starsFor(err, [.04,.08,.13]);
+      finish(o, stars, stars===3 ? `Two perfect pieces: ${frac(...o.a)} for ${o.who_a}, then ${frac(...o.b)} for ${o.who_b}.`
+        : `${cap(o.who_a)}'s piece ends at ${frac(...o.a)}. ${cap(o.who_b)}'s piece starts there and is ${frac(...o.b)} long (blue hops).`);
+    }, true);
+    const clr = button('Clear', 'btn ghost', ()=>k.clear());
+  },
+  lineup(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.bare?40:0), L, 1); drawWhole(sub);
+    ruler(sub, o.bare ? 'bare' : (o.ruler==='boxes'||o.ruler==='ticks') ? 'ends' : o.ruler, 2);
+    const placed = {}, flags = {}; let active = null;
+    const hit = $('hit'); hit.style.display='block'; hit.style.cursor='pointer';
+    hit.style.left=(x0-30)+'px'; hit.style.top=(sub.y-90)+'px'; hit.style.width=(L+60)+'px'; hit.style.height=(sub.h+170)+'px';
+    const chips = o.fracs.map((f,i) => button(`${f[0]}/${f[1]}`, 'btn chip', () => { active = i; chips.forEach((c,j)=>c.classList.toggle('on', j===i)); }));
+    const check = button('Check ✔', 'btn green', async () => {
+      hit.style.display='none'; chips.concat(check).forEach(b=>b.disabled=true);
+      const vals = o.fracs.map(f=>f[0]/f[1]);
+      const orderOK = [0,1,2].every(i=>[0,1,2].every(j=> (vals[i]<vals[j]) === (placed[i]<placed[j]) || i===j));
+      const err = Math.max(...[0,1,2].map(i=>Math.abs(placed[i]-vals[i]*L)/L));
+      o.fracs.forEach((f,i)=>{ const x=x0+vals[i]*L; svg('line',{x1:x,y1:sub.y-20,x2:x,y2:sub.y+sub.h+10,stroke:'#3aa66a','stroke-width':5,'stroke-dasharray':'9 7'}); stext(x, sub.y+sub.h+52, `${f[0]}/${f[1]}`, 24, '#c9f5d8'); });
+      const stars = !orderOK ? 0 : err<=.06 ? 3 : 2;
+      const sorted = o.fracs.slice().sort((a,b)=>a[0]/a[1]-b[0]/b[1]).map(f=>frac(...f)).join(' &lt; ');
+      finish(o, stars, stars===3 ? `Perfect! In order: ${sorted}.` : stars===2 ? `Right order: ${sorted}. The green marks show exactly where each one goes.` : `Smallest to biggest: ${sorted}. Picture each one as hops from 0.`);
+    }, true);
+    hit.onpointerdown = e => { if(active===null) return; const x = Math.max(0, Math.min(L, toStage(e).x - x0)); placed[active] = x;
+      if(flags[active]) flags[active].remove();
+      const g = svg('g',{}); svg('line',{x1:x0+x,y1:sub.y-60,x2:x0+x,y2:sub.y+sub.h,stroke:'#ffd34d','stroke-width':5},g);
+      svg('rect',{x:x0+x-40,y:sub.y-108,width:80,height:48,rx:10,fill:'#fffdf6',stroke:'#241d15','stroke-width':2},g);
+      const tx = svg('text',{x:x0+x,y:sub.y-75,'text-anchor':'middle','font-size':26,'font-weight':800,'font-family':'Trebuchet MS, sans-serif'},g); tx.textContent = `${o.fracs[active][0]}/${o.fracs[active][1]}`;
+      flags[active] = g; pop(); chips[active].classList.remove('on'); active = null;
+      check.disabled = Object.keys(placed).length < 3; };
   }
 };
-function tag(x,y,t,anchor){ stext(x,y,t,26,'#fff9ea',anchor); }
+function gcd(a,b){ return b ? gcd(b, a%b) : a; }
 function smallTicks(sub, den){ const y=sub.y+sub.h+4; for(let k=0;k<=den;k++){ const x=sub.x0+k*sub.L/den; svg('line',{x1:x,y1:y,x2:x,y2:y+(k%den===0?16:10),stroke:'#fff9ea','stroke-width':3}); } }
 function button(label, cls, fn, disabled){ const b=document.createElement('button'); b.className=cls; b.innerHTML=label; b.onclick=()=>{ ac(); fn(); }; b.disabled=!!disabled; $('controls').appendChild(b); return b; }
 function coach(html){ const c=$('coach'); c.innerHTML=html; c.classList.remove('off'); clearTimeout(coach.t); coach.t=setTimeout(()=>c.classList.add('off'), 6500); }
@@ -481,76 +623,115 @@ function coach(html){ const c=$('coach'); c.innerHTML=html; c.classList.remove('
 // ------------------------------------------------------------------ flow
 let cur = null;
 function setCustomer(cid, mood){ $('custImg').src = `${ART}cust_${cid}_${mood}.webp`; }
-function react(mood, n){ const o = cur.list[cur.idx]; setCustomer(o.cust, mood==='happy'?'happy':'unsure'); const i = 1+(hash(o.id+mood+n)%2); speak(`${o.cust}_${mood}${i}`, D.reactions[o.cust][mood][i-1], name(o.cust)); }
+function react(mood, n){ const o = cur.list[cur.idx]; setCustomer(o.cust, mood); const i = 1+(hash(o.id+mood+n)%2); speak(`${o.cust}_${mood}${i}`, D.reactions[o.cust][mood][i-1], name(o.cust)); }
+function setScene(w){ const sc = SCENES[w]; $('bg').src = ART+sc.bg+'.webp'; $('board').src = ART+sc.board+'.webp'; $('counter').style.background = sc.counter; $('counter').style.setProperty('--lip', sc.lip); }
 
 async function startShift(i){
   ac();
   const w = Math.floor(i/5);
+  setScene(w); $('receiptScr').classList.add('hidden'); $('home').classList.add('hidden');
   if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); await showIntro(WEEK_INTRO[w]); }
-  cur = {i, list: SHIFTS[i].map(o=>decorate(o)), idx:0, results:[]};
-  $('home').classList.add('hidden'); $('receiptScr').classList.add('hidden');
+  const sh = SHIFTS[i];
+  cur = {i, w, list: sh.list.map(decorate).concat(sh.boss.map(decorate)), nBase: sh.list.length, idx:0, results:[], ev: D.events[i]||null};
+  $('home').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('bossCard').classList.add('hidden');
   $('play').classList.remove('hidden'); $('hud').classList.remove('hidden');
-  $('hudShift').innerHTML = `Week <b>${w+1}</b> · Shift <b>${i%5+1}</b>`;
-  // preload this shift's voices and customers
+  $('hudShift').innerHTML = `${SCENES[w].name} · Shift <b>${i%5+1}</b>`;
   cur.list.forEach(o=>{ if(!S.muted){ const a=new Audio(); a.preload='auto'; a.src=VOX+o.id+'.mp3'; } ['neutral','happy','unsure'].forEach(m=>{ new Image().src=`${ART}cust_${o.cust}_${m}.webp`; }); });
   dots(); nextOrder();
 }
-function decorate(o){ const c = D.cast[o.cust]; return Object.assign({who_a:c.a, who_b:c.b==='me'?name(o.cust):c.b}, o); }
-function dots(){ $('dots').innerHTML = cur.list.map((_,k)=>`<i class="${k<cur.idx?'on':k===cur.idx?'cur':''}"></i>`).join(''); $('hudTips').textContent = '$'+(S.tips-S.spent); }
+function decorate(o){ const c = D.cast[o.cust] || {a:'', b:''}; return Object.assign({who_a:c.a, who_b:c.b==='me'?name(o.cust):c.b}, o); }
+function dots(){
+  $('dots').innerHTML = cur.list.slice(0,cur.nBase).map((_,k)=>`<i class="${k<cur.idx?'on':k===cur.idx?'cur':''}"></i>`).join('') + (cur.list.length>cur.nBase ? ' <span style="font-size:18px;margin-left:6px">🔍</span>' : '');
+  $('hudTips').textContent = '$'+(S.tips-S.spent);
+  const nxt = cur.list.slice(cur.idx+1, cur.idx+4).filter(o=>o.cust!=='inspector');
+  $('queue').innerHTML = nxt.map(o=>`<img src="${ART}cust_${o.cust}_neutral.webp" title="${name(o.cust)}" alt="">`).join('') || '<span>last one!</span>';
+  $('queuePill').classList.toggle('hidden', cur.idx >= cur.nBase);
+}
 
 async function nextOrder(){
-  clearBoard(); $('fb').classList.add('off'); $('coach').classList.add('off'); $('bubble').classList.add('off'); $('ticket').classList.add('off');
+  clearBoard(); ['fb','coach','bubble','ticket'].forEach(id=>$(id).classList.add('off')); $('speed').classList.add('off');
+  $('bg').classList.remove('dark'); $('neon').classList.remove('dark');
   if(cur.idx>=cur.list.length) return endShift();
   dots();
   const o = cur.list[cur.idx];
-  const cw = $('custWrap'); setCustomer(o.cust,'neutral');
-  cw.classList.add('out'); cw.classList.remove('right'); void cw.offsetWidth;
-  cw.classList.remove('out');
-  if(S.owned.bell) ding();
-  await wait(650);
+  cur.outage = false; cur.ruler = o.ruler;
+  if(cur.ev && cur.idx===cur.ev.at && cur.idx<cur.nBase){
+    if(cur.ev.kind==='vip') o.vip = true;
+    if(cur.ev.kind==='outage' && o.ruler!=='none'){ cur.outage = true; $('bg').classList.add('dark'); $('neon').classList.add('dark'); setTimeout(()=>toast('⚡ Power flicker! The marks went dark for this order.', 3400), 900); }
+  }
+  // Friday inspection starts
+  if(o.cust==='inspector' && !cur.bossIntro){
+    cur.bossIntro = true; const cw=$('custWrap'); setCustomer('inspector','neutral'); cw.classList.add('out'); cw.classList.remove('right'); void cw.offsetWidth; cw.classList.remove('out');
+    await wait(650); speak(`inspector_intro${cur.w+1}`, D.insp_intro[cur.w], name('inspector'));
+    const bc = $('bossCard'); bc.innerHTML = `<div style="font-size:30px;font-weight:800;margin-bottom:6px">🔍 Friday Inspection</div>No food. No marks. Just a number line, like a test. Three questions: get 7 of 9 stars to earn this week's badge.<div style="text-align:right;margin-top:14px"><button class="btn" id="bossGo">Ready</button></div>`;
+    bc.classList.remove('hidden'); await new Promise(r=>$('bossGo').onclick=()=>{ ac(); r(); }); bc.classList.add('hidden');
+  } else if(o.cust!=='inspector'){
+    const cw = $('custWrap'); setCustomer(o.cust,'neutral');
+    cw.classList.add('out'); cw.classList.remove('right'); void cw.offsetWidth; cw.classList.remove('out');
+    if(S.owned.bell) ding();
+    await wait(650);
+  } else setCustomer('inspector','neutral');
   speak(o.id, o.line, name(o.cust));
   $('replay').onclick = () => speak(o.id, o.line, name(o.cust));
-  $('ticket').innerHTML = ticketHTML(o); $('ticket').classList.remove('off');
+  $('ticket').innerHTML = ticketHTML(o); $('ticket').classList.toggle('vip', !!o.vip); $('ticket').classList.remove('off');
   MODES[o.type](o);
-  if(!S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
+  if(o.vip) setTimeout(()=>toast('★ A VIP food critic! Double tips on this order.'), 900);
+  // rush hour: speed bonus only, never a penalty
+  if(!o.bare){ const T = ({split:20+o.n*3, two:30, lineup:35, same:25, fix:25})[o.type] || 20; cur.t0 = performance.now(); cur.T = T*1000;
+    const sp=$('speed'), bar=sp.firstChild; sp.classList.remove('off'); bar.style.transition='none'; bar.style.width='100%'; void bar.offsetWidth; bar.style.transition=`width ${T}s linear`; bar.style.width='0%'; }
+  if(!o.bare && !S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
 }
 function finish(o, stars, msg){
-  const tip = stars;
-  cur.results.push({o, stars, tip});
+  const fast = !o.bare && stars>=2 && performance.now()-cur.t0 < cur.T;
+  let tip = o.bare ? 0 : stars + (fast?1:0); if(o.vip) tip *= 2;
+  const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
+  cur.results.push({o, stars, tip, fast});
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
-  $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip</div>` : '');
+  $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip${fast?' · ⚡ speedy!':''}${o.vip?' · VIP x2':''}</div>` : '');
   $('ticket').classList.add('off'); $('fb').classList.remove('off');
   setTimeout(()=>{ stars>=2 ? (react('happy',cur.idx), coinSnd()) : (react('unsure',cur.idx), sad()); }, 150);
   $('controls').innerHTML='';
+  if(cur.ev && cur.ev.kind==='dog' && cur.idx===cur.ev.at) setTimeout(dogRun, 900);
 }
+function dogRun(){ const d=$('dog'); d.src=ART+'dog.webp'; d.style.transition='none'; d.style.left='-420px'; void d.offsetWidth; d.style.transition='left 2.8s linear'; d.style.left='1700px'; woof(); toast('🐕 A dog snuck in and stole the crumbs!', 3000); }
 $('fbNext').onclick = async () => {
-  ac(); $('fb').classList.add('off'); $('bubble').classList.add('off'); $('ticket').classList.add('off');
-  if(voiceEl){ voiceEl.pause(); }
-  const cw=$('custWrap'); cw.classList.add('out','right'); await wait(450);
+  ac(); ['fb','bubble','ticket'].forEach(id=>$(id).classList.add('off'));
+  if(voiceEl) voiceEl.pause();
+  const cw=$('custWrap'); const o=cur.list[cur.idx], nx=cur.list[cur.idx+1];
+  if(!(o.cust==='inspector' && nx && nx.cust==='inspector')){ cw.classList.add('out','right'); await wait(450); }
   cur.idx++; nextOrder();
 };
 function flyCoins(n){
   for(let k=0;k<n;k++) setTimeout(()=>{ const c=document.createElement('div'); c.id='coin'; c.textContent='$'; c.style.left='880px'; c.style.top='520px'; $('stage').appendChild(c);
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.left='1490px'; c.style.top='500px'; }));
-    setTimeout(()=>{ c.remove(); coinSnd(); $('hudTips').textContent='$'+(S.tips-S.spent); jar(); }, 820); }, k*180);
+    setTimeout(()=>{ c.remove(); coinSnd(); $('hudTips').textContent='$'+(S.tips-S.spent); jar(); }, 820); }, k*150);
 }
-function jar(){ const t = S.tips - S.spent, f = Math.min(1, t/60); const el=$('jarFill'); el.style.height = (f*80)+'px'; el.style.top = (600-f*80-6)+'px'; el.style.opacity = f>0?.85:0; }
+function jar(){ const t = S.tips - S.spent, f = Math.min(1, t/80); const el=$('jarFill'); el.style.height = (f*80)+'px'; el.style.top = (600-f*80-6)+'px'; el.style.opacity = f>0?.85:0; }
 
+const TN = {split:'Split it',cut:'Cut it',fair:'Who got more',same:'Same amount',left:'Leftovers',name:'Name the cut',fix:'Check the rookie',two:'Two pieces',lineup:'Line them up'};
+function lab(o){
+  return o.type==='split'? `split ${o.n}` : o.type==='cut'? (o.wholes===2? `cut ${Math.floor(o.num/o.den)} ${o.num%o.den}/${o.den}`:`cut ${o.num}/${o.den}`) : o.type==='fair'? `${o.a.join('/')} vs ${o.b.join('/')}`
+    : o.type==='same'? `${o.num}/${o.den} in ${DENW[o.pieces]}` : o.type==='left'? `left after ${o.num}/${o.den}` : o.type==='name'? `name ${o.num}/${o.den}` : o.type==='fix'? `check ${o.num}/${o.den}`
+    : o.type==='two'? `${o.a.join('/')} + ${o.b.join('/')}` : `order ${o.fracs.map(f=>f.join('/')).join(', ')}`;
+}
 function endShift(){
-  const i = cur.i, tot = cur.results.reduce((a,r)=>a+r.stars,0), tips = cur.results.reduce((a,r)=>a+r.tip,0);
-  S.done[i] = 1; S.stars[i] = Math.max(S.stars[i]||0, tot); save();
+  const i = cur.i, base = cur.results.filter(r=>!r.o.bare), boss = cur.results.filter(r=>r.o.bare);
+  const tot = base.reduce((a,r)=>a+r.stars,0), tips = base.reduce((a,r)=>a+r.tip,0), max = base.length*3;
+  S.done[i] = 1; S.stars[i] = Math.max(S.stars[i]||0, tot);
+  const bossStars = boss.reduce((a,r)=>a+r.stars,0), passed = boss.length && bossStars>=7;
+  if(passed) S.badges[cur.w] = 1;
+  save();
   $('custWrap').classList.add('out');
-  const rank = tot>=21 ? 'HEAD CHEF' : tot>=15 ? 'SUB PRO' : tot>=9 ? 'LINE COOK' : 'TRAINEE';
-  const byType = {}; cur.results.forEach(r=>{ const t=r.o.type; byType[t]=byType[t]||[0,0]; byType[t][0]++; if(r.stars>=2) byType[t][1]++; });
-  const TN = {split:'Split it',cut:'Cut it',fair:'Who got more',same:'Same amount',left:'Leftovers'};
-  const lab = o => o.type==='split'? `split ${o.n}` : o.type==='cut'? (o.wholes===2? `cut ${Math.floor(o.num/o.den)} ${o.num%o.den}/${o.den}`:`cut ${o.num}/${o.den}`) : o.type==='fair'? `${o.a.join('/')} vs ${o.b.join('/')}` : o.type==='same'? `${o.num}/${o.den} in ${DENW[o.pieces]}` : `left after ${o.num}/${o.den}`;
-  $('receipt').innerHTML = `<h2>SUB SHOP</h2><div class="c">Week ${Math.floor(i/5)+1} · Shift ${i%5+1}</div><div class="c">--------------------------------</div>` +
-    cur.results.map(r=>`<div class="ln"><span>${name(r.o.cust)}<br><small>${lab(r.o)}</small></span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}</span></div>`).join('') +
-    `<div class="ln tot"><span>STARS</span><span>${tot}/24</span></div><div class="ln tot"><span>TIPS</span><span>$${tips}</span></div>` +
+  const pct = tot/max, rank = pct>=.88 ? 'HEAD CHEF' : pct>=.63 ? 'SUB PRO' : pct>=.38 ? 'LINE COOK' : 'TRAINEE';
+  const byType = {}; cur.results.forEach(r=>{ const t=r.o.bare?'Inspection':TN[r.o.type]; byType[t]=byType[t]||[0,0]; byType[t][0]++; if(r.stars>=2) byType[t][1]++; });
+  $('receipt').innerHTML = `<h2>${SCENES[cur.w].name.toUpperCase()}</h2><div class="c">Week ${cur.w+1} · Shift ${i%5+1}</div><div class="c">--------------------------------</div>` +
+    base.map(r=>`<div class="ln"><span>${name(r.o.cust)}${r.o.vip?' ★VIP':''}<br><small>${lab(r.o)}</small></span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}${r.fast?' ⚡':''}</span></div>`).join('') +
+    `<div class="ln tot"><span>STARS</span><span>${tot}/${max}</span></div><div class="ln tot"><span>TIPS</span><span>$${tips}</span></div>` +
+    (boss.length ? `<div class="c" style="margin-top:10px">--- FRIDAY INSPECTION ---</div>` + boss.map(r=>`<div class="ln"><span>${lab(r.o)}</span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}</span></div>`).join('') + `<div class="ln tot"><span>INSPECTION</span><span>${bossStars}/9 ${passed?'✅ BADGE':'❌'}</span></div>` : '') +
     `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
-    `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${TN[t]}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
+    `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${t}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
     `<div class="c" style="margin-top:8px">THANK YOU! COME AGAIN</div>` +
     `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i<19?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
   $('receiptScr').classList.remove('hidden'); ding();
@@ -561,12 +742,12 @@ function endShift(){
 function goHome(){
   if(voiceEl) voiceEl.pause();
   $('play').classList.add('hidden'); $('hud').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('home').classList.remove('hidden');
-  $('custWrap').classList.add('out'); renderHome();
+  $('custWrap').classList.add('out'); setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/5)))); renderHome();
 }
 function renderHome(){
   const next = SHIFTS.findIndex((_,k)=>!S.done[k]);
-  $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t}</b><small>${w.s}</small></div>${[0,1,2,3,4].map(s=>{ const k=wi*5+s, open = k===0 || S.done[k-1] || S.done[k];
-      return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}<small>${S.done[k]? '★ '+S.stars[k]+'/24' : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
+  $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t} ${S.badges[wi]?'🏅':''}</b><small>${w.s}</small></div>${[0,1,2,3,4].map(s=>{ const k=wi*5+s, open = k===0 || S.done[k-1] || S.done[k];
+      return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===4?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
   $('weeks').querySelectorAll('.tile').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
   $('homeTips').textContent = `Tip jar: $${S.tips-S.spent}`; scene(); jar();
 }
@@ -574,8 +755,8 @@ function scene(){
   $('plants').classList.toggle('hidden', !S.owned.plants);
   $('bell').classList.toggle('hidden', !S.owned.bell);
   $('neon').classList.toggle('hidden', !S.owned.neon);
-  $('muteBtn').textContent = $('muteHome').textContent = S.muted ? '🔇' : '🔈';
-  if(!S.muted) $('muteHome').textContent = '🔈 Sound'; else $('muteHome').textContent = '🔇 Muted';
+  $('muteBtn').textContent = S.muted ? '🔇' : '🔈';
+  $('muteHome').textContent = S.muted ? '🔇 Muted' : '🔈 Sound';
 }
 function renderShop(){
   const have = S.tips - S.spent; $('shopMoney').textContent = '$'+have;
@@ -587,7 +768,7 @@ $('shopBtn').onclick = ()=>{ renderShop(); $('shop').classList.remove('hidden');
 $('shopClose').onclick = ()=> $('shop').classList.add('hidden');
 $('resetBtn').onclick = ()=> $('confirm').classList.remove('hidden');
 $('cNo').onclick = ()=> $('confirm').classList.add('hidden');
-$('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}}; save(); $('confirm').classList.add('hidden'); renderHome(); };
+$('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}, badges:{}}; save(); $('confirm').classList.add('hidden'); renderHome(); };
 const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted && voiceEl) voiceEl.pause(); };
 $('muteBtn').onclick = toggleMute; $('muteHome').onclick = toggleMute;
 $('homeBtn').onclick = goHome;
@@ -595,12 +776,12 @@ $('bell').onclick = ding;
 
 // ------------------------------------------------------------------ boot
 load(); fit();
-$('bg').src = ART+'deli_bg.webp'; $('board').src = ART+'board.webp'; $('tipjar').src = ART+'tipjar.webp';
-$('plants').src = ART+'plants.webp'; $('bell').src = ART+'bell.webp'; $('neon').src = ART+'neon_open.webp';
+$('tipjar').src = ART+'tipjar.webp'; $('plants').src = ART+'plants.webp'; $('bell').src = ART+'bell.webp'; $('neon').src = ART+'neon_open.webp';
 $('bg').onload = () => $('loading').classList.add('hidden');
 setTimeout(()=>$('loading').classList.add('hidden'), 2500);
-renderHome();
+goHome();
 window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, get cur(){ return cur; }};
+
 </script>
 </body>
 </html>
