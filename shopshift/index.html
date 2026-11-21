@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cut the Sub: Shop Shift</title>
+<style>
+:root{--cream:#f9f4e8;--brown:#ae7c3d;--dark:#312a21;--gold:#d9b271;--red:#c0392b;--green:#2e8b57;--ink:#241d15}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#1a1510;overflow:hidden;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center;overflow:hidden;background:#2b231b}
+.abs{position:absolute}
+button{font-family:inherit;cursor:pointer;border:none}
+.btn{background:var(--gold);color:var(--dark);font-weight:800;font-size:30px;padding:14px 34px;border-radius:16px;box-shadow:0 6px 0 #9a7436,0 10px 24px rgba(0,0,0,.35);transition:transform .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #9a7436}
+.btn.red{background:#e2574c;color:#fff;box-shadow:0 6px 0 #8f2c24,0 10px 24px rgba(0,0,0,.35)}
+.btn.green{background:#3aa66a;color:#fff;box-shadow:0 6px 0 #22704a,0 10px 24px rgba(0,0,0,.35)}
+.btn.ghost{background:rgba(249,244,232,.92)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.hidden{display:none!important}
+
+/* ---------- scene ---------- */
+#bg{inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.78) saturate(1.05) blur(1.5px);transform:scale(1.03)}
+#vignette{inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,0,0,0) 40%,rgba(0,0,0,.45) 100%)}
+#neon{left:1250px;top:62px;width:290px;mix-blend-mode:screen;animation:flick 6s infinite}
+@keyframes flick{0%,92%,100%{opacity:1}93%{opacity:.55}95%{opacity:1}96%{opacity:.7}}
+#custWrap{left:40px;top:120px;width:560px;height:560px;transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .4s}
+#custWrap.out{transform:translateX(-720px);opacity:0}
+#custWrap.out.right{transform:translateX(900px)}
+#custInner{position:absolute;inset:0;transform-origin:50% 100%;animation:breathe 3.6s ease-in-out infinite}
+#custInner.talk{animation:breathe 3.6s ease-in-out infinite,talk .32s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1) rotate(0)}50%{transform:scale(1.008,1.018) rotate(.5deg)}}
+@keyframes talk{0%,100%{translate:0 0}50%{translate:0 -5px}}
+#custInner img{position:absolute;left:0;right:0;bottom:0;margin:auto;max-width:100%;max-height:100%;filter:drop-shadow(0 18px 18px rgba(0,0,0,.45))}
+#counter{left:0;right:0;top:600px;bottom:0;background:linear-gradient(#6b4a2b,#4a3220 18px,#3b2818 60%,#2a1c11);box-shadow:0 -6px 18px rgba(0,0,0,.45)}
+#counter:before{content:"";position:absolute;left:0;right:0;top:0;height:16px;background:linear-gradient(#a57a4d,#6b4a2b)}
+#board{left:230px;top:612px;width:1340px;height:250px;object-fit:fill;filter:drop-shadow(0 10px 12px rgba(0,0,0,.5))}
+#tipjar{left:1452px;top:452px;height:150px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
+#jarFill{left:1462px;top:540px;width:70px;height:0;background:linear-gradient(#e9c46a,#b08429);border-radius:0 0 18px 18px;opacity:.0}
+#plants{left:1250px;top:470px;height:140px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
+#bell{left:1135px;top:530px;height:74px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.4));cursor:pointer}
+
+/* ---------- HUD ---------- */
+#hud{left:20px;right:20px;top:16px;height:60px;display:flex;gap:14px;align-items:center;pointer-events:none}
+.pill{background:rgba(36,29,21,.82);color:var(--cream);border-radius:30px;padding:8px 22px;font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px;backdrop-filter:blur(3px)}
+.pill b{color:var(--gold)}
+#dots{display:flex;gap:7px}
+#dots i{width:16px;height:16px;border-radius:50%;background:rgba(249,244,232,.25);display:block}
+#dots i.on{background:var(--gold)}
+#dots i.cur{background:var(--cream);box-shadow:0 0 0 3px var(--gold)}
+.icon-btn{pointer-events:auto;background:rgba(36,29,21,.82);color:var(--cream);width:56px;height:56px;border-radius:50%;font-size:26px;display:flex;align-items:center;justify-content:center}
+
+/* ---------- speech + ticket ---------- */
+#bubble{left:590px;top:110px;width:640px;min-height:150px;background:#fff;border-radius:26px;padding:22px 28px 22px;font-size:29px;line-height:1.3;box-shadow:0 12px 30px rgba(0,0,0,.35);transform-origin:0 70%;transition:transform .25s,opacity .25s}
+#bubble:before{content:"";position:absolute;left:-26px;top:70px;border:16px solid transparent;border-right:28px solid #fff;border-left:0}
+#bubble.off{transform:scale(.6);opacity:0}
+#bubble .who{font-size:20px;font-weight:800;color:var(--brown);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+#replay{position:absolute;right:12px;bottom:10px;width:44px;height:44px;border-radius:50%;background:var(--cream);font-size:22px}
+#ticket{left:1250px;top:130px;width:300px;background:#fffdf6;padding:18px 18px 22px;font-family:"Courier New",monospace;font-size:22px;box-shadow:0 10px 24px rgba(0,0,0,.4);transform:rotate(2deg);transition:transform .3s,opacity .3s;clip-path:polygon(0 0,100% 0,100% 94%,95% 100%,90% 94%,85% 100%,80% 94%,75% 100%,70% 94%,65% 100%,60% 94%,55% 100%,50% 94%,45% 100%,40% 94%,35% 100%,30% 94%,25% 100%,20% 94%,15% 100%,10% 94%,5% 100%,0 94%)}
+#ticket.off{opacity:0;transform:rotate(8deg) translateY(-30px)}
+#ticket .tt{font-weight:700;border-bottom:2px dashed #aaa;padding-bottom:6px;margin-bottom:8px;font-size:18px;letter-spacing:.08em}
+#ticket .big{font-family:"Trebuchet MS",sans-serif;font-weight:800;font-size:34px;text-align:center;margin-top:4px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-weight:800;margin:0 4px}
+.frac .n{border-bottom:3px solid currentColor;padding:0 4px 2px}
+.frac .d{padding:2px 4px 0}
+
+/* ---------- board play ---------- */
+#play{inset:0}
+#subLayer{left:0;top:0;width:1600px;height:900px;pointer-events:none}
+.piece{position:absolute;overflow:hidden;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s,filter .3s}
+.piece img{position:absolute;top:0;height:100%}
+.piece.sel{transform:translateY(-14px);filter:drop-shadow(0 0 10px #ffd34d) brightness(1.1)}
+.piece.faded{opacity:.22;filter:grayscale(.8)}
+.piece.tap{pointer-events:auto;cursor:pointer}
+#fx{left:0;top:0;width:1600px;height:900px;pointer-events:none;overflow:visible}
+#hit{position:absolute;cursor:none;touch-action:none}
+#knife{position:absolute;pointer-events:none;width:0;height:0}
+#controls{left:0;right:0;top:836px;display:flex;justify-content:center;gap:24px}
+#controls .btn{font-size:25px;padding:9px 26px}
+.nameTag{position:absolute;font-size:24px;font-weight:800;color:var(--cream);text-shadow:0 2px 4px rgba(0,0,0,.7);white-space:nowrap}
+
+/* ---------- feedback ---------- */
+#fb{left:1236px;top:120px;width:350px;background:rgba(255,253,246,.97);border-radius:22px;padding:18px 26px;box-shadow:0 14px 34px rgba(0,0,0,.45);font-size:22px;line-height:1.3;transition:transform .3s,opacity .3s}
+#fb.off{opacity:0;transform:translateY(20px);pointer-events:none}
+#fb .stars{font-size:40px;text-align:center;letter-spacing:6px;color:#ccc}
+#fb .stars span.on{color:#f2b705;text-shadow:0 2px 0 #b07e00}
+#fb .row{display:flex;flex-direction:column;gap:6px}
+#fb .msg{flex:1}
+#coach{left:500px;top:440px;width:760px;background:#2f6f4f;color:#fff;border-radius:20px;padding:16px 24px;font-size:24px;box-shadow:0 10px 26px rgba(0,0,0,.4);transition:opacity .3s}
+#coach.off{opacity:0;pointer-events:none}
+#coach b{color:#ffe08a}
+
+/* ---------- overlays ---------- */
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.dim{background:rgba(20,15,10,.62);backdrop-filter:blur(3px)}
+.card{background:var(--cream);border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,.5);padding:34px 44px}
+#home .card{width:1280px;padding:26px 40px 30px}
+#logo{font-size:64px;font-weight:900;color:var(--dark);letter-spacing:-.5px;margin:0}
+#logo span{color:var(--red)}
+#home .sub{font-size:24px;color:#6a5a44;margin:2px 0 14px}
+.weeks{display:flex;flex-direction:column;gap:12px}
+.week{display:flex;align-items:center;gap:16px;background:#fff;border-radius:18px;padding:10px 16px}
+.week .wl{width:300px}
+.week .wl b{font-size:26px;display:block}
+.week .wl small{font-size:17px;color:#7a6a54}
+.tile{width:150px;height:84px;border-radius:14px;background:var(--gold);font-weight:800;font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--dark);box-shadow:0 5px 0 #9a7436}
+.tile small{font-size:18px;color:#5c4423}
+.tile.done{background:#f3e2bd}
+.tile.lock{background:#ddd5c4;color:#9b8f7c;box-shadow:0 5px 0 #b8ad98;pointer-events:none}
+.tile.next{outline:4px solid var(--red);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{outline-color:rgba(192,57,43,.25)}}
+.homeBar{display:flex;gap:16px;align-items:center;margin-top:18px}
+.homeBar .spacer{flex:1}
+.money{font-size:28px;font-weight:800}
+#receipt{width:560px;background:#fffdf6;font-family:"Courier New",monospace;font-size:21px;padding:26px 30px 40px;box-shadow:0 20px 50px rgba(0,0,0,.5);max-height:860px;overflow:auto;clip-path:polygon(0 0,100% 0,100% 97%,96% 100%,92% 97%,88% 100%,84% 97%,80% 100%,76% 97%,72% 100%,68% 97%,64% 100%,60% 97%,56% 100%,52% 97%,48% 100%,44% 97%,40% 100%,36% 97%,32% 100%,28% 97%,24% 100%,20% 97%,16% 100%,12% 97%,8% 100%,4% 97%,0 100%)}
+#receipt h2{text-align:center;margin:0;font-size:30px}
+#receipt .c{text-align:center}
+#receipt .ln{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dotted #bbb;padding:5px 0}
+#receipt .tot{font-weight:700;font-size:24px}
+#receipt .rbtns{display:flex;gap:12px;justify-content:center;margin-top:18px;font-family:"Trebuchet MS",sans-serif}
+#receipt .rbtns .btn{font-size:22px;padding:10px 20px}
+#shop .card,#confirm .card,#intro .card{width:900px}
+.items{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:18px 0}
+.item{background:#fff;border-radius:18px;padding:12px;text-align:center}
+.item img{height:110px;max-width:100%;object-fit:contain}
+.item b{display:block;font-size:22px;margin:6px 0}
+.item .btn{font-size:20px;padding:8px 16px}
+h2.t{margin:0 0 6px;font-size:40px}
+p.l{font-size:25px;line-height:1.4;margin:10px 0}
+#coin{position:absolute;width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff2b0,#e0a82e 55%,#9a6c12);box-shadow:0 2px 6px rgba(0,0,0,.5);pointer-events:none;transition:left .8s cubic-bezier(.3,.1,.3,1),top .8s cubic-bezier(.5,-0.6,.6,1),opacity .2s;font-weight:900;color:#7a5200;display:flex;align-items:center;justify-content:center;font-size:24px}
+#loading{inset:0;background:#2b231b;color:var(--cream);font-size:34px;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <img id="bg" class="abs" alt="">
+  <div id="vignette" class="abs"></div>
+  <img id="neon" class="abs hidden" alt="">
+  <div id="custWrap" class="abs out"><div id="custInner"><img id="custImg" alt=""></div></div>
+  <div id="counter" class="abs"></div>
+  <img id="board" class="abs" alt="">
+  <img id="plants" class="abs hidden" alt="">
+  <img id="bell" class="abs hidden" alt="">
+  <div id="jarFill" class="abs"></div>
+  <img id="tipjar" class="abs" alt="">
+
+  <div id="play" class="abs hidden">
+    <div id="subLayer" class="abs"></div>
+    <svg id="fx" class="abs" viewBox="0 0 1600 900"></svg>
+    <div id="hit"></div>
+    <div id="bubble" class="abs off"><div class="who" id="who"></div><div id="say"></div><button id="replay" title="Hear it again">🔊</button></div>
+    <div id="ticket" class="abs off"></div>
+    <div id="controls" class="abs"></div>
+    <div id="coach" class="abs off"></div>
+    <div id="fb" class="abs off"><div class="row"><div class="stars" id="fbStars"></div><div class="msg" id="fbMsg"></div></div><div style="text-align:center;margin-top:12px"><button class="btn green" id="fbNext" style="font-size:24px;padding:10px 22px">Next customer ➜</button></div></div>
+  </div>
+
+  <div id="hud" class="abs hidden">
+    <div class="pill" id="hudShift"></div>
+    <div class="pill"><div id="dots"></div></div>
+    <div style="flex:1"></div>
+    <div class="pill">Tips <b id="hudTips">$0</b></div>
+    <button class="icon-btn" id="muteBtn" title="Sound on/off">🔈</button>
+    <button class="icon-btn" id="homeBtn" title="Back to the map">⌂</button>
+  </div>
+
+  <div id="home" class="screen dim">
+    <div class="card">
+      <h1 id="logo">Cut the Sub: <span>Shop Shift</span></h1>
+      <div class="sub">Four weeks at the deli. Every customer wants their sub cut just right.</div>
+      <div class="weeks" id="weeks"></div>
+      <div class="homeBar">
+        <div class="money" id="homeTips"></div>
+        <button class="btn ghost" id="shopBtn">🛒 Shop upgrades</button>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="muteHome">🔈 Sound</button>
+        <button class="btn ghost" id="resetBtn" style="font-size:22px">Reset progress</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="receiptScr" class="screen dim hidden"><div id="receipt"></div></div>
+
+  <div id="shop" class="screen dim hidden"><div class="card">
+    <h2 class="t">Shop upgrades</h2><p class="l" style="margin:0">Spend your tips to fix up the deli. You have <b id="shopMoney"></b>.</p>
+    <div class="items" id="items"></div>
+    <div style="text-align:right"><button class="btn" id="shopClose">Done</button></div>
+  </div></div>
+
+  <div id="confirm" class="screen dim hidden"><div class="card">
+    <h2 class="t">Start over?</h2><p class="l">This erases all stars, tips and upgrades on this device.</p>
+    <div style="display:flex;gap:16px;justify-content:flex-end"><button class="btn ghost" id="cNo">Keep my progress</button><button class="btn red" id="cYes">Erase it</button></div>
+  </div></div>
+
+  <div id="intro" class="screen dim hidden"><div class="card"><div id="introBody"></div><div style="text-align:right;margin-top:16px"><button class="btn green" id="introGo">Open the shop ➜</button></div></div></div>
+
+  <div id="loading" class="abs">Opening the deli…</div>
+</div></div>
+
+<script>
+const D = {"orders":[{"id":"rose_o1","cust":"rose","week":1,"shift":1,"type":"split","ruler":"full","n":2,"line":"Hello, sweetheart! I need this sub cut into two equal pieces for my grandkids."},{"id":"marco_o1","cust":"marco","week":1,"shift":1,"type":"cut","ruler":"full","num":1,"den":2,"wholes":1,"line":"Ciao, my friend! Just one half of the sub for me, please."},{"id":"twins_o1","cust":"twins","week":1,"shift":1,"type":"split","ruler":"full","n":4,"line":"Hi! We're back! I need this sub cut into four equal pieces for our birthday party."},{"id":"rivera_o1","cust":"rivera","week":1,"shift":1,"type":"cut","ruler":"full","num":1,"den":4,"wholes":1,"line":"Hey there, chef! Just one fourth of the sub for me, please."},{"id":"kim_o1","cust":"kim","week":1,"shift":1,"type":"split","ruler":"full","n":2,"line":"Good morning! I need this sub cut into two equal pieces for my class."},{"id":"lily_max_o1","cust":"lily_max","week":1,"shift":1,"type":"cut","ruler":"full","num":3,"den":4,"wholes":1,"line":"Hi! Hi! Just three fourths of the sub for me, please."},{"id":"carmen_o1","cust":"carmen","week":1,"shift":1,"type":"split","ruler":"full","n":4,"line":"Hola, mijo! I need this sub cut into four equal pieces for my family."},{"id":"jasmine_o1","cust":"jasmine","week":1,"shift":1,"type":"cut","ruler":"full","num":1,"den":2,"wholes":1,"line":"Hey! Just one half of the sub for me, please."},{"id":"okafor_o1","cust":"okafor","week":1,"shift":2,"type":"cut","ruler":"full","num":1,"den":2,"wholes":1,"line":"Good afternoon! Just one half of the sub for me, please."},{"id":"garcia_o1","cust":"garcia","week":1,"shift":2,"type":"cut","ruler":"full","num":1,"den":4,"wholes":1,"line":"Hi! I've got the office order. Just one fourth of the sub for me, please."},{"id":"fire_o1","cust":"fire","week":1,"shift":2,"type":"cut","ruler":"full","num":2,"den":4,"wholes":1,"line":"Hey there! Station lunch run. Just two fourths of the sub for me, please."},{"id":"singh_o1","cust":"singh","week":1,"shift":2,"type":"cut","ruler":"full","num":1,"den":4,"wholes":1,"line":"Hi! I'm on a quick break. Just one fourth of the sub for me, please."},{"id":"hank_o1","cust":"hank","week":1,"shift":2,"type":"cut","ruler":"full","num":6,"den":8,"wholes":1,"line":"Howdy! Just six eighths of the sub for me, please."},{"id":"lou_o1","cust":"lou","week":1,"shift":2,"type":"split","ruler":"full","n":8,"line":"Morning, kid! I need this sub cut into eight equal pieces for my fishing buddies."},{"id":"brooks_o1","cust":"brooks","week":1,"shift":2,"type":"split","ruler":"full","n":4,"line":"Hi there! I need this sub cut into four equal pieces for my patrol team."},{"id":"tasha_o1","cust":"tasha","week":1,"shift":2,"type":"split","ruler":"full","n":2,"line":"Hey! Practice just ended. I need this sub cut into two equal pieces for my soccer team."},{"id":"band_o1","cust":"band","week":1,"shift":3,"type":"fair","ruler":"full","a":[1,2],"b":[1,8],"answer":"a","line":"Yo! Jax got one half of a sub, and Vee got one eighth of the same size sub. Is that fair? Who got more?"},{"id":"sam_o1","cust":"sam","week":1,"shift":3,"type":"fair","ruler":"full","a":[1,2],"b":[3,8],"answer":"a","line":"Hi! Mail's done for the day. My coworker got one half of a sub, and I got three eighths of the same size sub. Who got more?"},{"id":"theo_o1","cust":"theo","week":1,"shift":3,"type":"fair","ruler":"full","a":[1,2],"b":[6,8],"answer":"b","line":"Hi! I'm on a troop mission! Owen got one half of a sub, and I got six eighths of the same size sub. Who got more?"},{"id":"dale_o1","cust":"dale","week":1,"shift":3,"type":"cut","ruler":"full","num":2,"den":4,"wholes":1,"line":"Howdy, partner. Just two fourths of the sub for me, please."},{"id":"rose_o2","cust":"rose","week":1,"shift":3,"type":"cut","ruler":"full","num":1,"den":2,"wholes":1,"line":"Oh good, you're working today! Could you cut me one half of this sub?"},{"id":"marco_o2","cust":"marco","week":1,"shift":3,"type":"cut","ruler":"full","num":1,"den":4,"wholes":1,"line":"Ah, my favorite sub cutter! Could you cut me one fourth of this sub?"},{"id":"twins_o2","cust":"twins","week":1,"shift":3,"type":"split","ruler":"full","n":2,"line":"Hey! It's us again! I need this sub cut into two equal pieces for our birthday party."},{"id":"rivera_o2","cust":"rivera","week":1,"shift":3,"type":"split","ruler":"full","n":8,"line":"Big game today! I need this sub cut into eight equal pieces for my team."},{"id":"kim_o2","cust":"kim","week":1,"shift":4,"type":"same","ruler":"full","num":3,"den":4,"pieces":8,"answer":6,"line":"Hi there! I've got a math problem for you. I wanted three fourths of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"lily_max_o2","cust":"lily_max","week":1,"shift":4,"type":"same","ruler":"full","num":1,"den":4,"pieces":8,"answer":2,"line":"We're hungry! I wanted one fourth of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"carmen_o2","cust":"carmen","week":1,"shift":4,"type":"same","ruler":"full","num":1,"den":2,"pieces":4,"answer":2,"line":"Buenas tardes! I wanted one half of a sub, but it's already cut into fourths. Can you give me the right number of pieces?"},{"id":"jasmine_o2","cust":"jasmine","week":1,"shift":4,"type":"fair","ruler":"full","a":[7,8],"b":[5,8],"answer":"a","line":"Hi! Quick lunch break. My roommate got seven eighths of a sub, and I got five eighths of the same size sub. Who got more?"},{"id":"okafor_o2","cust":"okafor","week":1,"shift":4,"type":"fair","ruler":"full","a":[3,8],"b":[7,8],"answer":"b","line":"Hello, my friend! My brother got three eighths of a sub, and I got seven eighths of the same size sub. Who got more?"},{"id":"garcia_o2","cust":"garcia","week":1,"shift":4,"type":"cut","ruler":"full","num":2,"den":4,"wholes":1,"line":"Hello! Busy day at work. Could you cut me two fourths of this sub?"},{"id":"fire_o2","cust":"fire","week":1,"shift":4,"type":"cut","ruler":"full","num":3,"den":8,"wholes":1,"line":"Hi! The crew's starving. Could you cut me three eighths of this sub?"},{"id":"singh_o2","cust":"singh","week":1,"shift":4,"type":"split","ruler":"full","n":2,"line":"Hello! Lunch for the hospital. I need this sub cut into two equal pieces for the nurses on my floor."},{"id":"hank_o2","cust":"hank","week":1,"shift":5,"type":"left","ruler":"full","num":5,"den":8,"choices":[[3,8],[4,8],[5,8]],"answer":[3,8],"line":"Hey, bud! I already ate five eighths of my sub. How much is left for later?"},{"id":"lou_o2","cust":"lou","week":1,"shift":5,"type":"left","ruler":"full","num":1,"den":2,"choices":[[1,2]],"answer":[1,2],"line":"Well hello there! I already ate one half of my sub. How much is left for later?"},{"id":"brooks_o2","cust":"brooks","week":1,"shift":5,"type":"left","ruler":"full","num":1,"den":8,"choices":[[1,8],[7,8],[6,8]],"answer":[7,8],"line":"Afternoon! I already ate one eighth of my sub. How much is left for later?"},{"id":"tasha_o2","cust":"tasha","week":1,"shift":5,"type":"same","ruler":"full","num":1,"den":2,"pieces":4,"answer":2,"line":"Hi! Team snack time. I wanted one half of a sub, but it's already cut into fourths. Can you give me the right number of pieces?"},{"id":"band_o2","cust":"band","week":1,"shift":5,"type":"same","ruler":"full","num":1,"den":2,"pieces":8,"answer":4,"line":"Hey! We just finished practice. I wanted one half of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"sam_o2","cust":"sam","week":1,"shift":5,"type":"fair","ruler":"full","a":[1,2],"b":[6,8],"answer":"b","line":"Hey! Lunch break. My coworker got one half of a sub, and I got six eighths of the same size sub. Who got more?"},{"id":"theo_o2","cust":"theo","week":1,"shift":5,"type":"cut","ruler":"full","num":2,"den":4,"wholes":1,"line":"Hello! Scout lunch! Could you cut me two fourths of this sub?"},{"id":"dale_o2","cust":"dale","week":1,"shift":5,"type":"split","ruler":"full","n":2,"line":"Afternoon. I need this sub cut into two equal pieces for my ranch hands."},{"id":"rose_o3","cust":"rose","week":2,"shift":1,"type":"split","ruler":"halves","n":3,"line":"Hi, dear. I need this sub cut into three equal pieces for my grandkids."},{"id":"marco_o3","cust":"marco","week":2,"shift":1,"type":"cut","ruler":"halves","num":3,"den":4,"wholes":1,"line":"Buongiorno! I'd like three fourths of the sub, please."},{"id":"twins_o3","cust":"twins","week":2,"shift":1,"type":"cut","ruler":"halves","num":1,"den":2,"wholes":1,"line":"Hi! We need your help! I'd like one half of the sub, please."},{"id":"rivera_o3","cust":"rivera","week":2,"shift":1,"type":"fair","ruler":"halves","a":[2,3],"b":[4,6],"answer":"same","line":"Hey, champ! My goalie got two thirds of a sub, and my striker got four sixths of the same size sub. Is that fair? Who got more?"},{"id":"kim_o3","cust":"kim","week":2,"shift":1,"type":"same","ruler":"halves","num":2,"den":3,"pieces":6,"answer":4,"line":"Hello again! I wanted two thirds of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"lily_max_o3","cust":"lily_max","week":2,"shift":1,"type":"left","ruler":"halves","num":5,"den":6,"choices":[[5,6],[1,6],[2,6]],"answer":[1,6],"line":"Hi! Mom sent us! I already ate five sixths of my sub. How much is left for later?"},{"id":"carmen_o3","cust":"carmen","week":2,"shift":1,"type":"fair","ruler":"halves","a":[1,3],"b":[1,4],"answer":"a","line":"Hola, hola! My son got one third of a sub, and my daughter got one fourth of the same size sub. Is that fair? Who got more?"},{"id":"jasmine_o3","cust":"jasmine","week":2,"shift":1,"type":"cut","ruler":"halves","num":1,"den":4,"wholes":1,"line":"Hey, it's me again! I'd like one fourth of the sub, please."},{"id":"okafor_o3","cust":"okafor","week":2,"shift":2,"type":"split","ruler":"halves","n":3,"line":"Afternoon! I need this sub cut into three equal pieces for my tour group."},{"id":"garcia_o3","cust":"garcia","week":2,"shift":2,"type":"cut","ruler":"halves","num":1,"den":3,"wholes":1,"line":"Hi there! I'd like one third of the sub, please."},{"id":"fire_o3","cust":"fire","week":2,"shift":2,"type":"cut","ruler":"halves","num":5,"den":6,"wholes":1,"line":"Afternoon! I'd like five sixths of the sub, please."},{"id":"singh_o3","cust":"singh","week":2,"shift":2,"type":"fair","ruler":"halves","a":[3,6],"b":[5,6],"answer":"b","line":"Hi there. My nurse got three sixths of a sub, and my intern got five sixths of the same size sub. Is that fair? Who got more?"},{"id":"hank_o3","cust":"hank","week":2,"shift":2,"type":"same","ruler":"halves","num":1,"den":3,"pieces":6,"answer":2,"line":"Crew's hungry again! I wanted one third of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"lou_o3","cust":"lou","week":2,"shift":2,"type":"left","ruler":"halves","num":3,"den":4,"choices":[[2,4],[3,4],[1,4]],"answer":[1,4],"line":"Hey, kid! I already ate three fourths of my sub. How much is left for later?"},{"id":"brooks_o3","cust":"brooks","week":2,"shift":2,"type":"fair","ruler":"halves","a":[2,3],"b":[1,4],"answer":"a","line":"Hello again! My partner got two thirds of a sub, and I got one fourth of the same size sub. Who got more?"},{"id":"tasha_o3","cust":"tasha","week":2,"shift":2,"type":"cut","ruler":"halves","num":1,"den":2,"wholes":1,"line":"Hey there! I'd like one half of the sub, please."},{"id":"band_o3","cust":"band","week":2,"shift":3,"type":"split","ruler":"halves","n":3,"line":"What's up! I need this sub cut into three equal pieces for the band."},{"id":"sam_o3","cust":"sam","week":2,"shift":3,"type":"cut","ruler":"halves","num":2,"den":4,"wholes":1,"line":"Hi again! I'd like two fourths of the sub, please."},{"id":"theo_o3","cust":"theo","week":2,"shift":3,"type":"cut","ruler":"halves","num":2,"den":6,"wholes":1,"line":"Hi! It's me, Theo! I'd like two sixths of the sub, please."},{"id":"dale_o3","cust":"dale","week":2,"shift":3,"type":"fair","ruler":"halves","a":[2,3],"b":[1,3],"answer":"a","line":"Well, howdy. My son got two thirds of a sub, and my neighbor got one third of the same size sub. Is that fair? Who got more?"},{"id":"rose_o4","cust":"rose","week":2,"shift":3,"type":"same","ruler":"halves","num":1,"den":3,"pieces":6,"answer":2,"line":"Hello, sweetheart! I wanted one third of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"marco_o4","cust":"marco","week":2,"shift":3,"type":"left","ruler":"halves","num":3,"den":6,"choices":[[4,6],[3,6]],"answer":[3,6],"line":"Ciao, my friend! I already ate three sixths of my sub. How much is left for later?"},{"id":"twins_o4","cust":"twins","week":2,"shift":3,"type":"fair","ruler":"halves","a":[1,6],"b":[5,6],"answer":"b","line":"Hi! We're back! Arjun got one sixth of a sub, and Priya got five sixths of the same size sub. Is that fair? Who got more?"},{"id":"rivera_o4","cust":"rivera","week":2,"shift":3,"type":"cut","ruler":"halves","num":4,"den":6,"wholes":1,"line":"Hey there, chef! Just four sixths of the sub for me, please."},{"id":"kim_o4","cust":"kim","week":2,"shift":4,"type":"split","ruler":"halves","n":6,"line":"Good morning! I need this sub cut into six equal pieces for my class."},{"id":"lily_max_o4","cust":"lily_max","week":2,"shift":4,"type":"cut","ruler":"halves","num":2,"den":6,"wholes":1,"line":"Hi! Hi! Just two sixths of the sub for me, please."},{"id":"carmen_o4","cust":"carmen","week":2,"shift":4,"type":"cut","ruler":"halves","num":2,"den":3,"wholes":1,"line":"Hola, mijo! Just two thirds of the sub for me, please."},{"id":"jasmine_o4","cust":"jasmine","week":2,"shift":4,"type":"fair","ruler":"halves","a":[1,3],"b":[2,3],"answer":"b","line":"Hey! My roommate got one third of a sub, and I got two thirds of the same size sub. Who got more?"},{"id":"okafor_o4","cust":"okafor","week":2,"shift":4,"type":"same","ruler":"halves","num":2,"den":3,"pieces":6,"answer":4,"line":"Good afternoon! I wanted two thirds of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"garcia_o4","cust":"garcia","week":2,"shift":4,"type":"left","ruler":"halves","num":1,"den":6,"choices":[[5,6],[4,6],[1,6]],"answer":[5,6],"line":"Hi! I've got the office order. I already ate one sixth of my sub. How much is left for later?"},{"id":"fire_o4","cust":"fire","week":2,"shift":4,"type":"fair","ruler":"halves","a":[1,2],"b":[2,3],"answer":"b","line":"Hey there! Station lunch run. My rookie got one half of a sub, and my lieutenant got two thirds of the same size sub. Is that fair? Who got more?"},{"id":"singh_o4","cust":"singh","week":2,"shift":4,"type":"cut","ruler":"halves","num":2,"den":3,"wholes":1,"line":"Hi! I'm on a quick break. Just two thirds of the sub for me, please."},{"id":"hank_o4","cust":"hank","week":2,"shift":5,"type":"split","ruler":"halves","n":3,"line":"Howdy! I need this sub cut into three equal pieces for my construction crew."},{"id":"lou_o4","cust":"lou","week":2,"shift":5,"type":"cut","ruler":"halves","num":2,"den":6,"wholes":1,"line":"Morning, kid! Just two sixths of the sub for me, please."},{"id":"brooks_o4","cust":"brooks","week":2,"shift":5,"type":"cut","ruler":"halves","num":2,"den":3,"wholes":1,"line":"Hi there! Just two thirds of the sub for me, please."},{"id":"tasha_o4","cust":"tasha","week":2,"shift":5,"type":"fair","ruler":"halves","a":[2,3],"b":[1,3],"answer":"a","line":"Hey! Practice just ended. My goalie got two thirds of a sub, and my captain got one third of the same size sub. Is that fair? Who got more?"},{"id":"band_o4","cust":"band","week":2,"shift":5,"type":"same","ruler":"halves","num":1,"den":3,"pieces":6,"answer":2,"line":"Yo! I wanted one third of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"sam_o4","cust":"sam","week":2,"shift":5,"type":"left","ruler":"halves","num":3,"den":6,"choices":[[4,6],[3,6]],"answer":[3,6],"line":"Hi! Mail's done for the day. I already ate three sixths of my sub. How much is left for later?"},{"id":"theo_o4","cust":"theo","week":2,"shift":5,"type":"fair","ruler":"halves","a":[2,3],"b":[5,6],"answer":"b","line":"Hi! I'm on a troop mission! Owen got two thirds of a sub, and I got five sixths of the same size sub. Who got more?"},{"id":"dale_o4","cust":"dale","week":2,"shift":5,"type":"cut","ruler":"halves","num":1,"den":2,"wholes":1,"line":"Howdy, partner. Just one half of the sub for me, please."},{"id":"rose_o5","cust":"rose","week":3,"shift":1,"type":"split","ruler":"none","n":6,"line":"Oh good, you're working today! I need this sub cut into six equal pieces for my grandkids."},{"id":"marco_o5","cust":"marco","week":3,"shift":1,"type":"cut","ruler":"none","num":2,"den":4,"wholes":1,"line":"Ah, my favorite sub cutter! Could you cut me two fourths of this sub?"},{"id":"twins_o5","cust":"twins","week":3,"shift":1,"type":"cut","ruler":"none","num":2,"den":6,"wholes":1,"line":"Hey! It's us again! Could you cut me two sixths of this sub?"},{"id":"rivera_o5","cust":"rivera","week":3,"shift":1,"type":"fair","ruler":"none","a":[5,6],"b":[2,3],"answer":"a","line":"Big game today! My goalie got five sixths of a sub, and my striker got two thirds of the same size sub. Is that fair? Who got more?"},{"id":"kim_o5","cust":"kim","week":3,"shift":1,"type":"same","ruler":"none","num":1,"den":2,"pieces":6,"answer":3,"line":"Hi there! I've got a math problem for you. I wanted one half of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"lily_max_o5","cust":"lily_max","week":3,"shift":1,"type":"left","ruler":"none","num":5,"den":6,"choices":[[2,6],[1,6],[5,6]],"answer":[1,6],"line":"We're hungry! I already ate five sixths of my sub. How much is left for later?"},{"id":"carmen_o5","cust":"carmen","week":3,"shift":1,"type":"fair","ruler":"none","a":[2,8],"b":[1,3],"answer":"b","line":"Buenas tardes! My son got two eighths of a sub, and my daughter got one third of the same size sub. Is that fair? Who got more?"},{"id":"jasmine_o5","cust":"jasmine","week":3,"shift":1,"type":"cut","ruler":"none","num":1,"den":3,"wholes":1,"line":"Hi! Quick lunch break. Could you cut me one third of this sub?"},{"id":"okafor_o5","cust":"okafor","week":3,"shift":2,"type":"split","ruler":"none","n":4,"line":"Hello, my friend! I need this sub cut into four equal pieces for my tour group."},{"id":"garcia_o5","cust":"garcia","week":3,"shift":2,"type":"cut","ruler":"none","num":1,"den":2,"wholes":1,"line":"Hello! Busy day at work. Could you cut me one half of this sub?"},{"id":"fire_o5","cust":"fire","week":3,"shift":2,"type":"cut","ruler":"none","num":1,"den":2,"wholes":1,"line":"Hi! The crew's starving. Could you cut me one half of this sub?"},{"id":"singh_o5","cust":"singh","week":3,"shift":2,"type":"fair","ruler":"none","a":[3,8],"b":[4,6],"answer":"b","line":"Hello! Lunch for the hospital. My nurse got three eighths of a sub, and my intern got four sixths of the same size sub. Is that fair? Who got more?"},{"id":"hank_o5","cust":"hank","week":3,"shift":2,"type":"same","ruler":"none","num":1,"den":2,"pieces":8,"answer":4,"line":"Hey, bud! I wanted one half of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"lou_o5","cust":"lou","week":3,"shift":2,"type":"left","ruler":"none","num":5,"den":8,"choices":[[5,8],[3,8],[4,8]],"answer":[3,8],"line":"Well hello there! I already ate five eighths of my sub. How much is left for later?"},{"id":"brooks_o5","cust":"brooks","week":3,"shift":2,"type":"fair","ruler":"none","a":[3,8],"b":[3,6],"answer":"b","line":"Afternoon! My partner got three eighths of a sub, and I got three sixths of the same size sub. Who got more?"},{"id":"tasha_o5","cust":"tasha","week":3,"shift":2,"type":"cut","ruler":"none","num":3,"den":4,"wholes":1,"line":"Hi! Team snack time. Could you cut me three fourths of this sub?"},{"id":"band_o5","cust":"band","week":3,"shift":3,"type":"split","ruler":"none","n":8,"line":"Hey! We just finished practice. I need this sub cut into eight equal pieces for the band."},{"id":"sam_o5","cust":"sam","week":3,"shift":3,"type":"cut","ruler":"none","num":1,"den":2,"wholes":1,"line":"Hey! Lunch break. Could you cut me one half of this sub?"},{"id":"theo_o5","cust":"theo","week":3,"shift":3,"type":"cut","ruler":"none","num":4,"den":6,"wholes":1,"line":"Hello! Scout lunch! Could you cut me four sixths of this sub?"},{"id":"dale_o5","cust":"dale","week":3,"shift":3,"type":"fair","ruler":"none","a":[1,4],"b":[1,3],"answer":"b","line":"Afternoon. My son got one fourth of a sub, and my neighbor got one third of the same size sub. Is that fair? Who got more?"},{"id":"rose_o6","cust":"rose","week":3,"shift":3,"type":"same","ruler":"none","num":1,"den":4,"pieces":8,"answer":2,"line":"Hi, dear. I wanted one fourth of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"marco_o6","cust":"marco","week":3,"shift":3,"type":"left","ruler":"none","num":1,"den":3,"choices":[[2,3],[1,3]],"answer":[2,3],"line":"Buongiorno! I already ate one third of my sub. How much is left for later?"},{"id":"twins_o6","cust":"twins","week":3,"shift":3,"type":"fair","ruler":"none","a":[2,4],"b":[2,6],"answer":"a","line":"Hi! We need your help! Arjun got two fourths of a sub, and Priya got two sixths of the same size sub. Is that fair? Who got more?"},{"id":"rivera_o6","cust":"rivera","week":3,"shift":3,"type":"cut","ruler":"none","num":2,"den":3,"wholes":1,"line":"Hey, champ! I'd like two thirds of the sub, please."},{"id":"kim_o6","cust":"kim","week":3,"shift":4,"type":"split","ruler":"none","n":3,"line":"Hello again! I need this sub cut into three equal pieces for my class."},{"id":"lily_max_o6","cust":"lily_max","week":3,"shift":4,"type":"cut","ruler":"none","num":7,"den":8,"wholes":1,"line":"Hi! Mom sent us! I'd like seven eighths of the sub, please."},{"id":"carmen_o6","cust":"carmen","week":3,"shift":4,"type":"cut","ruler":"none","num":4,"den":8,"wholes":1,"line":"Hola, hola! I'd like four eighths of the sub, please."},{"id":"jasmine_o6","cust":"jasmine","week":3,"shift":4,"type":"fair","ruler":"none","a":[2,6],"b":[6,8],"answer":"b","line":"Hey, it's me again! My roommate got two sixths of a sub, and I got six eighths of the same size sub. Who got more?"},{"id":"okafor_o6","cust":"okafor","week":3,"shift":4,"type":"same","ruler":"none","num":1,"den":2,"pieces":6,"answer":3,"line":"Afternoon! I wanted one half of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"garcia_o6","cust":"garcia","week":3,"shift":4,"type":"left","ruler":"none","num":2,"den":3,"choices":[[1,3],[2,3]],"answer":[1,3],"line":"Hi there! I already ate two thirds of my sub. How much is left for later?"},{"id":"fire_o6","cust":"fire","week":3,"shift":4,"type":"fair","ruler":"none","a":[2,4],"b":[1,2],"answer":"same","line":"Afternoon! My rookie got two fourths of a sub, and my lieutenant got one half of the same size sub. Is that fair? Who got more?"},{"id":"singh_o6","cust":"singh","week":3,"shift":4,"type":"cut","ruler":"none","num":1,"den":2,"wholes":1,"line":"Hi there. I'd like one half of the sub, please."},{"id":"hank_o6","cust":"hank","week":3,"shift":5,"type":"split","ruler":"none","n":8,"line":"Crew's hungry again! I need this sub cut into eight equal pieces for my construction crew."},{"id":"lou_o6","cust":"lou","week":3,"shift":5,"type":"cut","ruler":"none","num":4,"den":6,"wholes":1,"line":"Hey, kid! I'd like four sixths of the sub, please."},{"id":"brooks_o6","cust":"brooks","week":3,"shift":5,"type":"cut","ruler":"none","num":2,"den":4,"wholes":1,"line":"Hello again! I'd like two fourths of the sub, please."},{"id":"tasha_o6","cust":"tasha","week":3,"shift":5,"type":"fair","ruler":"none","a":[6,8],"b":[1,2],"answer":"a","line":"Hey there! My goalie got six eighths of a sub, and my captain got one half of the same size sub. Is that fair? Who got more?"},{"id":"band_o6","cust":"band","week":3,"shift":5,"type":"same","ruler":"none","num":1,"den":2,"pieces":6,"answer":3,"line":"What's up! I wanted one half of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"sam_o6","cust":"sam","week":3,"shift":5,"type":"left","ruler":"none","num":2,"den":4,"choices":[[3,4],[2,4]],"answer":[2,4],"line":"Hi again! I already ate two fourths of my sub. How much is left for later?"},{"id":"theo_o6","cust":"theo","week":3,"shift":5,"type":"fair","ruler":"none","a":[1,3],"b":[1,4],"answer":"a","line":"Hi! It's me, Theo! Owen got one third of a sub, and I got one fourth of the same size sub. Who got more?"},{"id":"dale_o6","cust":"dale","week":3,"shift":5,"type":"cut","ruler":"none","num":3,"den":4,"wholes":1,"line":"Well, howdy. I'd like three fourths of the sub, please."},{"id":"rose_o7","cust":"rose","week":4,"shift":1,"type":"split","ruler":"none","n":8,"line":"Hello, sweetheart! I need this sub cut into eight equal pieces for my grandkids."},{"id":"marco_o7","cust":"marco","week":4,"shift":1,"type":"cut","ruler":"none","num":5,"den":3,"wholes":2,"line":"Ciao, my friend! We need one and two thirds subs for the guys at my shop. Cut it right there."},{"id":"twins_o7","cust":"twins","week":4,"shift":1,"type":"cut","ruler":"none","num":2,"den":3,"wholes":1,"line":"Hi! We're back! Just two thirds of the sub for me, please."},{"id":"rivera_o7","cust":"rivera","week":4,"shift":1,"type":"fair","ruler":"none","a":[2,4],"b":[2,6],"answer":"a","line":"Hey there, chef! My goalie got two fourths of a sub, and my striker got two sixths of the same size sub. Is that fair? Who got more?"},{"id":"kim_o7","cust":"kim","week":4,"shift":1,"type":"same","ruler":"none","num":1,"den":3,"pieces":6,"answer":2,"line":"Good morning! I wanted one third of a sub, but it's already cut into sixths. Can you give me the right number of pieces?"},{"id":"lily_max_o7","cust":"lily_max","week":4,"shift":1,"type":"left","ruler":"none","num":3,"den":8,"choices":[[5,8],[3,8],[6,8]],"answer":[5,8],"line":"Hi! Hi! I already ate three eighths of my sub. How much is left for later?"},{"id":"carmen_o7","cust":"carmen","week":4,"shift":1,"type":"fair","ruler":"none","a":[1,6],"b":[1,8],"answer":"a","line":"Hola, mijo! My son got one sixth of a sub, and my daughter got one eighth of the same size sub. Is that fair? Who got more?"},{"id":"jasmine_o7","cust":"jasmine","week":4,"shift":1,"type":"cut","ruler":"none","num":5,"den":3,"wholes":2,"line":"Hey! We need one and two thirds subs for my study group. Cut it right there."},{"id":"okafor_o7","cust":"okafor","week":4,"shift":2,"type":"split","ruler":"none","n":6,"line":"Good afternoon! I need this sub cut into six equal pieces for my tour group."},{"id":"garcia_o7","cust":"garcia","week":4,"shift":2,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Hi! I've got the office order. We need one and one half subs for my office. Cut it right there."},{"id":"fire_o7","cust":"fire","week":4,"shift":2,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Hey there! Station lunch run. We need one and one half subs for the fire station crew. Cut it right there."},{"id":"singh_o7","cust":"singh","week":4,"shift":2,"type":"fair","ruler":"none","a":[3,4],"b":[3,8],"answer":"a","line":"Hi! I'm on a quick break. My nurse got three fourths of a sub, and my intern got three eighths of the same size sub. Is that fair? Who got more?"},{"id":"hank_o7","cust":"hank","week":4,"shift":2,"type":"same","ruler":"none","num":3,"den":4,"pieces":8,"answer":6,"line":"Howdy! I wanted three fourths of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"lou_o7","cust":"lou","week":4,"shift":2,"type":"left","ruler":"none","num":3,"den":6,"choices":[[3,6],[4,6]],"answer":[3,6],"line":"Morning, kid! I already ate three sixths of my sub. How much is left for later?"},{"id":"brooks_o7","cust":"brooks","week":4,"shift":2,"type":"fair","ruler":"none","a":[1,2],"b":[6,8],"answer":"b","line":"Hi there! My partner got one half of a sub, and I got six eighths of the same size sub. Who got more?"},{"id":"tasha_o7","cust":"tasha","week":4,"shift":2,"type":"cut","ruler":"none","num":4,"den":3,"wholes":2,"line":"Hey! Practice just ended. We need one and one third subs for my soccer team. Cut it right there."},{"id":"band_o7","cust":"band","week":4,"shift":3,"type":"split","ruler":"none","n":6,"line":"Yo! I need this sub cut into six equal pieces for the band."},{"id":"sam_o7","cust":"sam","week":4,"shift":3,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Hi! Mail's done for the day. We need one and one half subs for the post office crew. Cut it right there."},{"id":"theo_o7","cust":"theo","week":4,"shift":3,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Hi! I'm on a troop mission! We need one and one half subs for my scout troop. Cut it right there."},{"id":"dale_o7","cust":"dale","week":4,"shift":3,"type":"fair","ruler":"none","a":[1,4],"b":[5,6],"answer":"b","line":"Howdy, partner. My son got one fourth of a sub, and my neighbor got five sixths of the same size sub. Is that fair? Who got more?"},{"id":"rose_o8","cust":"rose","week":4,"shift":3,"type":"same","ruler":"none","num":3,"den":4,"pieces":8,"answer":6,"line":"Oh good, you're working today! I wanted three fourths of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"marco_o8","cust":"marco","week":4,"shift":3,"type":"left","ruler":"none","num":1,"den":3,"choices":[[1,3],[2,3]],"answer":[2,3],"line":"Ah, my favorite sub cutter! I already ate one third of my sub. How much is left for later?"},{"id":"twins_o8","cust":"twins","week":4,"shift":3,"type":"fair","ruler":"none","a":[7,8],"b":[1,2],"answer":"a","line":"Hey! It's us again! Arjun got seven eighths of a sub, and Priya got one half of the same size sub. Is that fair? Who got more?"},{"id":"rivera_o8","cust":"rivera","week":4,"shift":3,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Big game today! We need one and one half subs for my team. Cut it right there."},{"id":"kim_o8","cust":"kim","week":4,"shift":4,"type":"split","ruler":"none","n":8,"line":"Hi there! I've got a math problem for you. I need this sub cut into eight equal pieces for my class."},{"id":"lily_max_o8","cust":"lily_max","week":4,"shift":4,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"We're hungry! We need one and one half subs for our cousins. Cut it right there."},{"id":"carmen_o8","cust":"carmen","week":4,"shift":4,"type":"cut","ruler":"none","num":3,"den":2,"wholes":2,"line":"Buenas tardes! We need one and one half subs for my family. Cut it right there."},{"id":"jasmine_o8","cust":"jasmine","week":4,"shift":4,"type":"fair","ruler":"none","a":[2,3],"b":[3,4],"answer":"b","line":"Hi! Quick lunch break. My roommate got two thirds of a sub, and I got three fourths of the same size sub. Who got more?"},{"id":"okafor_o8","cust":"okafor","week":4,"shift":4,"type":"same","ruler":"none","num":1,"den":2,"pieces":8,"answer":4,"line":"Hello, my friend! I wanted one half of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"garcia_o8","cust":"garcia","week":4,"shift":4,"type":"left","ruler":"none","num":1,"den":3,"choices":[[2,3],[1,3]],"answer":[2,3],"line":"Hello! Busy day at work. I already ate one third of my sub. How much is left for later?"},{"id":"fire_o8","cust":"fire","week":4,"shift":4,"type":"fair","ruler":"none","a":[3,4],"b":[3,8],"answer":"a","line":"Hi! The crew's starving. My rookie got three fourths of a sub, and my lieutenant got three eighths of the same size sub. Is that fair? Who got more?"},{"id":"singh_o8","cust":"singh","week":4,"shift":4,"type":"cut","ruler":"none","num":7,"den":4,"wholes":2,"line":"Hello! Lunch for the hospital. We need one and three fourths subs for the nurses on my floor. Cut it right there."},{"id":"hank_o8","cust":"hank","week":4,"shift":5,"type":"split","ruler":"none","n":6,"line":"Hey, bud! I need this sub cut into six equal pieces for my construction crew."},{"id":"lou_o8","cust":"lou","week":4,"shift":5,"type":"cut","ruler":"none","num":7,"den":4,"wholes":2,"line":"Well hello there! We need one and three fourths subs for my fishing buddies. Cut it right there."},{"id":"brooks_o8","cust":"brooks","week":4,"shift":5,"type":"cut","ruler":"none","num":5,"den":3,"wholes":2,"line":"Afternoon! We need one and two thirds subs for my patrol team. Cut it right there."},{"id":"tasha_o8","cust":"tasha","week":4,"shift":5,"type":"fair","ruler":"none","a":[2,8],"b":[1,2],"answer":"b","line":"Hi! Team snack time. My goalie got two eighths of a sub, and my captain got one half of the same size sub. Is that fair? Who got more?"},{"id":"band_o8","cust":"band","week":4,"shift":5,"type":"same","ruler":"none","num":3,"den":4,"pieces":8,"answer":6,"line":"Hey! We just finished practice. I wanted three fourths of a sub, but it's already cut into eighths. Can you give me the right number of pieces?"},{"id":"sam_o8","cust":"sam","week":4,"shift":5,"type":"left","ruler":"none","num":2,"den":6,"choices":[[2,6],[4,6],[5,6]],"answer":[4,6],"line":"Hey! Lunch break. I already ate two sixths of my sub. How much is left for later?"},{"id":"theo_o8","cust":"theo","week":4,"shift":5,"type":"fair","ruler":"none","a":[1,8],"b":[1,6],"answer":"b","line":"Hello! Scout lunch! Owen got one eighth of a sub, and I got one sixth of the same size sub. Who got more?"},{"id":"dale_o8","cust":"dale","week":4,"shift":5,"type":"cut","ruler":"none","num":6,"den":8,"wholes":1,"line":"Afternoon. Could you cut me six eighths of this sub?"}],"reactions":{"rose":{"happy":["Oh, that's just perfect, sweetheart!","You have such careful hands. Thank you!"],"unsure":["Hmm, that doesn't look quite right, dear.","Oh my. Let's look at that one again."]},"marco":{"happy":["Bellissimo! Exactly right!","Perfetto! You cut like a pro."],"unsure":["Eh, not quite, my friend.","Hmm. Measure twice, cut once!"]},"twins":{"happy":["Yes! That's totally fair!","Woo-hoo! You got it!"],"unsure":["Wait... that doesn't look right.","Hmm, are you sure about that?"]},"rivera":{"happy":["That's a winner! Great job!","Nailed it! High five!"],"unsure":["Hmm, let's run that play again.","Not quite. Take another look."]},"kim":{"happy":["Wonderful! That's exactly right.","Gold star for you!"],"unsure":["Hmm, let's check that together.","Close, but take another look."]},"lily_max":{"happy":["Yay! Thank you!","That's awesome!"],"unsure":["Uh oh. That doesn't look fair.","Hmm... wait a second."]},"carmen":{"happy":["Muy bien! That's perfect.","Ay, que bueno! Thank you."],"unsure":["Ay, no, no. Look again, mijo.","Hmm, that's not quite it."]},"jasmine":{"happy":["Yes! Thank you so much!","Perfect, that's exactly what I needed."],"unsure":["Hmm, I don't think that's right.","Wait, can you double-check that?"]},"okafor":{"happy":["Excellent work! Thank you.","Very good! Spot on."],"unsure":["Hmm. I don't think so, my friend.","Not quite. Try once more."]},"garcia":{"happy":["Great, that's exactly right!","Perfect! The office will love it."],"unsure":["Hmm, that's not what's on my list.","Hold on, that doesn't look right."]},"fire":{"happy":["Right on target! Thanks!","That's a five-alarm cut! Great job."],"unsure":["Hmm, that's off a bit.","Let's take another look at that."]},"singh":{"happy":["Perfect. That's precise!","Excellent. Thank you!"],"unsure":["Hmm, I don't think that's right.","Let's double-check that one."]},"hank":{"happy":["That's a clean cut! Nice work.","Right on the money!"],"unsure":["Hmm, that's not level, bud.","Measure that one again."]},"lou":{"happy":["Now that's a keeper!","Ha! Perfect. Thanks, kid."],"unsure":["Hmm, not quite, kid.","Eh, that one got away from you."]},"brooks":{"happy":["Fair and square. Thank you!","Exactly right. Nice job."],"unsure":["Hmm, I don't think that's right.","Let's look at the evidence again."]},"tasha":{"happy":["Goal! That's perfect!","Great teamwork! Thanks!"],"unsure":["Hmm, that's offside.","Not quite. Let's try that again."]},"band":{"happy":["Yeah! That rocks!","Awesome! You're a rock star."],"unsure":["Hmm. That's a little off-key.","Wait, that doesn't sound right."]},"sam":{"happy":["Special delivery! Thank you!","That's exactly right. Thanks!"],"unsure":["Hmm, return to sender.","I don't think that's right."]},"theo":{"happy":["Awesome! That earns a badge!","Yes! Thank you!"],"unsure":["Hmm, I don't think that's right.","Wait, can you check that?"]},"dale":{"happy":["Yep. That's a fine cut.","Good work, partner."],"unsure":["Nope. Not quite, partner.","Hmm. Let's try that again."]}},"names":{"rose":"Grandma Rose","marco":"Marco","twins":"The Patel Twins","rivera":"Coach Rivera","kim":"Ms. Kim","lily_max":"Lily and Max","carmen":"Abuela Carmen","jasmine":"Jasmine","okafor":"Mr. Okafor","garcia":"Mrs. Garcia","fire":"Captain Reyes","singh":"Dr. Singh","hank":"Hank","lou":"Lou","brooks":"Officer Brooks","tasha":"Coach Tasha","band":"The Garage Band","sam":"Sam","theo":"Theo","dale":"Dale"},"cast":{"rose":{"a":"Sophie","b":"Ben"},"marco":{"a":"my nephew","b":"my cousin"},"twins":{"a":"Arjun","b":"Priya"},"rivera":{"a":"my goalie","b":"my striker"},"kim":{"a":"Maya","b":"Leo"},"lily_max":{"a":"Lily","b":"Max"},"carmen":{"a":"my son","b":"my daughter"},"jasmine":{"a":"my roommate","b":"me"},"okafor":{"a":"my brother","b":"me"},"garcia":{"a":"my boss","b":"my assistant"},"fire":{"a":"my rookie","b":"my lieutenant"},"singh":{"a":"my nurse","b":"my intern"},"hank":{"a":"my welder","b":"my foreman"},"lou":{"a":"my buddy Earl","b":"me"},"brooks":{"a":"my partner","b":"me"},"tasha":{"a":"my goalie","b":"my captain"},"band":{"a":"Jax","b":"Vee"},"sam":{"a":"my coworker","b":"me"},"theo":{"a":"Owen","b":"me"},"dale":{"a":"my son","b":"my neighbor"}}};
+const ART = 'art/', VOX = 'voice/';
+const KEY = 'shopshift.v1';
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const WORDS = {1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight'};
+const DENW = {2:'halves',3:'thirds',4:'fourths',6:'sixths',8:'eighths'};
+const DEN1 = {2:'half',3:'third',4:'fourth',6:'sixth',8:'eighth'};
+const WEEKS = [
+  {t:'Week 1', s:'Halves, fourths, eighths · full ruler'},
+  {t:'Week 2', s:'Thirds and sixths join · ruler shows the halfway mark'},
+  {t:'Week 3', s:'No ruler · compare and match'},
+  {t:'Week 4', s:'Party subs past one whole · no ruler'}];
+const WEEK_INTRO = [
+  '<h2 class="t">Welcome to the deli!</h2><p class="l">Customers will ask for part of a sub. The ruler under the sub shows <b>0</b> at the left end and <b>1</b> at the right end. Tap where to cut, then press <b>Cut!</b></p><p class="l">Tip: a fraction names <b>how far from 0</b> the cut is. Count the equal spaces, not the lines.</p>',
+  '<h2 class="t">Week 2: thirds and sixths</h2><p class="l">Now the ruler only shows <b>0</b>, the <b>halfway mark</b>, and <b>1</b>. Thirds don\'t land on the half. Guess where one third goes, then picture hopping it three times to the end.</p>',
+  '<h2 class="t">Week 3: no ruler</h2><p class="l">The ruler is gone, just like on a test. Use the strategies: <b>find the whole</b>, <b>half first</b>, then <b>half again</b> or <b>guess and hop</b>.</p>',
+  '<h2 class="t">Week 4: party subs!</h2><p class="l">Big groups need <b>more than one sub</b>. Two subs go end to end, so the line runs from <b>0</b> to <b>2</b>. One and a half subs means one whole sub, plus half of the next.</p>'];
+const COACH = {
+  split:'<b>Split it:</b> tap where the <b>first</b> piece should end. We\'ll copy that piece down the sub, so make it just right!',
+  cut:'<b>Cut it:</b> tap where the cut goes, measured from the <b>left end (0)</b>. You can drag the knife to adjust. Then press <b>Cut!</b>',
+  fair:'<b>Who got more?</b> Both subs are the same size. Picture where each cut would land, then choose.',
+  same:'<b>Same amount, different cut:</b> the sub is already cut. Tap pieces to give the customer exactly what they asked for, then press <b>Serve</b>.',
+  left:'<b>Leftovers:</b> the gray part is already eaten. How much of the whole sub is left?'};
+const UPGRADES = [
+  {id:'plants', name:'Counter plants', cost:10, img:'plants'},
+  {id:'bell', name:'Service bell', cost:15, img:'bell'},
+  {id:'neon', name:'Neon OPEN sign', cost:25, img:'neon_open'},
+  {id:'knife', name:'Pro bread knife', cost:40, img:'knife'}];
+
+// ------------------------------------------------------------------ save
+let S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:false, seen:{}, weekSeen:{}};
+function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY)||'null'); if(v) S = Object.assign(S, v); }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+// ------------------------------------------------------------------ data
+const SHIFTS = [];
+for(let w=1; w<=4; w++) for(let s=1; s<=5; s++) SHIFTS.push(D.orders.filter(o=>o.week===w && o.shift===s));
+const name = c => D.names[c];
+
+// ------------------------------------------------------------------ stage scale
+let scale = 1;
+function fit(){ scale = Math.min(innerWidth/1600, innerHeight/900); $('stage').style.transform = `translate(-50%,-50%) scale(${scale})`; }
+addEventListener('resize', fit);
+function toStage(e){ const r = $('stage').getBoundingClientRect(); return {x:(e.clientX-r.left)/scale, y:(e.clientY-r.top)/scale}; }
+
+// ------------------------------------------------------------------ sound
+let AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(f, t0, dur, type='sine', g=0.15){ const a=ac(); if(!a||S.muted) return; const o=a.createOscillator(), v=a.createGain(); o.type=type; o.frequency.value=f; v.gain.setValueAtTime(g,a.currentTime+t0); v.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+t0+dur); o.connect(v).connect(a.destination); o.start(a.currentTime+t0); o.stop(a.currentTime+t0+dur+.05); }
+function chop(){ const a=ac(); if(!a||S.muted) return; const n=a.sampleRate*.12, b=a.createBuffer(1,n,a.sampleRate), d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3); const s=a.createBufferSource(), f=a.createBiquadFilter(), v=a.createGain(); f.type='lowpass'; f.frequency.value=1800; v.gain.value=.5; s.buffer=b; s.connect(f).connect(v).connect(a.destination); s.start(); tone(110,0,.12,'triangle',.2); }
+const coinSnd = () => { tone(988,0,.08,'square',.06); tone(1319,.07,.18,'square',.06); };
+const ding = () => { tone(1760,0,1.2,'sine',.12); tone(2637,0,.8,'sine',.05); };
+const pop = () => tone(660,0,.08,'triangle',.12);
+const sad = () => { tone(330,0,.18,'triangle',.1); tone(262,.15,.3,'triangle',.1); };
+
+let voiceEl = null;
+function speak(id, text, who){
+  $('who').textContent = who; $('say').innerHTML = text; $('bubble').classList.remove('off');
+  $('custInner').classList.add('talk');
+  if(voiceEl){ voiceEl.pause(); voiceEl = null; }
+  let done = () => $('custInner').classList.remove('talk');
+  let fallback = setTimeout(done, Math.min(6000, 900 + text.length*45));
+  if(S.muted) return;
+  const a = new Audio(VOX + id + '.mp3'); voiceEl = a;
+  a.onended = () => { clearTimeout(fallback); done(); };
+  a.onplay = () => { clearTimeout(fallback); };
+  a.onerror = () => {};
+  a.play().catch(()=>{});
+}
+
+// ------------------------------------------------------------------ helpers
+const frac = (n,d) => `<span class="frac"><span class="n">${n}</span><span class="d">${d}</span></span>`;
+const fracTxt = (n,d) => `${n}/${d}`;
+function mixed(n,d){ const w=Math.floor(n/d), r=n%d; return r ? `${w} ${frac(r,d)}` : `${w}`; }
+function svg(tag, attrs, parent=$('fx')){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); parent.appendChild(e); return e; }
+function stext(x,y,t,size=26,fill='#fff9ea',anchor='middle',weight=800){ const e=svg('text',{x,y,'font-size':size,fill,'text-anchor':anchor,'font-weight':weight,'font-family':'Trebuchet MS, sans-serif',stroke:'#241d15','stroke-width':5,'paint-order':'stroke'}); e.textContent=t; return e; }
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+function hash(s){ let h=0; for(const c of s) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); }
+function clearBoard(){ $('subLayer').innerHTML=''; $('fx').innerHTML=''; $('controls').innerHTML=''; const h=$('hit'); h.onpointerdown=h.onpointermove=h.onpointerup=null; h.style.display='none'; }
+
+// ------------------------------------------------------------------ sub drawing
+const ASPECT = {sub_italian:.295, sub_wheat:.3, sub_herb:.301, sub_6in:.504, sub_party:.137};
+function makeSub(o, x0, y, L, wholes, bread){
+  const img = bread || 'sub_party';
+  const h = Math.round(L*ASPECT[img]);
+  return {x0, y, L, wholes, img, h, pieces:[]};
+}
+function piece(sub, a, b, cls=''){ // a,b in px from x0
+  const el = document.createElement('div'); el.className = 'piece ' + cls;
+  el.style.left = (sub.x0+a)+'px'; el.style.top = sub.y+'px'; el.style.width = (b-a)+'px'; el.style.height = sub.h+'px';
+  for(let k=0; k<sub.wholes; k++){ const im = new Image(); im.src = ART+sub.img+'.webp'; im.style.left = (k*sub.L - a)+'px'; im.style.width = sub.L+'px'; el.appendChild(im); }
+  $('subLayer').appendChild(el); return el;
+}
+function drawWhole(sub){ $('subLayer').querySelectorAll('.piece').forEach(e=>{ if(e.dataset.sub===sub.tag) e.remove(); }); const p = piece(sub, 0, sub.L*sub.wholes); p.dataset.sub = sub.tag||''; sub.pieces=[p]; return p; }
+function cutInto(sub, cutsPx, gap=10){
+  sub.pieces.forEach(p=>p.remove());
+  const pts = [0, ...cutsPx.filter(c=>c>0 && c<sub.L*sub.wholes).sort((a,b)=>a-b), sub.L*sub.wholes];
+  sub.pieces = [];
+  for(let i=0;i<pts.length-1;i++){ const p = piece(sub, pts[i], pts[i+1]); p.dataset.sub=sub.tag||''; sub.pieces.push(p); requestAnimationFrame(()=>requestAnimationFrame(()=>{ p.style.transform = `translateX(${(i-(pts.length-2)/2)*gap}px)`; })); }
+  return sub.pieces;
+}
+function ruler(sub, mode, den){
+  const y = sub.y + sub.h + 22, x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
+  svg('line',{x1:x0,y1:y,x2:X,y2:y,stroke:'#241d15','stroke-width':5,'stroke-linecap':'round'});
+  for(let w=0; w<=sub.wholes; w++){ const x=x0+w*sub.L; svg('line',{x1:x,y1:y-16,x2:x,y2:y+16,stroke:'#241d15','stroke-width':5}); stext(x,y+42,String(w),28); }
+  if(mode==='full'){ for(let w=0; w<sub.wholes; w++) for(let k=1;k<den;k++){ const x=x0+w*sub.L+k*sub.L/den; svg('line',{x1:x,y1:y-10,x2:x,y2:y+10,stroke:'#241d15','stroke-width':3}); } }
+  if(mode==='halves'){ for(let w=0; w<sub.wholes; w++){ const x=x0+w*sub.L+sub.L/2; svg('line',{x1:x,y1:y-11,x2:x,y2:y+11,stroke:'#241d15','stroke-width':3.5}); } }
+}
+function hops(sub, fromPx, count, unitPx, den, startK, color='#ffd34d', delay=260){
+  const y = sub.y - 6, ps=[];
+  for(let k=0;k<count;k++){
+    const a = sub.x0+fromPx+k*unitPx, b = a+unitPx, mid=(a+b)/2, hgt=Math.min(70, unitPx*.45+18);
+    const p = svg('path',{d:`M${a},${y} Q${mid},${y-hgt*2} ${b},${y}`,fill:'none',stroke:color,'stroke-width':5,'stroke-linecap':'round',opacity:0});
+    const len = unitPx*1.6+hgt*2; p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
+    p.style.transition=`stroke-dashoffset .3s ease ${k*delay/1000}s, opacity .01s ${k*delay/1000}s`;
+    const t = stext(b, y-hgt-14, `${startK+k+1}/${den}`, 24, '#ffe9a8'); t.style.opacity=0; t.style.transition=`opacity .2s ${k*delay/1000+.25}s`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ p.setAttribute('opacity',1); p.style.strokeDashoffset=0; t.style.opacity=1; }));
+    ps.push(p);
+  }
+  return wait(count*delay+350);
+}
+function markLine(x, sub, color, label, dash){ const l = svg('line',{x1:x,y1:sub.y-26,x2:x,y2:sub.y+sub.h+8,stroke:color,'stroke-width':5,'stroke-dasharray':dash?'10 8':'none','stroke-linecap':'round'}); if(label) stext(x, sub.y-150, label, 26, color==='#3aa66a'?'#c9f5d8':'#fff'); return l; }
+
+// ------------------------------------------------------------------ knife input
+function knifeInput(sub, onSet){
+  const hit = $('hit'), total = sub.L*sub.wholes;
+  hit.style.display='block'; hit.style.left=(sub.x0-30)+'px'; hit.style.top=(sub.y-60)+'px'; hit.style.width=(total+60)+'px'; hit.style.height=(sub.h+140)+'px';
+  const guide = svg('line',{x1:0,y1:sub.y-34,x2:0,y2:sub.y+sub.h+14,stroke:'#fff','stroke-width':3,'stroke-dasharray':'6 6',opacity:0});
+  const mark = svg('g',{opacity:0});
+  svg('line',{x1:0,y1:sub.y-40,x2:0,y2:sub.y+sub.h+16,stroke:'#e2574c','stroke-width':6,'stroke-linecap':'round'},mark);
+  svg('path',{d:`M-16,${sub.y-62} L16,${sub.y-62} L0,${sub.y-40} Z`,fill:'#e2574c',stroke:'#fff','stroke-width':3},mark);
+  const kn = svg('g',{opacity:0});
+  if(S.owned.knife){ const im = svg('image',{href:ART+'knife.webp',x:-150,y:-34,width:300,height:36,transform:'rotate(-90)'},kn); }
+  else { svg('rect',{x:-6,y:-120,width:12,height:46,rx:4,fill:'#4a3220'},kn); svg('path',{d:'M-9,-76 L9,-76 L9,-8 L0,0 L-9,-8 Z',fill:'#dfe4ea',stroke:'#7c8794','stroke-width':2},kn); }
+  let pos = null, dragging=false;
+  const clamp = v => Math.max(2, Math.min(total-2, v));
+  const setGuide = x => { guide.setAttribute('x1',sub.x0+x); guide.setAttribute('x2',sub.x0+x); guide.setAttribute('opacity',.8); kn.setAttribute('transform',`translate(${sub.x0+x},${sub.y-30})`); kn.setAttribute('opacity',1); };
+  const place = x => { pos = clamp(x); mark.setAttribute('transform',`translate(${sub.x0+pos},0)`); mark.setAttribute('opacity',1); onSet(pos); };
+  hit.onpointermove = e => { const p=toStage(e); const x=clamp(p.x-sub.x0); setGuide(x); if(dragging) place(x); };
+  hit.onpointerdown = e => { hit.setPointerCapture(e.pointerId); dragging=true; const p=toStage(e); place(p.x-sub.x0); setGuide(pos); pop(); };
+  hit.onpointerup = () => { dragging=false; };
+  hit.onpointerleave = () => { guide.setAttribute('opacity',0); kn.setAttribute('opacity',0); };
+  const key = e => { if(pos==null) return; if(e.key==='ArrowLeft'){ place(pos-2); e.preventDefault(); } if(e.key==='ArrowRight'){ place(pos+2); e.preventDefault(); } };
+  addEventListener('keydown', key);
+  return { get pos(){ return pos; }, done(){ removeEventListener('keydown', key); hit.style.display='none'; guide.remove(); kn.remove(); mark.setAttribute('opacity',0); } };
+}
+
+// ------------------------------------------------------------------ order modes
+function subGeometry(o){
+  // whole length varies by week so kids can't memorize pixel spots
+  const r = (hash(o.id+'L')%1000)/1000;
+  if(o.wholes===2){ const L = 520 + Math.round(r*40); return {L, x0: 900 - L}; }
+  const L = o.week===1 ? 1000 : o.week===2 ? 820+Math.round(r*180) : 640+Math.round(r*360);
+  return {L, x0: 900 - L/2};
+}
+const SUB_Y = 622;
+
+function ticketHTML(o){
+  const T = t => `<div class="tt">ORDER #${(cur.idx+1)} · ${t}</div>`;
+  if(o.type==='split') return T('SPLIT IT') + `<div class="big">${WORDS[o.n]} equal pieces</div><div style="text-align:center;margin-top:6px">each piece = ${frac(1,o.n)}</div>`;
+  if(o.type==='cut') return T('CUT IT') + `<div class="big">${o.wholes===2? mixed(o.num,o.den)+' subs' : frac(o.num,o.den)+' of the sub'}</div>`;
+  if(o.type==='fair') return T('WHO GOT MORE?') + `<div style="font-size:24px;line-height:1.9">${cap(o.who_a)}: ${frac(o.a[0],o.a[1])}<br>${cap(o.who_b)}: ${frac(o.b[0],o.b[1])}</div>`;
+  if(o.type==='same') return T('SAME AMOUNT') + `<div class="big">serve ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">sub is cut in ${DENW[o.pieces]}</div>`;
+  if(o.type==='left') return T('LEFTOVERS') + `<div class="big">ate ${frac(o.num,o.den)}</div><div style="text-align:center;margin-top:6px">how much is left?</div>`;
+}
+const cap = s => s[0].toUpperCase()+s.slice(1);
+const hopW = n => n===1 ? 'one hop' : `${WORDS[n]||n} hops`;
+
+const MODES = {
+  split(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
+    ruler(sub, o.ruler, o.n);
+    let x = null; const k = knifeInput(sub, v => { x=v; cutBtn.disabled=false; });
+    const cutBtn = button('Cut! 🔪','btn red', async () => {
+      k.done(); cutBtn.disabled=true; chop();
+      const unit = L/o.n, cuts=[]; for(let i=1;i<o.n;i++) cuts.push(x*i);
+      // copy the first piece down the sub, one chop at a time
+      for(let i=1;i<=o.n-1;i++){ cutInto(sub, cuts.slice(0,i), 6); if(i>1) chop(); await wait(260); }
+      const endAt = x*o.n, err = Math.abs(x-unit)/unit;
+      for(let i=1;i<o.n;i++) markLine(x0+unit*i, sub, '#3aa66a', null, true);
+      await hops(sub, 0, o.n, unit, o.n, 0, '#7be0a2', 180);
+      const stars = err<=.1?3: err<=.2?2: err<=.3?1:0;
+      let msg;
+      if(stars===3) msg = `${cap(WORDS[o.n])} equal pieces. Every piece is ${frac(1,o.n)} of the sub!`;
+      else if(endAt > L) msg = `Your first piece was a little <b>too big</b>. Copied ${WORDS[o.n]} times, it ran past the end. Each piece should be ${frac(1,o.n)}: the green lines.`;
+      else msg = `Your first piece was a little <b>too small</b>. Copied ${WORDS[o.n]} times, it left extra sub. Each piece should be ${frac(1,o.n)}: the green lines.`;
+      finish(o, stars, msg);
+    }, true);
+  },
+  cut(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y + (o.wholes===2?30:0), L, o.wholes, o.wholes===2?'sub_italian':null); drawWhole(sub);
+    ruler(sub, o.ruler, o.den);
+    let x=null; const k = knifeInput(sub, v => { x=v; cutBtn.disabled=false; });
+    const cutBtn = button('Cut! 🔪','btn red', async () => {
+      k.done(); cutBtn.disabled=true; chop();
+      cutInto(sub, [x], 14); await wait(300);
+      const t = L*o.num/o.den, err = Math.abs(x-t)/L;
+      await hops(sub, 0, o.num, L/o.den, o.den, 0);
+      markLine(x0+t, sub, '#3aa66a', null, true);
+      const stars = err<=.03?3: err<=.07?2: err<=.12?1:0;
+      const name = o.wholes===2 ? `${mixed(o.num,o.den)} subs` : frac(o.num,o.den);
+      const msg = stars===3 ? `Right on the ${name} cut! ${cap(hopW(o.num))} of ${frac(1,o.den)} from 0.`
+        : stars>0 ? `Close! The ${name} cut is the green line: ${hopW(o.num)} of ${frac(1,o.den)} from 0.`
+        : `The ${name} cut is at the green line. Count ${hopW(o.num)} of ${frac(1,o.den)}, starting at 0.`;
+      finish(o, stars, msg);
+    }, true);
+  },
+  fair(o){
+    const L = o.week>=3 ? 760 : 900, x0 = 820 - L/2 + 60;
+    const sa = makeSub(o, x0, 612, L, 1), sb = makeSub(o, x0, 728, L, 1);
+    sa.h = sb.h = 90; sa.tag='a'; sb.tag='b'; drawWhole(sa); drawWhole(sb);
+    tag(x0-24, 668, `${cap(o.who_a)} ${fracTxt(...o.a)}`, 'end'); tag(x0-24, 784, `${cap(o.who_b)} ${fracTxt(...o.b)}`, 'end');
+    if(o.week<=2){ smallTicks(sa, o.a[1]); smallTicks(sb, o.b[1]); }
+    const reveal = async pick => {
+      [...$('controls').children].forEach(b=>b.disabled=true);
+      const xa = L*o.a[0]/o.a[1], xb = L*o.b[0]/o.b[1];
+      cutInto(sa,[xa],0); cutInto(sb,[xb],0); chop(); await wait(250);
+      sa.pieces[1].classList.add('faded'); sb.pieces[1].classList.add('faded');
+      const far = Math.max(xa,xb);
+      svg('line',{x1:x0+far,y1:600,x2:x0+far,y2:830,stroke:'#ffd34d','stroke-width':4,'stroke-dasharray':'8 7'});
+      const A = o.a[0]/o.a[1], B = o.b[0]/o.b[1];
+      const ok = pick===o.answer;
+      let why;
+      if(o.answer==='same') why = `${frac(...o.a)} and ${frac(...o.b)} reach the <b>same spot</b>. They're equal!`;
+      else { const [big,small] = o.answer==='a'? [o.a,o.b]:[o.b,o.a]; const bn = o.answer==='a'?o.who_a:o.who_b;
+        if(big[1]===small[1]) why = `Same size pieces (${DENW[big[1]]}), and ${big[0]} pieces is more than ${small[0]}. ${cap(bn)} got more.`;
+        else if(big[0]===small[0]) why = `Same number of pieces, but ${DENW[big[1]]} are <b>bigger</b> than ${DENW[small[1]]}. ${cap(bn)} got more.`;
+        else why = `${frac(...big)} reaches farther than ${frac(...small)} on the same size sub. ${cap(bn)} got more.`; }
+      finish(o, ok?3:0, (ok?'Yes! ':'Look at the subs: ') + why);
+    };
+    button(`${cap(o.who_a)} got more`, 'btn', ()=>reveal('a'));
+    button('Same amount', 'btn ghost', ()=>reveal('same'));
+    button(`${cap(o.who_b)} got more`, 'btn', ()=>reveal('b'));
+  },
+  same(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
+    const unit = L/o.pieces, cuts=[]; for(let i=1;i<o.pieces;i++) cuts.push(unit*i);
+    cutInto(sub, cuts, 8); let tries = 0;
+    const sel = new Set();
+    sub.pieces.forEach((p,i)=>{ p.classList.add('tap'); p.onpointerdown = () => { sel.has(i)?sel.delete(i):sel.add(i); p.classList.toggle('sel'); pop(); serve.disabled = sel.size===0; cnt.textContent = sel.size ? `${sel.size} of ${o.pieces} pieces` : ''; }; });
+    const cnt = stext(900, sub.y+sub.h+44, '', 26);
+    const serve = button('Serve 🍽️', 'btn green', async () => {
+      tries++; const k = sel.size;
+      if(k===o.answer){
+        sub.pieces.forEach(p=>p.onpointerdown=null);
+        const t = L*o.num/o.den; markLine(x0+t, sub, '#3aa66a', `${o.num}/${o.den} = ${o.answer}/${o.pieces}`, true);
+        await hops(sub, 0, o.answer, unit, o.pieces, 0, '#7be0a2', 200);
+        finish(o, tries===1?3:1, `${frac(o.num,o.den)} is the same as ${frac(o.answer,o.pieces)}. ${cap(WORDS[o.answer])} ${o.answer===1?DEN1[o.pieces]:DENW[o.pieces]} reach the ${frac(o.num,o.den)} mark.`);
+      } else if(tries===1){
+        sad(); react('unsure', 1);
+        const t = L*o.num/o.den; markLine(x0+t, sub, '#ffd34d', `${o.num}/${o.den} is here`, true);
+        coach(`Not quite. The yellow line shows where ${frac(o.num,o.den)} of the sub ends. Pick the pieces that reach it.`);
+      } else {
+        sub.pieces.forEach((p,i)=>{ p.onpointerdown=null; p.classList.toggle('sel', i<o.answer); });
+        finish(o, 0, `It takes ${WORDS[o.answer]} ${DENW[o.pieces]} to make ${frac(o.num,o.den)}. ${frac(o.num,o.den)} = ${frac(o.answer,o.pieces)}.`);
+      }
+    }, true);
+  },
+  left(o){
+    const {L,x0} = subGeometry(o), sub = makeSub(o, x0, SUB_Y, L, 1); drawWhole(sub);
+    const e = L*o.num/o.den; cutInto(sub, [e], 0); sub.pieces[0].classList.add('faded');
+    for(let i=0;i<14;i++){ svg('circle',{cx:x0+ (hash(o.id+i)%Math.max(8,Math.round(e))), cy:SUB_Y+sub.h+ (hash(i+o.id)%22)-4, r:3+(i%3), fill:'#c89a5a', opacity:.8}); }
+    tag(x0+e/2, SUB_Y-24, `eaten: ${fracTxt(o.num,o.den)}`, 'middle');
+    if(o.ruler!=='none') ruler(sub, o.ruler, o.den);
+    const choose = async c => {
+      [...$('controls').children].forEach(b=>b.disabled=true);
+      const ok = c[0]===o.answer[0] && c[1]===o.answer[1];
+      await hops(sub, e, o.den-o.num, L/o.den, o.den, o.num, '#7be0a2', 220);
+      finish(o, ok?3:0, `${ok?'Right! ':''}The whole sub is ${frac(o.den,o.den)}. ${frac(o.num,o.den)} was eaten, so ${frac(o.den-o.num,o.den)} is left: ${hopW(o.den-o.num)} more to the end.`);
+    };
+    o.choices.forEach(c => button(`${c[0]}/${c[1]} left`, 'btn', ()=>choose(c)));
+  }
+};
+function tag(x,y,t,anchor){ stext(x,y,t,26,'#fff9ea',anchor); }
+function smallTicks(sub, den){ const y=sub.y+sub.h+4; for(let k=0;k<=den;k++){ const x=sub.x0+k*sub.L/den; svg('line',{x1:x,y1:y,x2:x,y2:y+(k%den===0?16:10),stroke:'#fff9ea','stroke-width':3}); } }
+function button(label, cls, fn, disabled){ const b=document.createElement('button'); b.className=cls; b.innerHTML=label; b.onclick=()=>{ ac(); fn(); }; b.disabled=!!disabled; $('controls').appendChild(b); return b; }
+function coach(html){ const c=$('coach'); c.innerHTML=html; c.classList.remove('off'); clearTimeout(coach.t); coach.t=setTimeout(()=>c.classList.add('off'), 6500); }
+
+// ------------------------------------------------------------------ flow
+let cur = null;
+function setCustomer(cid, mood){ $('custImg').src = `${ART}cust_${cid}_${mood}.webp`; }
+function react(mood, n){ const o = cur.list[cur.idx]; setCustomer(o.cust, mood==='happy'?'happy':'unsure'); const i = 1+(hash(o.id+mood+n)%2); speak(`${o.cust}_${mood}${i}`, D.reactions[o.cust][mood][i-1], name(o.cust)); }
+
+async function startShift(i){
+  ac();
+  const w = Math.floor(i/5);
+  if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); await showIntro(WEEK_INTRO[w]); }
+  cur = {i, list: SHIFTS[i].map(o=>decorate(o)), idx:0, results:[]};
+  $('home').classList.add('hidden'); $('receiptScr').classList.add('hidden');
+  $('play').classList.remove('hidden'); $('hud').classList.remove('hidden');
+  $('hudShift').innerHTML = `Week <b>${w+1}</b> · Shift <b>${i%5+1}</b>`;
+  // preload this shift's voices and customers
+  cur.list.forEach(o=>{ if(!S.muted){ const a=new Audio(); a.preload='auto'; a.src=VOX+o.id+'.mp3'; } ['neutral','happy','unsure'].forEach(m=>{ new Image().src=`${ART}cust_${o.cust}_${m}.webp`; }); });
+  dots(); nextOrder();
+}
+function decorate(o){ const c = D.cast[o.cust]; return Object.assign({who_a:c.a, who_b:c.b==='me'?name(o.cust):c.b}, o); }
+function dots(){ $('dots').innerHTML = cur.list.map((_,k)=>`<i class="${k<cur.idx?'on':k===cur.idx?'cur':''}"></i>`).join(''); $('hudTips').textContent = '$'+(S.tips-S.spent); }
+
+async function nextOrder(){
+  clearBoard(); $('fb').classList.add('off'); $('coach').classList.add('off'); $('bubble').classList.add('off'); $('ticket').classList.add('off');
+  if(cur.idx>=cur.list.length) return endShift();
+  dots();
+  const o = cur.list[cur.idx];
+  const cw = $('custWrap'); setCustomer(o.cust,'neutral');
+  cw.classList.add('out'); cw.classList.remove('right'); void cw.offsetWidth;
+  cw.classList.remove('out');
+  if(S.owned.bell) ding();
+  await wait(650);
+  speak(o.id, o.line, name(o.cust));
+  $('replay').onclick = () => speak(o.id, o.line, name(o.cust));
+  $('ticket').innerHTML = ticketHTML(o); $('ticket').classList.remove('off');
+  MODES[o.type](o);
+  if(!S.seen[o.type]){ S.seen[o.type]=1; save(); cur.coachT = setTimeout(()=>coach(COACH[o.type]), 1200); }
+}
+function finish(o, stars, msg){
+  const tip = stars;
+  cur.results.push({o, stars, tip});
+  if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
+  clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
+  $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
+  $('fbMsg').innerHTML = msg + (tip? `<div style="font-size:21px;color:#2e8b57;margin-top:6px;font-weight:700">+$${tip} tip</div>` : '');
+  $('ticket').classList.add('off'); $('fb').classList.remove('off');
+  setTimeout(()=>{ stars>=2 ? (react('happy',cur.idx), coinSnd()) : (react('unsure',cur.idx), sad()); }, 150);
+  $('controls').innerHTML='';
+}
+$('fbNext').onclick = async () => {
+  ac(); $('fb').classList.add('off'); $('bubble').classList.add('off'); $('ticket').classList.add('off');
+  if(voiceEl){ voiceEl.pause(); }
+  const cw=$('custWrap'); cw.classList.add('out','right'); await wait(450);
+  cur.idx++; nextOrder();
+};
+function flyCoins(n){
+  for(let k=0;k<n;k++) setTimeout(()=>{ const c=document.createElement('div'); c.id='coin'; c.textContent='$'; c.style.left='880px'; c.style.top='520px'; $('stage').appendChild(c);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.left='1490px'; c.style.top='500px'; }));
+    setTimeout(()=>{ c.remove(); coinSnd(); $('hudTips').textContent='$'+(S.tips-S.spent); jar(); }, 820); }, k*180);
+}
+function jar(){ const t = S.tips - S.spent, f = Math.min(1, t/60); const el=$('jarFill'); el.style.height = (f*80)+'px'; el.style.top = (600-f*80-6)+'px'; el.style.opacity = f>0?.85:0; }
+
+function endShift(){
+  const i = cur.i, tot = cur.results.reduce((a,r)=>a+r.stars,0), tips = cur.results.reduce((a,r)=>a+r.tip,0);
+  S.done[i] = 1; S.stars[i] = Math.max(S.stars[i]||0, tot); save();
+  $('custWrap').classList.add('out');
+  const rank = tot>=21 ? 'HEAD CHEF' : tot>=15 ? 'SUB PRO' : tot>=9 ? 'LINE COOK' : 'TRAINEE';
+  const byType = {}; cur.results.forEach(r=>{ const t=r.o.type; byType[t]=byType[t]||[0,0]; byType[t][0]++; if(r.stars>=2) byType[t][1]++; });
+  const TN = {split:'Split it',cut:'Cut it',fair:'Who got more',same:'Same amount',left:'Leftovers'};
+  const lab = o => o.type==='split'? `split ${o.n}` : o.type==='cut'? (o.wholes===2? `cut ${Math.floor(o.num/o.den)} ${o.num%o.den}/${o.den}`:`cut ${o.num}/${o.den}`) : o.type==='fair'? `${o.a.join('/')} vs ${o.b.join('/')}` : o.type==='same'? `${o.num}/${o.den} in ${DENW[o.pieces]}` : `left after ${o.num}/${o.den}`;
+  $('receipt').innerHTML = `<h2>SUB SHOP</h2><div class="c">Week ${Math.floor(i/5)+1} · Shift ${i%5+1}</div><div class="c">--------------------------------</div>` +
+    cur.results.map(r=>`<div class="ln"><span>${name(r.o.cust)}<br><small>${lab(r.o)}</small></span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}</span></div>`).join('') +
+    `<div class="ln tot"><span>STARS</span><span>${tot}/24</span></div><div class="ln tot"><span>TIPS</span><span>$${tips}</span></div>` +
+    `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
+    `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${TN[t]}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
+    `<div class="c" style="margin-top:8px">THANK YOU! COME AGAIN</div>` +
+    `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i<19?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
+  $('receiptScr').classList.remove('hidden'); ding();
+  $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1);
+}
+
+// ------------------------------------------------------------------ home, shop, settings
+function goHome(){
+  if(voiceEl) voiceEl.pause();
+  $('play').classList.add('hidden'); $('hud').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('home').classList.remove('hidden');
+  $('custWrap').classList.add('out'); renderHome();
+}
+function renderHome(){
+  const next = SHIFTS.findIndex((_,k)=>!S.done[k]);
+  $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t}</b><small>${w.s}</small></div>${[0,1,2,3,4].map(s=>{ const k=wi*5+s, open = k===0 || S.done[k-1] || S.done[k];
+      return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}<small>${S.done[k]? '★ '+S.stars[k]+'/24' : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
+  $('weeks').querySelectorAll('.tile').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
+  $('homeTips').textContent = `Tip jar: $${S.tips-S.spent}`; scene(); jar();
+}
+function scene(){
+  $('plants').classList.toggle('hidden', !S.owned.plants);
+  $('bell').classList.toggle('hidden', !S.owned.bell);
+  $('neon').classList.toggle('hidden', !S.owned.neon);
+  $('muteBtn').textContent = $('muteHome').textContent = S.muted ? '🔇' : '🔈';
+  if(!S.muted) $('muteHome').textContent = '🔈 Sound'; else $('muteHome').textContent = '🔇 Muted';
+}
+function renderShop(){
+  const have = S.tips - S.spent; $('shopMoney').textContent = '$'+have;
+  $('items').innerHTML = UPGRADES.map(u=>`<div class="item"><img src="${ART+u.img}.webp" alt=""><b>${u.name}</b>${S.owned[u.id]?'<span style="color:#2e8b57;font-weight:800">Owned ✔</span>':`<button class="btn" data-u="${u.id}" ${have<u.cost?'disabled':''}>$${u.cost}</button>`}</div>`).join('');
+  $('items').querySelectorAll('button[data-u]').forEach(b=>b.onclick=()=>{ const u=UPGRADES.find(x=>x.id===b.dataset.u); if(S.tips-S.spent<u.cost) return; S.spent+=u.cost; S.owned[u.id]=1; save(); coinSnd(); renderShop(); scene(); jar(); $('homeTips').textContent=`Tip jar: $${S.tips-S.spent}`; });
+}
+function showIntro(html){ return new Promise(res=>{ $('introBody').innerHTML=html; $('intro').classList.remove('hidden'); $('introGo').onclick=()=>{ $('intro').classList.add('hidden'); res(); }; }); }
+$('shopBtn').onclick = ()=>{ renderShop(); $('shop').classList.remove('hidden'); };
+$('shopClose').onclick = ()=> $('shop').classList.add('hidden');
+$('resetBtn').onclick = ()=> $('confirm').classList.remove('hidden');
+$('cNo').onclick = ()=> $('confirm').classList.add('hidden');
+$('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}}; save(); $('confirm').classList.add('hidden'); renderHome(); };
+const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted && voiceEl) voiceEl.pause(); };
+$('muteBtn').onclick = toggleMute; $('muteHome').onclick = toggleMute;
+$('homeBtn').onclick = goHome;
+$('bell').onclick = ding;
+
+// ------------------------------------------------------------------ boot
+load(); fit();
+$('bg').src = ART+'deli_bg.webp'; $('board').src = ART+'board.webp'; $('tipjar').src = ART+'tipjar.webp';
+$('plants').src = ART+'plants.webp'; $('bell').src = ART+'bell.webp'; $('neon').src = ART+'neon_open.webp';
+$('bg').onload = () => $('loading').classList.add('hidden');
+setTimeout(()=>$('loading').classList.add('hidden'), 2500);
+renderHome();
+window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, get cur(){ return cur; }};
+</script>
+</body>
+</html>

@@ -9,3 +9,12 @@ Grade 3 fractions interactive that goes with "The Party Sub" two-day lesson and 
 One self-contained `index.html`, no external libraries, fonts, or tracking. Works on Chromebooks.
 
 `slides/` holds the exact fraction visuals used in the Canva decks.
+
+## Cut the Sub: Shop Shift
+
+A bigger game version at `/shopshift/`: 4 weeks × 5 shifts at a sub shop, 20 voiced customers, 160 orders across five order types (split it, cut it, who got more, same amount, leftovers). The ruler fades week by week; progress saves in the browser.
+
+- `shopshift/index.html` – the game (built from `src.html` with the order data inlined)
+- `shopshift/art/` – customer cutouts and props (WebP)
+- `shopshift/voice/` – voice clips (`<customer>_o1..o8`, `_happy1-2`, `_unsure1-2`); missing clips fall back to text
+- `shopshift/tools/` – order generator and build script
