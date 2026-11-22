@@ -513,9 +513,9 @@ function cutInto(sub, cutsPx, gap=10){
   return sub.pieces;
 }
 // Scaffold fades: boxes (wk1) -> number line with marks (wk2) -> 0 and 1 only (wk3) -> nothing (wk4). Inspector: bare test-style line.
-function ruler(sub, mode, den){
+function ruler(sub, mode, den, plain){
   if(cur && cur.outage && mode!=='bare') mode='none';
-  if(cur && cur.support){ if(mode==='bare') ruler(sub,'bare',0); mode='boxes'; }
+  if(!plain && cur && cur.support){ if(mode==='bare') ruler(sub,'bare',0,true); mode='boxes'; }   // retry help: keep the bare line, add the bites
   if(mode==='none') return;
   const x0 = sub.x0, X = sub.x0 + sub.L*sub.wholes;
   if(mode==='boxes'){
@@ -1413,7 +1413,7 @@ $('tipjar').src = ART+'tipjar.webp'; $('plants').src = ART+'plants.webp'; $('bel
 $('bg').onload = () => $('loading').classList.add('hidden');
 setTimeout(()=>$('loading').classList.add('hidden'), 2500);
 goHome();
-window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, MG, get cur(){ return cur; }};
+window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, MG, nextOrder, retryOrder, get cur(){ return cur; }};
 
 </script>
 </body>
