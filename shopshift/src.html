@@ -1163,8 +1163,9 @@ const MG = {
     if(typeof id==='number') setScene(id);
     $('mg').classList.remove('hidden'); $('mgTitle').textContent=this.g.title; $('mgScore').textContent='0'; this.bar(1);
     const best=(S.mg||{})[id];
-    $('mgCard').innerHTML=`<h2>${this.g.icon} ${this.g.title}</h2><p>${this.g.how}</p>${best!=null?`<p style="color:#7a6a55">Your best: <b>${best}</b></p>`:''}<button class="btn green" id="mgGo" style="font-size:30px">Start!</button>`;
-    $('mgCard').classList.remove('hidden'); $('mgGo').onclick=()=>{ ac(); $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
+    const vid='chef_mg_'+id; chefSay([vid], false);
+    $('mgCard').innerHTML=`<h2>${this.g.icon} ${this.g.title} <button class="icon-btn" id="mgHear" title="Hear it again" style="vertical-align:middle;font-size:24px">🔊</button></h2><p>${this.g.how}</p>${best!=null?`<p style="color:#7a6a55">Your best: <b>${best}</b></p>`:''}<button class="btn green" id="mgGo" style="font-size:30px">Start!</button>`;
+    $('mgCard').classList.remove('hidden'); $('mgHear').onclick=()=>{ ac(); chefSay([vid], false); }; $('mgGo').onclick=()=>{ ac(); stopChef(); $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
   },
   end(){
     const sc=this.score; this.stop(); S.mg=S.mg||{}; const prev=S.mg[this.id], best=prev==null||sc>prev; if(best) S.mg[this.id]=sc;
@@ -1173,7 +1174,7 @@ const MG = {
       <div style="display:flex;gap:16px;justify-content:center;margin-top:10px"><button class="btn ghost" id="mgBack">Back</button><button class="btn green" id="mgAgain">Play again</button></div>`;
     $('mgCard').classList.remove('hidden'); $('mgAgain').onclick=()=>this.open(this.id); $('mgBack').onclick=()=>this.close();
   },
-  close(){ this.stop(); $('mg').classList.add('hidden'); if(this.id==='catch') visitShop(); else goHome(); },
+  close(){ this.stop(); stopChef(); $('mg').classList.add('hidden'); if(this.id==='catch') visitShop(); else goHome(); },
 };
 $('mgQuit').onclick=()=>MG.close();
 
