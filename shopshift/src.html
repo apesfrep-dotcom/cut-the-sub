@@ -23,9 +23,9 @@ button{font-family:inherit;cursor:pointer;border:none}
 /* ---------- scene ---------- */
 #bg{inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.78) saturate(1.05) blur(1.5px);transform:scale(1.03)}
 #vignette{inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,0,0,0) 40%,rgba(0,0,0,.45) 100%)}
-#neon{left:1250px;top:62px;width:290px;mix-blend-mode:screen;animation:flick 6s infinite}
+#neon{left:34px;top:88px;width:272px;filter:drop-shadow(0 0 10px rgba(255,60,90,.55));animation:flick 6s infinite}
 @keyframes flick{0%,92%,100%{opacity:1}93%{opacity:.55}95%{opacity:1}96%{opacity:.7}}
-#custWrap{left:40px;top:120px;width:560px;height:560px;transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .4s}
+#custWrap{left:92px;top:236px;width:420px;height:420px;transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .4s}
 #custWrap.out{transform:translateX(-720px);opacity:0}
 #custWrap.out.right{transform:translateX(900px)}
 #custInner{position:absolute;inset:0;transform-origin:50% 100%;animation:breathe 3.6s ease-in-out infinite}
@@ -36,10 +36,57 @@ button{font-family:inherit;cursor:pointer;border:none}
 #counter{left:0;right:0;top:600px;bottom:0;background:linear-gradient(#6b4a2b,#4a3220 18px,#3b2818 60%,#2a1c11);box-shadow:0 -6px 18px rgba(0,0,0,.45)}
 #counter:before{content:"";position:absolute;left:0;right:0;top:0;height:16px;background:linear-gradient(#a57a4d,#6b4a2b)}
 #board{left:230px;top:612px;width:1340px;height:250px;object-fit:fill;filter:drop-shadow(0 10px 12px rgba(0,0,0,.5))}
-#tipjar{left:1452px;top:452px;height:150px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
-#jarFill{left:1462px;top:540px;width:70px;height:0;background:linear-gradient(#e9c46a,#b08429);border-radius:0 0 18px 18px;opacity:.0}
-#plants{left:1250px;top:470px;height:140px;filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
-#bell{left:1135px;top:530px;height:74px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.4));cursor:pointer}
+#tipjar{left:1494px;top:487px;height:140px;filter:drop-shadow(0 4px 3px rgba(0,0,0,.55))}
+#jarFill{left:1503px;top:560px;width:66px;height:0;background:linear-gradient(#e9c46a,#b08429);border-radius:0 0 18px 18px;opacity:.0}
+#plants{left:1322px;top:511px;height:120px;filter:drop-shadow(0 4px 3px rgba(0,0,0,.55))}
+#bell{left:1110px;top:552px;height:74px;filter:drop-shadow(0 4px 3px rgba(0,0,0,.55));cursor:pointer}
+/* ---------- shop decorations (bases rest on the counter at y=626, tucked behind the board's back edge) ---------- */
+.deco{filter:drop-shadow(0 4px 3px rgba(0,0,0,.55));cursor:pointer;-webkit-user-drag:none}
+#lights{left:0;top:76px;width:1600px;height:64px;pointer-events:none;filter:none}
+#lights .b{animation:twinkle 1.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:1}50%{opacity:.45}}
+#disco{left:1086px;top:-48px;height:162px;transform-origin:50% 0;animation:sway 5s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+#gumball{left:10px;top:457px;height:170px}
+#cannon{left:110px;top:516px;height:112px}
+#cat{left:236px;top:519px;height:108px}
+#trophy{left:1200px;top:535px;height:92px;animation:shine 3s ease-in-out infinite}
+@keyframes shine{0%,100%{filter:drop-shadow(0 4px 3px rgba(0,0,0,.55)) brightness(1)}50%{filter:drop-shadow(0 4px 3px rgba(0,0,0,.55)) brightness(1.25)}}
+#train{left:-260px;top:560px;height:70px}
+#jukebox{left:24px;top:648px;height:236px}
+.hop{animation:hop .5s ease-out}
+@keyframes hop{0%,100%{translate:0 0}40%{translate:0 -18px}}
+.fxbit{position:absolute;pointer-events:none;z-index:40}
+#party{inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .5s;overflow:hidden}
+#party.on{opacity:1}
+#visitBar{left:330px;top:18px;display:flex;gap:16px;align-items:center;background:rgba(36,29,21,.88);color:var(--cream);border-radius:30px;padding:10px 14px 10px 26px;font-size:24px;font-weight:700;z-index:50}
+/* ---------- mini-games ---------- */
+#mg{inset:0;background:rgba(20,14,8,.62);backdrop-filter:blur(2px)}
+#mgTop{left:30px;right:30px;top:18px;height:64px;display:flex;align-items:center;gap:18px;z-index:5}
+#mgTop .pill{font-size:26px}
+#mgBar{flex:1;height:20px;border-radius:12px;background:rgba(249,244,232,.25);overflow:hidden}
+#mgBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#f2c230,#e9893a);border-radius:12px}
+#mgArea{inset:0;touch-action:none}
+#mgCard{left:50%;top:50%;transform:translate(-50%,-50%);width:780px;background:#fffdf6;border-radius:26px;padding:28px 36px;text-align:center;font-size:26px;line-height:1.35;box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:6}
+#mgCard h2{margin:0 0 6px;font-size:44px}
+#mgCard .big{font-size:58px;font-weight:900;color:var(--red)}
+.mgsub{position:absolute;height:auto;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+.mgfr{position:absolute;color:#fff;font-weight:900;text-shadow:0 3px 8px rgba(0,0,0,.6);transform:translateX(-50%);white-space:nowrap}
+.mgcard{position:absolute;background:#fffdf6;border-radius:24px;box-shadow:0 12px 28px rgba(0,0,0,.45);cursor:pointer;transition:transform .15s}
+.mgcard:hover{transform:scale(1.03)}
+.mgmsg{position:absolute;left:50%;transform:translateX(-50%);font-size:44px;font-weight:900;color:#fff;text-shadow:0 4px 10px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap}
+.mgline{position:absolute;height:6px;background:#fffdf6;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.mgtick{position:absolute;width:5px;background:#fffdf6;border-radius:2px}
+.mglab{position:absolute;color:#fff;font-size:34px;font-weight:900;transform:translateX(-50%);text-shadow:0 2px 6px rgba(0,0,0,.7)}
+.mgticket{position:absolute;width:170px;height:120px;background:#fffdf6;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:900;color:var(--dark);box-shadow:0 8px 18px rgba(0,0,0,.45);cursor:pointer;transition:left .5s cubic-bezier(.2,.8,.2,1),top .5s cubic-bezier(.2,.8,.2,1),transform .3s,width .5s,height .5s,font-size .5s}
+.mgticket.shake{animation:shake .4s}
+@keyframes shake{0%,100%{translate:0}25%{translate:-12px}75%{translate:12px}}
+.tile.mgt{width:118px;background:#8fd0a8;box-shadow:0 5px 0 #4f9a6c}
+.tile.mgt.lock{background:#ddd5c4;box-shadow:0 5px 0 #b8ad98}
+/* ---------- teacher light ---------- */
+#tlight{position:absolute;right:14px;bottom:12px;width:24px;height:24px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(0,0,0,.4);cursor:pointer;z-index:999;padding:0}
+#tpop{position:absolute;right:14px;bottom:48px;width:390px;background:#fffdf6;border-radius:16px;padding:16px 18px;font-size:19px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:999;color:#2b211a}
+#tpop b.h{display:block;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:#8a6a3a;margin-bottom:4px}
 
 /* ---------- HUD ---------- */
 #hud{left:20px;right:20px;top:16px;height:60px;display:flex;gap:14px;align-items:center;pointer-events:none}
@@ -52,7 +99,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 .icon-btn{pointer-events:auto;background:rgba(36,29,21,.82);color:var(--cream);width:56px;height:56px;border-radius:50%;font-size:26px;display:flex;align-items:center;justify-content:center}
 
 /* ---------- speech + ticket ---------- */
-#bubble{left:590px;top:110px;width:640px;min-height:150px;background:#fff;border-radius:26px;padding:22px 28px 22px;font-size:29px;line-height:1.3;box-shadow:0 12px 30px rgba(0,0,0,.35);transform-origin:0 70%;transition:transform .25s,opacity .25s}
+#bubble{left:528px;top:118px;width:640px;min-height:150px;background:#fff;border-radius:26px;padding:22px 28px 22px;font-size:29px;line-height:1.3;box-shadow:0 12px 30px rgba(0,0,0,.35);transform-origin:0 70%;transition:transform .25s,opacity .25s}
 #bubble:before{content:"";position:absolute;left:-26px;top:70px;border:16px solid transparent;border-right:28px solid #fff;border-left:0}
 #bubble.off{transform:scale(.6);opacity:0}
 #bubble .who{font-size:20px;font-weight:800;color:var(--brown);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
@@ -123,9 +170,11 @@ button{font-family:inherit;cursor:pointer;border:none}
 #receipt .rbtns{display:flex;gap:12px;justify-content:center;margin-top:18px;font-family:"Trebuchet MS",sans-serif}
 #receipt .rbtns .btn{font-size:22px;padding:10px 20px}
 #shop .card,#confirm .card,#intro .card{width:900px}
-.items{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:18px 0}
+.items{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0}
+.homeBar .btn{font-size:21px;padding:10px 16px;white-space:nowrap}
+.item{padding:8px!important}
 .item{background:#fff;border-radius:18px;padding:12px;text-align:center}
-.item img{height:110px;max-width:100%;object-fit:contain}
+.item img{height:70px;max-width:100%;object-fit:contain}
 .item b{display:block;font-size:22px;margin:6px 0}
 .item .btn{font-size:20px;padding:8px 16px}
 h2.t{margin:0 0 6px;font-size:40px}
@@ -194,13 +243,22 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
   <img id="bg" class="abs" alt="">
   <div id="vignette" class="abs"></div>
   <img id="neon" class="abs hidden" alt="">
+  <svg id="lights" class="abs hidden" viewBox="0 0 1600 64"></svg>
+  <img id="disco" class="abs deco hidden" data-fx="disco" alt="">
   <div id="custWrap" class="abs out"><div id="custInner"><img id="custImg" alt=""></div></div>
   <div id="counter" class="abs"></div>
-  <img id="board" class="abs" alt="">
+  <img id="train" class="abs deco hidden" data-fx="train" alt="">
+  <img id="gumball" class="abs deco hidden" data-fx="gumball" alt="">
+  <img id="cannon" class="abs deco hidden" data-fx="cannon" alt="">
+  <img id="cat" class="abs deco hidden" data-fx="cat" alt="">
   <img id="plants" class="abs hidden" alt="">
   <img id="bell" class="abs hidden" alt="">
+  <img id="trophy" class="abs deco hidden" data-fx="trophy" alt="">
   <div id="jarFill" class="abs"></div>
   <img id="tipjar" class="abs" alt="">
+  <img id="board" class="abs" alt="">
+  <img id="jukebox" class="abs deco hidden" data-fx="jukebox" alt="">
+  <div id="party" class="abs"></div>
 
   <div id="play" class="abs hidden">
     <div id="subLayer" class="abs"></div>
@@ -233,16 +291,23 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
       <div class="weeks" id="weeks"></div>
       <div class="homeBar">
         <div class="money" id="homeTips"></div>
-        <button class="btn ghost" id="shopBtn">🛒 Shop upgrades</button>
+        <button class="btn ghost" id="shopBtn">🛒 Buy upgrades</button>
+        <button class="btn ghost" id="visitBtn">🏪 My shop</button>
         <button class="btn ghost" id="byosBtn">🥪 Build Your Own Sub</button>
         <button class="btn ghost hidden" id="menuBtn">📋 Menu</button>
         <div class="spacer"></div>
         <button class="btn ghost" id="muteHome">🔈 Sound</button>
-        <button class="btn ghost" id="resetBtn" style="font-size:22px">Reset progress</button>
+        <button class="btn ghost" id="resetBtn" style="font-size:18px">Reset</button>
       </div>
     </div>
   </div>
 
+  <div id="visitBar" class="abs hidden"><span id="visitMsg">Your shop! Tap things to play.</span><button class="btn" id="catchBtn">🕹️ Topping Catch</button><button class="btn" id="visitBack">Back</button></div>
+  <button id="tlight" title="Teacher check" aria-label="Teacher check"></button>
+  <div id="tpop" class="hidden"></div>
+  <div id="mg" class="abs hidden"><div id="mgArea" class="abs"></div>
+    <div id="mgTop" class="abs"><div class="pill" id="mgTitle"></div><div id="mgBar"><i></i></div><div class="pill">Score <b id="mgScore">0</b></div><button class="icon-btn" id="mgQuit" title="Quit">✕</button></div>
+    <div id="mgCard" class="abs"></div></div>
   <div id="receiptScr" class="screen dim hidden"><div id="receipt"></div></div>
 
   <div id="shop" class="screen dim hidden"><div class="card">
@@ -301,7 +366,7 @@ const WEEKS = [
   {t:'Week 2 · Food Truck', s:'Number line with marks · thirds and sixths join'},
   {t:'Week 3 · Ballpark', s:'Only 0 and 1 are marked'},
   {t:'Week 4 · Big Party', s:'No marks at all · past one whole'}];
-const FRIDAY = '<p class="l">Every <b>Shift 5</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
+const FRIDAY = '<p class="l">Every <b>Shift 4</b> ends with <b>Inspector Hale</b>: three questions on a plain number line, like a test.</p>';
 const WEEK_INTRO = [
   '<h2 class="t">Week 1: The Deli</h2><p class="l">Under every sub is a strip of <b>24 bites</b>, just like your Fraction Sleeve. The <b>bottom number</b> tells how many equal <b>jumps</b> fit in the whole sub; the <b>top number</b> tells how many jumps to take from 0. Half a sub is <b>12 bites</b>, a fourth is <b>6</b>, an eighth is <b>3</b>. The dark marks show where the equal pieces split. Count bites or marks from <b>0</b> (the left end) to find your cut.</p>'+FRIDAY,
   '<h2 class="t">Week 2: The Food Truck</h2><p class="l">Business is booming, so you\'re running the food truck at the park! The bites are gone, but the <b>jumps</b> are still there. Look at the <b>bottom number</b>: that\'s how many equal jumps fit in the whole sub. Then take as many jumps as the <b>top number</b> says, starting at 0. Now there\'s a <b>number line with marks</b>. Count the <b>jumps</b> (spaces), not the lines. New this week: <b>thirds</b> and <b>sixths</b>.</p>'+FRIDAY,
@@ -318,25 +383,60 @@ const COACH = {
   two:'<b>Two people, one order:</b> cut the first person\'s piece starting at <b>0</b>, then the second piece right after it.',
   lineup:'<b>Line them up:</b> tap a ticket, then tap the line where that cut goes. Place all three, then press <b>Check</b>.'};
 const UPGRADES = [
-  {id:'plants', name:'Counter plants', cost:10, img:'plants'},
-  {id:'bell', name:'Service bell', cost:15, img:'bell'},
-  {id:'neon', name:'Neon OPEN sign', cost:25, img:'neon_open'},
-  {id:'knife', name:'Pro bread knife', cost:40, img:'knife'}];
+  {id:'plants', name:'Counter plants', cost:10, img:'plants', d:'A little green'},
+  {id:'bell', name:'Service bell', cost:15, img:'bell', d:'Tap it: ding!'},
+  {id:'lights', name:'String lights', cost:15, img:null, d:'Twinkle over the shop'},
+  {id:'neon', name:'Neon OPEN sign', cost:25, img:'neon_open_a', d:'Glows by the door'},
+  {id:'gumball', name:'Gumball machine', cost:25, img:'gumball', d:'Tap for a gumball'},
+  {id:'cat', name:'Shop cat', cost:35, img:'cat', d:'Tap to hear a meow'},
+  {id:'knife', name:'Pro bread knife', cost:40, img:'knife', d:'A fancy knife for cutting'},
+  {id:'jukebox', name:'Jukebox', cost:45, img:'jukebox', d:'Tap to play music'},
+  {id:'train', name:'Toy train', cost:60, img:'train', d:'Chugs along the counter'},
+  {id:'disco', name:'Disco ball', cost:100, img:'disco', d:'Party lights! Turns on for Head Chef shifts'},
+  {id:'cannon', name:'Confetti cannon', cost:150, img:'cannon', d:'Fires on every 3-star order'},
+  {id:'trophy', name:'Golden Sub trophy', cost:200, img:'trophy', d:'The ultimate prize'}];
+const DECOS = ['gumball','cat','jukebox','train','disco','cannon','trophy'];
+const LIGHTS_SVG = (()=>{ const pal=['#ff5a5a','#ffd23f','#3fd47a','#4fb3ff','#ff8ad8']; let p='', b='';
+  for(let k=0;k<4;k++){ const x0=k*400, x1=x0+400; p+=`<path d="M${x0} 6 Q${x0+200} 52 ${x1} 6" stroke="#2b2b2b" stroke-width="3" fill="none"/>`;
+    for(let j=1;j<8;j++){ const t=j/8, x=x0+400*t, y=(1-t)*(1-t)*6+2*(1-t)*t*52+t*t*6; b+=`<circle class="b" cx="${x}" cy="${y+9}" r="8" fill="${pal[(k*7+j)%5]}" style="animation-delay:${((k*7+j)%5)*.3}s;filter:drop-shadow(0 0 6px ${pal[(k*7+j)%5]})"/><rect x="${x-4}" y="${y-1}" width="8" height="7" fill="#444"/>`; } }
+  return p+b; })();
 const FOOD_ART = {baguette:['food_baguette',.188], flatbread:['food_flatbread',.35], churro:['food_churro',.143], hot_dog:['food_hotdog',.184], licorice:['food_licorice',.062]};
 const FOODW = {baguette:'baguette', flatbread:'flatbread', churro:'churro', hot_dog:'hot dog', licorice:'licorice rope'};
 
 // ------------------------------------------------------------------ save
 let S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:false, seen:{}, weekSeen:{}, badges:{}};
-function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY)||'null'); if(v) S = Object.assign(S, v); }catch(e){} }
+function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY)||'null'); if(v) S = Object.assign(S, v); }catch(e){} migrate(); }
+function migrate(){
+  if(S.ver>=2) return;
+  const od = S.done||{}, os = S.stars||{}, nd = {}, ns = {};
+  for(let w=0; w<4; w++){
+    const map = w===0 ? [[0],[1],[2],[3,4]] : [[0],[1],[3],[4]];
+    map.forEach((olds,k)=>{ const n=w*4+k; if(olds.some(o=>od[w*5+o])){ nd[n]=1; ns[n]=Math.max(...olds.map(o=>os[w*5+o]||0)); } });
+  }
+  S.done = nd; S.stars = ns; S.ver = 2; save();
+}
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
 
 // ------------------------------------------------------------------ data: base orders + 2 new orders per shift (+ Friday inspector)
+// 4 shifts per location. Weeks 2-4 repeat two order mixes, so the repeat shift 3 is dropped.
+// Week 1 merges its old shifts 4 and 5 so every order type is still introduced.
+const PER = 4, NSH = 16;
 const SHIFTS = [];
-for(let w=1; w<=4; w++) for(let s=1; s<=5; s++){
+function oldShift(w, s){
   const base = D.orders.filter(o=>o.week===w && o.shift===s);
   const add = D.new.filter(o=>o.week===w && o.shift===s).sort((a,b)=>b.pos-a.pos);
-  const list = base.slice(); add.forEach(o=>list.splice(o.pos, 0, o));
-  SHIFTS.push({list, boss: s===5 ? D.boss.filter(o=>o.week===w) : []});
+  const list = base.slice(); add.forEach(o=>list.splice(o.pos, 0, o)); return list;
+}
+function mergeShifts(a, b){
+  const q = {same:2, two:2, left:2, name:1, fair:1, cut:1, split:1}, out = [];
+  a.concat(b).forEach(o=>{ if(q[o.type]>0){ q[o.type]--; out.push(o); } }); return out;
+}
+for(let w=1; w<=4; w++){
+  const keep = w===1 ? [1,2,3,4] : [1,2,4,5];
+  keep.forEach((s,k)=>{
+    const list = (w===1 && k===3) ? mergeShifts(oldShift(1,4), oldShift(1,5)) : oldShift(w,s);
+    SHIFTS.push({list, old:(w-1)*5+(s-1), boss: k===PER-1 ? D.boss.filter(o=>o.week===w) : []});
+  });
 }
 const name = c => D.names[c];
 const shiftMax = i => SHIFTS[i].list.length*3;
@@ -709,16 +809,16 @@ function react(mood, n){ const o = cur.list[cur.idx]; setCustomer(o.cust, mood);
 function setScene(w){ const sc = SCENES[w]; $('bg').src = ART+sc.bg+'.webp'; $('board').src = ART+sc.board+'.webp'; $('counter').style.background = sc.counter; $('counter').style.setProperty('--lip', sc.lip); }
 
 async function startShift(i){
-  ac();
-  const w = Math.floor(i/5);
+  ac(); stopMusic(); $('visitBar').classList.add('hidden'); $('lights').style.pointerEvents='none'; $('tpop').classList.add('hidden');
+  const w = Math.floor(i/PER);
   setScene(w); $('receiptScr').classList.add('hidden'); $('home').classList.add('hidden');
   if(!S.weekSeen[w]){ S.weekSeen[w]=1; save(); if(w===1) chefSay(['chef_week2'], false); await showIntro(WEEK_INTRO[w]); stopChef(); }
   if(w===0 || !S.readySeen || !S.readySeen[w]){ S.readySeen = S.readySeen||{}; S.readySeen[w]=1; save(); await showReady(true); }
   const sh = SHIFTS[i];
-  cur = {i, w, list: sh.list.map(decorate).concat(sh.boss.map(decorate)), nBase: sh.list.length, idx:0, results:[], ev: D.events[i]||null};
+  cur = {i, w, list: sh.list.map(decorate).concat(sh.boss.map(decorate)), nBase: sh.list.length, idx:0, results:[], ev: D.events[sh.old]||null};
   $('home').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('bossCard').classList.add('hidden');
   $('play').classList.remove('hidden'); $('hud').classList.remove('hidden');
-  $('hudShift').innerHTML = `${SCENES[w].name} · Shift <b>${i%5+1}</b>`;
+  $('hudShift').innerHTML = `${SCENES[w].name} · Shift <b>${i%PER+1}</b>`;
   cur.list.forEach(o=>{ if(!S.muted){ const a=new Audio(); a.preload='auto'; a.src=VOX+o.id+'.mp3'; } ['neutral','happy','unsure'].forEach(m=>{ new Image().src=`${ART}cust_${o.cust}_${m}.webp`; }); });
   dots(); nextOrder();
 }
@@ -732,6 +832,7 @@ function dots(){
 }
 
 async function nextOrder(){
+  if(S.owned.train && cur.idx%3===1) setTimeout(()=>FX.train($('train'), true), 1400);
   clearBoard(); ['fb','coach','bubble','ticket'].forEach(id=>$(id).classList.add('off')); $('speed').classList.add('off');
   $('bg').classList.remove('dark'); $('neon').classList.remove('dark');
   if(cur.idx>=cur.list.length) return endShift();
@@ -771,6 +872,8 @@ function finish(o, stars, msg){
   let tip = o.bare ? 0 : stars + (fast?1:0); if(o.vip) tip *= 2;
   const sb=$('speed').firstChild; sb.style.transition='none'; sb.style.width=getComputedStyle(sb).width;
   cur.results.push({o, stars, tip, fast, retried:!!o.retry});
+  if(!o.retry && !cur.byos){ S.hist = (S.hist||[]).concat({t:o.bare?'insp':o.type, ok:raw>=2}).slice(-10); save(); tlight(); }
+  if(raw===3 && !o.retry && S.owned.cannon) setTimeout(()=>FX.cannon($('cannon'), true), 350);
   if(tip>0){ S.tips += tip; save(); flyCoins(tip); }
   clearTimeout(cur.coachT); clearTimeout(coach.t); $('coach').classList.add('off');
   $('fbStars').innerHTML = [1,2,3].map(k=>`<span class="${k<=stars?'on':''}">★</span>`).join('');
@@ -798,7 +901,7 @@ function flyCoins(n){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ c.style.left='1490px'; c.style.top='500px'; }));
     setTimeout(()=>{ c.remove(); coinSnd(); $('hudTips').textContent='$'+(S.tips-S.spent); jar(); }, 820); }, k*150);
 }
-function jar(){ const t = S.tips - S.spent, f = Math.min(1, t/80); const el=$('jarFill'); el.style.height = (f*80)+'px'; el.style.top = (600-f*80-6)+'px'; el.style.opacity = f>0?.85:0; }
+function jar(){ const t = S.tips - S.spent, f = Math.min(1, t/80); const el=$('jarFill'); el.style.height = (f*70)+'px'; el.style.top = (614-f*70)+'px'; el.style.opacity = f>0?.85:0; }
 
 const TN = {split:'Split it',cut:'Cut it',fair:'Who got more',same:'Same amount',left:'Leftovers',name:'Name the cut',fix:'Check the rookie',two:'Two pieces',lineup:'Line them up'};
 function lab(o){
@@ -814,18 +917,19 @@ function endShift(){
   if(passed) S.badges[cur.w] = 1;
   save();
   $('custWrap').classList.add('out');
-  const pct = tot/max, rank = pct>=.88 ? 'HEAD CHEF' : pct>=.63 ? 'SUB PRO' : pct>=.38 ? 'LINE COOK' : 'TRAINEE';
+  const pct = tot/max; if(pct>=.88 && S.owned.disco) setTimeout(()=>party(5000), 600);
+  const rank = pct>=.88 ? 'HEAD CHEF' : pct>=.63 ? 'SUB PRO' : pct>=.38 ? 'LINE COOK' : 'TRAINEE';
   const byType = {}; cur.results.forEach(r=>{ const t=r.o.bare?'Inspection':TN[r.o.type]; byType[t]=byType[t]||[0,0]; byType[t][0]++; if(r.stars>=2) byType[t][1]++; });
-  $('receipt').innerHTML = `<h2>${SCENES[cur.w].name.toUpperCase()}</h2><div class="c">Week ${cur.w+1} · Shift ${i%5+1}</div><div class="c">--------------------------------</div>` +
+  $('receipt').innerHTML = `<h2>${SCENES[cur.w].name.toUpperCase()}</h2><div class="c">Week ${cur.w+1} · Shift ${i%PER+1}</div><div class="c">--------------------------------</div>` +
     base.map(r=>`<div class="ln"><span>${name(r.o.cust)}${r.o.vip?' ★VIP':''}<br><small>${lab(r.o)}</small></span><span>${r.retried?'↻ ':''}${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}<br>$${r.tip}${r.fast?' ⚡':''}</span></div>`).join('') +
     `<div class="ln tot"><span>STARS</span><span>${tot}/${max}</span></div><div class="ln tot"><span>TIPS</span><span>$${tips}</span></div>` +
     (boss.length ? `<div class="c" style="margin-top:10px">--- FRIDAY INSPECTION ---</div>` + boss.map(r=>`<div class="ln"><span>${lab(r.o)}</span><span>${'★'.repeat(r.stars)}${'☆'.repeat(3-r.stars)}</span></div>`).join('') + `<div class="ln tot"><span>INSPECTION</span><span>${bossStars}/9 ${passed?'✅ BADGE':'❌'}</span></div>` : '') +
     (base.some(r=>r.retried)?`<div class="c" style="font-size:18px">↻ = redone with help</div>`:'') + `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
     `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary><div class="ln"><span>Needed a redo</span><span>${cur.results.filter(r=>r.retried).length} of ${cur.results.length}</span></div>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${t}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
     `<div class="c" style="margin-top:8px">THANK YOU! COME AGAIN</div>` +
-    `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i<19?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
+    `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i%PER===1?'<button class="btn" id="rGame" style="background:#8fd0a8">🎮 Bonus game!</button>':''}${i<NSH-1?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
   $('receiptScr').classList.remove('hidden'); ding();
-  $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1);
+  $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1); if($('rGame')) $('rGame').onclick = ()=>{ $('receiptScr').classList.add('hidden'); MG.open(cur.w); };
 }
 
 
@@ -834,18 +938,19 @@ function endShift(){
 // ------------------------------------------------------------------ Head Chef narration
 let chefEl = null, chefQ = [], chefTimer = null;
 function stopChef(){ chefQ = []; clearTimeout(chefTimer); if(chefEl){ chefEl.pause(); chefEl = null; } $('chefBadge').classList.remove('on','talk'); }
+const CHEF_RATE = 1.2; // chef narration speed (1 = as recorded)
 function chefSay(ids, waitForCustomer=true){
   stopChef(); if(S.muted || !ids.length) return;
   chefQ = ids.slice(); const b = $('chefBadge'); b.src = ART+'chef.webp';
   let waited = 0;
   const next = () => {
     if(!chefQ.length){ b.classList.remove('talk'); chefTimer = setTimeout(()=>b.classList.remove('on'), 900); return; }
-    const id = chefQ.shift(); const a = new Audio(VOX+id+'.mp3'); chefEl = a;
+    const id = chefQ.shift(); const a = new Audio(VOX+id+'.mp3'); a.preservesPitch = true; a.playbackRate = CHEF_RATE; chefEl = a;
     b.classList.add('on','talk');
     a.onended = () => setTimeout(next, 250); a.onerror = () => next();
     a.play().catch(()=>next());
   };
-  const start = () => { if(waitForCustomer && voiceEl && !voiceEl.paused && !voiceEl.ended && waited < 5000){ waited += 200; chefTimer = setTimeout(start, 200); return; } next(); };
+  const start = () => { if(waitForCustomer && voiceEl && !voiceEl.paused && !voiceEl.ended && waited < 20000){ waited += 200; chefTimer = setTimeout(start, 200); return; } next(); };
   chefTimer = setTimeout(start, waitForCustomer ? 400 : 0);
 }
 function chefFrac(n,d){ return `chef_f_${n}_${d}`; }
@@ -984,30 +1089,219 @@ function retryOrder(o){
   else if(CHEF_HINT[o.type]) chefCoach(CHEF_HINT[o.type], true);
 }
 
+// ------------------------------------------------------------------ shop decorations: tap-to-play effects
+const pos = el => ({x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight});
+function bit(html, x, y, css=''){ const b=document.createElement('div'); b.className='fxbit'; b.innerHTML=html; b.style.cssText=`left:${x}px;top:${y}px;${css}`; $('stage').appendChild(b); return b; }
+function sweep(f0, f1, f2, dur, type='sawtooth', g=.12, lp=1600){ const a=ac(); if(!a||S.muted) return; const o=a.createOscillator(), v=a.createGain(), f=a.createBiquadFilter(), t=a.currentTime;
+  f.type='lowpass'; f.frequency.value=lp; o.type=type; o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f1,t+dur*.35); o.frequency.linearRampToValueAtTime(f2,t+dur);
+  v.gain.setValueAtTime(.0001,t); v.gain.exponentialRampToValueAtTime(g,t+.05); v.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(f); f.connect(v); v.connect(a.destination); o.start(t); o.stop(t+dur+.05); }
+const meow = () => sweep(480, 880, 520, .6);
+const toot = () => { [0,.42].forEach(t=>{ tone(523,t,.36,'square',.06); tone(659,t,.36,'square',.045); }); };
+const fanfare = () => [523,659,784,1047].forEach((f,k)=>tone(f,k*.13,k===3?.7:.2,'triangle',.12));
+const clink = () => { tone(2400,0,.05,'triangle',.09); tone(1800,.09,.08,'triangle',.07); tone(1500,.25,.06,'triangle',.05); };
+const boom = () => { chop(); tone(110,0,.25,'triangle',.18); };
+let music = null;
+const TUNE = [[523,.25],[659,.25],[784,.25],[659,.25],[698,.5],[587,.5],[523,.25],[659,.25],[784,.5],[880,.25],[784,.25],[659,.5],[587,.25],[523,.75]];
+function playTune(){ let t=0; TUNE.forEach(([f,d])=>{ tone(f,t,d*.9,'square',.035); tone(f/2,t,d*.9,'triangle',.05); t+=d*.55; }); return t; }
+function startMusic(){ if(music) return; const loop=()=>{ const len=playTune(); music=setTimeout(loop, len*1000); }; loop(); }
+function stopMusic(){ clearTimeout(music); music=null; }
+function confetti(x, y, n=70){ const pal=['#ff5a5a','#ffd23f','#3fd47a','#4fb3ff','#ff8ad8','#ffffff'];
+  for(let k=0;k<n;k++){ const c=bit('', x, y, `width:${8+Math.random()*6}px;height:${10+Math.random()*8}px;background:${pal[k%6]};border-radius:2px`);
+    const dx=-120+Math.random()*520, up=-200-Math.random()*320, r=Math.random()*720;
+    c.animate([{transform:'translate(0,0) rotate(0)'},{transform:`translate(${dx*.6}px,${up}px) rotate(${r/2}deg)`,offset:.4},{transform:`translate(${dx}px,${up+420}px) rotate(${r}deg)`,opacity:0}],{duration:1700+Math.random()*900,easing:'cubic-bezier(.2,.7,.4,1)'}).onfinish=()=>c.remove(); } }
+function party(ms=6000){ const pt=$('party'); if(pt.classList.contains('on')) return; const pal=['#ff3b6b','#3bd1ff','#ffe23b','#7cff6b','#c86bff'];
+  pt.innerHTML=''; for(let k=0;k<14;k++){ const d=document.createElement('div'); d.style.cssText=`position:absolute;width:140px;height:140px;border-radius:50%;background:radial-gradient(${pal[k%5]},transparent 70%);left:${Math.random()*1500}px;top:${Math.random()*800}px`;
+    d.animate([{transform:'translate(0,0)'},{transform:`translate(${-300+Math.random()*600}px,${-200+Math.random()*400}px)`}],{duration:1800,iterations:Infinity,direction:'alternate',easing:'ease-in-out'}); pt.appendChild(d); }
+  pt.classList.add('on'); const db=$('disco'); db.style.animation='sway .6s ease-in-out infinite'; if(!music) playTune();
+  clearTimeout(party.t); party.t=setTimeout(()=>{ pt.classList.remove('on'); db.style.animation=''; }, ms); }
+const FX = {
+  gumball(el){ const p=pos(el), cols=['#ff4d4d','#ffd23f','#3fd47a','#4fb3ff','#ff8ad8']; clink();
+    const g=bit('', p.x+p.w*.62, p.y+p.h*.80, `width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,${cols[Math.floor(Math.random()*5)]} 45%);box-shadow:0 2px 3px rgba(0,0,0,.4)`);
+    g.animate([{transform:'translate(0,0)'},{transform:'translate(14px,20px)',offset:.3},{transform:'translate(40px,8px)',offset:.55},{transform:'translate(70px,20px)',offset:.8},{transform:'translate(90px,20px)',opacity:0}],{duration:1400,easing:'ease-out'}).onfinish=()=>g.remove(); },
+  cat(el){ meow(); el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop'); const p=pos(el);
+    const h=bit('❤️', p.x+p.w*.45, p.y-10, 'font-size:34px'); h.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-80px)',opacity:0}],{duration:1300}).onfinish=()=>h.remove(); },
+  jukebox(el){ if(music){ stopMusic(); return; } startMusic(); const p=pos(el);
+    for(let k=0;k<6;k++) setTimeout(()=>{ const n=bit(k%2?'♪':'♫', p.x+p.w*(.2+Math.random()*.6), p.y+20, 'font-size:36px;color:#ffd23f;text-shadow:0 2px 4px #000');
+      n.animate([{transform:'translate(0,0)',opacity:1},{transform:`translate(${-30+Math.random()*60}px,-140px)`,opacity:0}],{duration:1600}).onfinish=()=>n.remove(); }, k*260); },
+  train(el, auto){ if(el.dataset.run) return; el.dataset.run=1; if(!auto || !S.muted) toot(); el.style.transition='none'; el.style.left='-260px'; void el.offsetWidth;
+    el.style.transition='left 5s linear'; el.style.left='1660px'; setTimeout(()=>{ el.style.transition='none'; el.style.left=$('visitBar').classList.contains('hidden')?'-260px':'560px'; delete el.dataset.run; }, 5100); },
+  disco(){ party(6000); },
+  cannon(el){ const p=pos(el); boom(); confetti(p.x+p.w*.8, p.y+p.h*.15); },
+  trophy(el){ fanfare(); const p=pos(el); for(let k=0;k<10;k++){ const sp=bit('✨', p.x+Math.random()*p.w, p.y+Math.random()*p.h, 'font-size:26px');
+    sp.animate([{transform:'scale(.2)',opacity:0},{transform:'scale(1.2)',opacity:1,offset:.4},{transform:'scale(.2) translateY(-30px)',opacity:0}],{duration:1100,delay:k*90}).onfinish=()=>sp.remove(); } },
+};
+document.querySelectorAll('.deco').forEach(el=>el.addEventListener('click', ()=>{ ac(); FX[el.dataset.fx](el); }));
+$('lights').addEventListener('click', ()=>{ ac(); pop(); document.querySelectorAll('#lights .b').forEach((c,k)=>{ const pal=['#ff5a5a','#ffd23f','#3fd47a','#4fb3ff','#ff8ad8']; c.setAttribute('fill', pal[(k+Math.floor(Math.random()*5))%5]); }); });
+function visitShop(){
+  ac(); $('home').classList.add('hidden'); $('custWrap').classList.add('out'); scene();
+  setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/PER))));
+  const any = DECOS.concat(['lights','plants','bell','neon']).some(id=>S.owned[id]);
+  $('visitMsg').textContent = any ? 'Tap things to play!' : 'Nothing here yet. Buy things with your tips!';
+  $('lights').style.pointerEvents='auto'; $('train').style.left='560px'; $('visitBar').classList.remove('hidden');
+  const cu = !!S.done[PER-1]; $('catchBtn').disabled = !cu; $('catchBtn').textContent = cu ? '🕹️ Topping Catch' : '🔒 Game (finish Week 1)';
+}
+$('visitBtn').onclick = visitShop;
+$('visitBack').onclick = ()=>{ stopMusic(); $('party').classList.remove('on'); $('lights').style.pointerEvents='none'; $('train').style.left='-260px'; $('visitBar').classList.add('hidden'); $('home').classList.remove('hidden'); renderHome(); };
+
+// ------------------------------------------------------------------ mini-games
+const rnd = n => Math.floor(Math.random()*n);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const fracHTML = (n,d) => d===1 ? `${n}` : n>d && n%d ? `${Math.floor(n/d)} ${frac(n%d,d)}` : n%d===0 ? `${n/d}` : frac(n,d);
+function stagePt(e){ const r=$('stage').getBoundingClientRect(); return {x:(e.clientX-r.left)*1600/r.width, y:(e.clientY-r.top)*900/r.height}; }
+const MG = {
+  tok:0, raf:0, timers:[], g:null, id:null, score:0,
+  el(tag, cls, css, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(css) e.style.cssText=css; if(html!=null) e.innerHTML=html; $('mgArea').appendChild(e); return e; },
+  later(fn, ms){ const t=this.tok; this.timers.push(setTimeout(()=>{ if(t===this.tok) fn(); }, ms)); },
+  add(n){ this.score=Math.max(0,this.score+n); $('mgScore').textContent=this.score; },
+  bar(f){ $('mgBar').firstChild.style.width=Math.max(0,Math.min(1,f))*100+'%'; },
+  msg(t, y=430, ms=900, col='#fff'){ const m=this.el('div','mgmsg',`top:${y}px;color:${col}`,t); m.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.1)',offset:.25},{opacity:1,transform:'translateX(-50%) scale(1)',offset:.8},{opacity:0}],{duration:ms}).onfinish=()=>m.remove(); },
+  clock(secs, done){ const t=this.tok, t0=performance.now(); const tick=now=>{ if(t!==this.tok) return; const f=1-(now-t0)/(secs*1000); this.bar(f); if(f<=0) return done(); this.raf=requestAnimationFrame(tick); }; this.raf=requestAnimationFrame(tick); },
+  stop(){ this.tok++; cancelAnimationFrame(this.raf); this.timers.forEach(clearTimeout); this.timers=[]; $('mgArea').innerHTML=''; $('mgArea').onpointerdown=$('mgArea').onpointermove=null; document.onkeydown=null; },
+  open(id){
+    ac(); stopMusic(); this.stop(); this.id=id; this.g = id==='catch' ? CATCH : MGAMES[id];
+    ['home','visitBar','receiptScr'].forEach(x=>$(x).classList.add('hidden'));
+    if(typeof id==='number') setScene(id);
+    $('mg').classList.remove('hidden'); $('mgTitle').textContent=this.g.title; $('mgScore').textContent='0'; this.bar(1);
+    const best=(S.mg||{})[id];
+    const vid='chef_mg_'+id; chefSay([vid], false);
+    $('mgCard').innerHTML=`<h2>${this.g.icon} ${this.g.title} <button class="icon-btn" id="mgHear" title="Hear it again" style="vertical-align:middle;font-size:24px">🔊</button></h2><p>${this.g.how}</p>${best!=null?`<p style="color:#7a6a55">Your best: <b>${best}</b></p>`:''}<button class="btn green" id="mgGo" style="font-size:30px">Start!</button>`;
+    $('mgCard').classList.remove('hidden'); $('mgHear').onclick=()=>{ ac(); chefSay([vid], false); }; $('mgGo').onclick=()=>{ ac(); stopChef(); $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
+  },
+  end(){
+    const sc=this.score; this.stop(); S.mg=S.mg||{}; const prev=S.mg[this.id], best=prev==null||sc>prev; if(best) S.mg[this.id]=sc;
+    const tip=this.g.tips(sc); if(tip>0) S.tips+=tip; save(); best&&sc>0 ? fanfare() : coinSnd();
+    $('mgCard').innerHTML=`<h2>${this.g.icon} Time's up!</h2><div class="big">${sc} points</div><p>${best&&sc>0?'🏆 New best score!':'Best: '+S.mg[this.id]}</p>${tip?`<p style="color:#2e8b57;font-weight:800">+$${tip} tips for the jar!</p>`:''}
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:10px"><button class="btn ghost" id="mgBack">Back</button><button class="btn green" id="mgAgain">Play again</button></div>`;
+    $('mgCard').classList.remove('hidden'); $('mgAgain').onclick=()=>this.open(this.id); $('mgBack').onclick=()=>this.close();
+  },
+  close(){ this.stop(); stopChef(); $('mg').classList.add('hidden'); if(this.id==='catch') visitShop(); else goHome(); },
+};
+$('mgQuit').onclick=()=>MG.close();
+
+function pickFrac(dens, max=1){ const d=dens[rnd(dens.length)], n=1+rnd(d*max-1); return [n,d]; }
+const MGAMES = [
+ { title:'Bigger Bite', icon:'🥪', how:'Two orders pop up. Tap the <b>bigger</b> fraction as fast as you can! Get 3 in a row for bonus points. You have 45 seconds.',
+   tips:s=>Math.min(8,Math.floor(s/2)),
+   start(m){ let streak=0; const round=()=>{ $('mgArea').innerHTML='';
+       let a,b; do{ a=pickFrac([2,4,8]); b=pickFrac([2,4,8]); }while(a[0]/a[1]===b[0]/b[1]);
+       [a,b].forEach((f,k)=>{ const x=130+k*700, c=m.el('div','mgcard',`left:${x}px;top:200px;width:640px;height:440px`);
+         c.innerHTML=`<div style="font-size:130px;font-weight:900;text-align:center;margin-top:40px;color:var(--dark)">${frac(f[0],f[1])}</div><div style="position:absolute;left:40px;right:40px;bottom:50px;height:78px"><img src="${ART}sub_party.webp" style="width:100%;height:100%;object-fit:fill"><div class="fill" style="position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(242,194,48,.6);border-right:4px solid #c0392b;transition:width .35s"></div></div>`;
+         c.onclick=()=>{ if(m.lock) return; m.lock=true; const win=f[0]/f[1]>[a,b][1-k][0]/[a,b][1-k][1];
+           document.querySelectorAll('#mgArea .fill').forEach((el,j)=>el.style.width=([a,b][j][0]/[a,b][j][1]*100)+'%');
+           if(win){ streak++; m.add(streak>=3?2:1); coinSnd(); m.msg(streak>=3?`🔥 ${streak} in a row!`:'Yes!',110,800,'#ffe066'); } else { streak=0; sad(); m.msg('The other one is bigger',110,900,'#ffb3a8'); }
+           m.later(()=>{ m.lock=false; round(); }, win?650:1300); }; }); };
+     m.lock=false; round(); m.clock(45, ()=>m.end()); } },
+ { title:'Conveyor Slice', icon:'🔪', how:'Subs roll by on the conveyor belt. Tap to cut when the <b>knife</b> is right on the fraction! 8 subs, and they get faster.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ let k=0; const N=8, KX=800;
+     m.el('div','',`position:absolute;left:0;right:0;top:640px;height:46px;background:repeating-linear-gradient(90deg,#3a3a3a 0 40px,#555 40px 80px);box-shadow:0 6px 12px rgba(0,0,0,.5)`);
+     m.el('div','',`position:absolute;left:${KX-2}px;top:330px;width:4px;height:340px;background:repeating-linear-gradient(#fff 0 14px,transparent 14px 24px)`);
+     m.el('div','',`position:absolute;left:${KX-30}px;top:262px;font-size:56px;transform:rotate(135deg)`,'🔪');
+     const round=()=>{ if(k>=N) return m.end(); m.bar(1-k/N); k++;
+       const [n,d]=pickFrac([2,3,4,6]), L=720, v=240+k*28, y=520; let x=1620, cut=false;
+       const tgt=m.el('div','mgfr',`left:800px;top:96px;font-size:66px`,`Cut at ${frac(n,d)}`);
+       const box=m.el('div','',`position:absolute;left:${x}px;top:${y}px;width:${L}px;height:150px`);
+       box.innerHTML=`<img src="${ART}sub_party.webp" style="position:absolute;left:0;top:0;width:${L}px;height:100px;object-fit:fill"><div style="position:absolute;left:0;top:112px;width:${L}px;height:5px;background:#fff"></div>`+
+         Array.from({length:d+1},(_,j)=>`<div style="position:absolute;left:${j*L/d-2}px;top:${j%d?104:98}px;width:4px;height:${j%d?20:30}px;background:#fff"></div>`).join('')+`<div style="position:absolute;left:-8px;top:126px;color:#fff;font-weight:900;font-size:26px">0</div><div style="position:absolute;left:${L-8}px;top:126px;color:#fff;font-weight:900;font-size:26px">1</div>`;
+       let last=performance.now(); const t=m.tok;
+       const move=now=>{ if(t!==m.tok||cut) return; x-=v*(now-last)/1000; last=now; box.style.left=x+'px';
+         if(x+L<KX-40){ cut=true; sad(); m.msg('Too late!',330); m.later(()=>{ box.remove(); tgt.remove(); round(); },900); return; } m.raf=requestAnimationFrame(move); };
+       m.raf=requestAnimationFrame(move);
+       $('mgArea').onpointerdown=()=>{ if(cut) return; const f=(KX-x)/L; if(f<=0) return; cut=true; chop();
+         const e=Math.abs(f-n/d), pts=e<.03?3:e<.07?2:e<.12?1:0; m.add(pts);
+         box.insertAdjacentHTML('beforeend',`<div style="position:absolute;left:${f*L-3}px;top:-10px;width:6px;height:130px;background:#e0483e"></div><div style="position:absolute;left:${n/d*L-3}px;top:-10px;width:6px;height:130px;background:#3fd47a"></div>`);
+         m.msg(['Missed it','Close-ish','Close!','Perfect!'][pts]+(pts?` +${pts}`:''),330,1000,pts===3?'#ffe066':'#fff'); pts?coinSnd():sad();
+         m.later(()=>{ box.remove(); tgt.remove(); round(); },1300); }; };
+     round(); } },
+ { title:'Hot Dog Toss', icon:'🌭', how:'Toss the hot dog onto the number line! Tap where the fraction goes. Only 0 and 1 are marked, and the line changes size every throw. 8 throws.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ let k=0; const N=8, Y=650;
+     const round=()=>{ if(k>=N) return m.end(); m.bar(1-k/N); k++; $('mgArea').innerHTML='';
+       const [n,d]=pickFrac([2,3,4,6,8]), L=520+rnd(560), x0=800-L/2;
+       m.el('div','mgfr',`left:800px;top:110px;font-size:72px`,`Toss it to ${frac(n,d)}`);
+       m.el('div','mgline',`left:${x0}px;top:${Y}px;width:${L}px`); [0,1].forEach(j=>{ m.el('div','mgtick',`left:${x0+j*L-2}px;top:${Y-20}px;height:46px`); m.el('div','mglab',`left:${x0+j*L}px;top:${Y+34}px`,j); });
+       const hit=m.el('div','',`position:absolute;left:${x0-60}px;top:${Y-120}px;width:${L+120}px;height:200px;cursor:crosshair`);
+       hit.onpointerdown=e=>{ hit.onpointerdown=null; const p=stagePt(e), f=Math.max(0,Math.min(1,(p.x-x0)/L)), tx=x0+f*L;
+         const dog=m.el('img','',`position:absolute;left:0;top:0;width:150px;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))`); dog.src=ART+'food_hotdog.webp'; pop();
+         dog.animate([{transform:'translate(60px,820px) rotate(0)'},{transform:`translate(${(60+tx-75)/2}px,240px) rotate(360deg)`},{transform:`translate(${tx-75}px,${Y-40}px) rotate(720deg)`}],{duration:900,easing:'ease-in-out',fill:'forwards'});
+         m.later(()=>{ const e2=Math.abs(f-n/d), pts=e2<.03?3:e2<.07?2:e2<.12?1:0; m.add(pts);
+           m.el('div','',`position:absolute;left:${x0+n/d*L-3}px;top:${Y-60}px;width:6px;height:70px;background:#3fd47a`); m.el('div','mglab',`left:${x0+n/d*L}px;top:${Y-110}px;font-size:30px;color:#bfffd0`,frac(n,d));
+           m.msg(['Missed','Close-ish','Close!','Bullseye!'][pts]+(pts?` +${pts}`:''),340,1100,pts===3?'#ffe066':'#fff'); pts?coinSnd():sad(); m.later(round,1500); }, 950); }; };
+     round(); } },
+ { title:'Stack the Order', icon:'🎉', how:'Party orders! Tap the tickets from <b>smallest to biggest</b>. Each one jumps to its spot on the number line. Some are bigger than 1! You have 60 seconds.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ const POOL=[[1,4],[1,3],[1,2],[2,3],[3,4],[1,1],[5,4],[4,3],[3,2],[5,3],[7,4],[2,1],[1,6],[5,6],[1,8],[3,8]], X0=200, L=1200, Y=700;
+     m.el('div','mgline',`left:${X0}px;top:${Y}px;width:${L}px`); [0,1,2].forEach(j=>{ m.el('div','mgtick',`left:${X0+j*L/2-2}px;top:${Y-22}px;height:50px`); m.el('div','mglab',`left:${X0+j*L/2}px;top:${Y+36}px`,j); });
+     const round=()=>{ document.querySelectorAll('#mgArea .mgticket').forEach(t=>t.remove());
+       let set; do{ set=shuffle(POOL.slice()).slice(0,4); }while(new Set(set.map(f=>f[0]/f[1])).size<4);
+       const order=set.slice().sort((a,b)=>a[0]/a[1]-b[0]/b[1]); let next=0, clean=true;
+       set.forEach((f,j)=>{ const t=m.el('div','mgticket',`left:${260+j*290}px;top:250px`,fracHTML(f[0],f[1]));
+         t.onclick=()=>{ if(t.dataset.done) return; if(f!==order[next]){ clean=false; sad(); t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); m.msg('Find the smallest one left!',140,900,'#ffb3a8'); return; }
+           t.dataset.done=1; next++; pop(); const v=f[0]/f[1]; t.style.left=(X0+v/2*L-55)+'px'; t.style.top=(Y-150-(next%2)*70)+'px'; t.style.width='110px'; t.style.height='80px'; t.style.fontSize='34px';
+           if(next===4){ m.add(clean?5:4); coinSnd(); m.msg(clean?'Perfect order! +5':'Done! +4',140,900,'#ffe066'); m.later(round,1100); } }; }); };
+     round(); m.clock(60, ()=>m.end()); } },
+];
+const CATCH = { title:'Topping Catch', icon:'🍅', how:'Slide the sub to catch falling toppings! 🍅 🧀 🥬 🥒 are +1. Watch out for 🧦 and 👟 (−2). Use your finger, mouse, or the arrow keys. 40 seconds.',
+  tips:s=>Math.min(5,Math.floor(s/5)),
+  start(m){ const GOOD=['🍅','🧀','🥬','🥒','🧅','🫑'], BAD=['🧦','👟'], W=300, Y=760; let px=650, items=[], last=performance.now(), spawn=0, t0=last; const t=m.tok;
+    const sub=m.el('img','mgsub',`left:${px}px;top:${Y}px;width:${W}px`); sub.src=ART+'sub_party.webp';
+    $('mgArea').onpointermove=$('mgArea').onpointerdown=e=>{ px=Math.max(0,Math.min(1600-W,stagePt(e).x-W/2)); };
+    const keys={}; document.onkeydown=e=>{ if(e.key==='ArrowLeft') px=Math.max(0,px-60); if(e.key==='ArrowRight') px=Math.min(1600-W,px+60); };
+    const loop=now=>{ if(t!==m.tok) return; const dt=(now-last)/1000, el=(now-t0)/1000; last=now; sub.style.left=px+'px';
+      spawn-=dt; if(spawn<=0){ spawn=Math.max(.32,.7-el*.01); const bad=Math.random()<.22, x=40+Math.random()*1500; items.push({x,y:90,v:260+el*6+Math.random()*120,bad,e:m.el('div','',`position:absolute;left:${x}px;top:90px;font-size:60px;pointer-events:none`,bad?BAD[rnd(2)]:GOOD[rnd(6)])}); }
+      items=items.filter(it=>{ it.y+=it.v*dt; it.e.style.top=it.y+'px';
+        if(it.y>Y-50 && it.y<Y+20 && it.x+30>px && it.x+30<px+W){ it.e.remove(); if(it.bad){ m.add(-2); sad(); m.msg('Yuck! −2',600,700,'#ffb3a8'); } else { m.add(1); pop(); } return false; }
+        if(it.y>900){ it.e.remove(); return false; } return true; });
+      m.raf=requestAnimationFrame(loop); };
+    m.raf=requestAnimationFrame(loop); m.clock(40, ()=>m.end()); } };
+$('catchBtn').onclick=()=>{ $('lights').style.pointerEvents='none'; MG.open('catch'); };
+
+// ------------------------------------------------------------------ teacher light: last 10 first tries
+const TL = {g:['#2fb35a','On track'], y:['#f2c230','Getting there'], r:['#e0483e','Needs help'], n:['#9a9a9a','Not enough orders yet']};
+function tlight(){
+  const h = S.hist||[], n = h.length, ok = h.filter(x=>x.ok).length, pct = n? ok/n : 0;
+  const lv = n<3 ? 'n' : pct>=.8 ? 'g' : pct>=.5 ? 'y' : 'r';
+  $('tlight').style.background = TL[lv][0];
+  const miss = {}; h.forEach(x=>{ if(!x.ok){ const t = x.t==='insp' ? 'Inspection' : TN[x.t]; miss[t]=(miss[t]||0)+1; } });
+  const tops = Object.entries(miss).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t,c])=>`${t} (${c})`);
+  $('tpop').innerHTML = `<b class="h">Teacher check</b><div style="display:flex;gap:10px;align-items:center;font-size:22px;font-weight:800"><i style="width:18px;height:18px;border-radius:50%;background:${TL[lv][0]};display:inline-block"></i>${TL[lv][1]}</div>` +
+    (n ? `<div>Last ${n} orders: <b>${ok}</b> right on the first try (${Math.round(pct*100)}%).</div>` : '<div>No orders played yet.</div>') +
+    (tops.length ? `<div>Missed most: ${tops.join(', ')}</div>` : '') +
+    `<div style="font-size:15px;color:#7a6a55;margin-top:6px">Green 80%+ · Yellow 50–79% · Red under 50%. Only first tries count, not redos with help.</div>`;
+}
+$('tlight').onclick = e => { e.stopPropagation(); tlight(); $('tpop').classList.toggle('hidden'); };
+$('tpop').onclick = () => $('tpop').classList.add('hidden');
+
 // ------------------------------------------------------------------ home, shop, settings
 function goHome(){
   if(voiceEl) voiceEl.pause(); stopChef();
   $('play').classList.add('hidden'); $('hud').classList.add('hidden'); $('receiptScr').classList.add('hidden'); $('home').classList.remove('hidden');
-  $('custWrap').classList.add('out'); setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/5)))); renderHome();
+  $('custWrap').classList.add('out'); setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/PER)))); renderHome();
 }
 function renderHome(){
   const next = SHIFTS.findIndex((_,k)=>!S.done[k]);
-  $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t} ${S.badges[wi]?'🏅':''}</b><small>${w.s}</small></div>${[0,1,2,3,4].map(s=>{ const k=wi*5+s, open = k===0 || S.done[k-1] || S.done[k];
-      return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===4?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
-  $('weeks').querySelectorAll('.tile').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
+  $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t} ${S.badges[wi]?'🏅':''}</b><small>${w.s}</small></div>${[0,1,2,3].map(s=>{ const k=wi*PER+s, open = k===0 || S.done[k-1] || S.done[k];
+      const t = `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===PER-1?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`;
+      if(s!==1) return t; const mo = !!S.done[wi*PER+1], best = (S.mg||{})[wi];
+      return t + `<button class="tile mgt ${mo?'':'lock'}" data-g="${wi}" title="${MGAMES[wi].title}">🎮 Bonus<small>${mo ? (best!=null ? 'best '+best : 'Play!') : '🔒'}</small></button>`; }).join('')}</div>`).join('');
+  $('weeks').querySelectorAll('.tile[data-k]').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
+  $('weeks').querySelectorAll('.tile[data-g]').forEach(b=>b.onclick=()=>MG.open(+b.dataset.g));
   $('homeTips').textContent = `Tip jar: $${S.tips-S.spent}`; scene(); jar();
-  $('byosBtn').innerHTML = S.done[19] ? '🥪 Build Your Own Sub' : '🔒 Build Your Own Sub'; $('menuBtn').classList.toggle('hidden', !(S.menu&&S.menu.length));
+  $('byosBtn').innerHTML = S.done[NSH-1] ? '🥪 Build Your Own Sub' : '🔒 Build Your Own Sub'; $('menuBtn').classList.toggle('hidden', !(S.menu&&S.menu.length));
 }
 function scene(){
   $('plants').classList.toggle('hidden', !S.owned.plants);
   $('bell').classList.toggle('hidden', !S.owned.bell);
   $('neon').classList.toggle('hidden', !S.owned.neon);
+  DECOS.forEach(id=>{ const el=$(id); if(S.owned[id] && !el.getAttribute('src')) el.src=ART+id+'.webp'; el.classList.toggle('hidden', !S.owned[id]); });
+  if(!$('lights').innerHTML) $('lights').innerHTML = LIGHTS_SVG; $('lights').classList.toggle('hidden', !S.owned.lights);
+  tlight();
   $('muteBtn').textContent = S.muted ? '🔇' : '🔈';
   $('muteHome').textContent = S.muted ? '🔇 Muted' : '🔈 Sound';
 }
 function renderShop(){
   const have = S.tips - S.spent; $('shopMoney').textContent = '$'+have;
-  $('items').innerHTML = UPGRADES.map(u=>`<div class="item"><img src="${ART+u.img}.webp" alt=""><b>${u.name}</b>${S.owned[u.id]?'<span style="color:#2e8b57;font-weight:800">Owned ✔</span>':`<button class="btn" data-u="${u.id}" ${have<u.cost?'disabled':''}>$${u.cost}</button>`}</div>`).join('');
+  $('items').innerHTML = UPGRADES.map(u=>`<div class="item">${u.img?`<img src="${ART+u.img}.webp" alt="">`:`<svg viewBox="0 0 400 64" style="height:84px;width:100%">${LIGHTS_SVG}</svg>`}<b>${u.name}</b><div style="font-size:15px;color:#7a6a55;min-height:20px">${u.d}</div>${S.owned[u.id]?'<span style="color:#2e8b57;font-weight:800">Owned ✔</span>':`<button class="btn" data-u="${u.id}" ${have<u.cost?'disabled':''}>$${u.cost}</button>`}</div>`).join('');
   $('items').querySelectorAll('button[data-u]').forEach(b=>b.onclick=()=>{ const u=UPGRADES.find(x=>x.id===b.dataset.u); if(S.tips-S.spent<u.cost) return; S.spent+=u.cost; S.owned[u.id]=1; save(); coinSnd(); renderShop(); scene(); jar(); $('homeTips').textContent=`Tip jar: $${S.tips-S.spent}`; });
 }
 function showIntro(html){ return new Promise(res=>{ $('introBody').innerHTML=html; $('intro').classList.remove('hidden'); $('introGo').onclick=()=>{ $('intro').classList.add('hidden'); res(); }; }); }
@@ -1018,7 +1312,7 @@ $('shopBtn').onclick = ()=>{ renderShop(); $('shop').classList.remove('hidden');
 $('shopClose').onclick = ()=> $('shop').classList.add('hidden');
 $('resetBtn').onclick = ()=> $('confirm').classList.remove('hidden');
 $('cNo').onclick = ()=> $('confirm').classList.add('hidden');
-$('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}, badges:{}}; save(); $('confirm').classList.add('hidden'); renderHome(); };
+$('cYes').onclick = ()=>{ try{ localStorage.removeItem(KEY); }catch(e){} S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:S.muted, seen:{}, weekSeen:{}, badges:{}, ver:2, hist:[]}; save(); scene(); $('confirm').classList.add('hidden'); renderHome(); };
 const toggleMute = ()=>{ S.muted=!S.muted; save(); scene(); if(S.muted){ if(voiceEl) voiceEl.pause(); stopChef(); } };
 $('muteBtn').onclick = toggleMute; $('muteHome').onclick = toggleMute;
 $('homeBtn').onclick = goHome;
@@ -1059,7 +1353,7 @@ function bins(){
   $('fillBins').querySelectorAll('.bin').forEach(b=>b.onclick=()=>{ if(BY.layers.length>=6){ toast('Six layers max: that sub is tall enough!'); return; } BY.layers.push(b.dataset.f); pop(); drawPreview(); });
 }
 function openBuilder(){
-  if(!S.done[19]){ toast('🔒 Finish Week 4 (and the Big Party inspection) to unlock this!'); return; }
+  if(!S.done[NSH-1]){ toast('🔒 Finish Week 4 (and the Big Party inspection) to unlock this!'); return; }
   ac(); setScene(0); BY.layers = []; BY.bread = 'italian'; $('byName').value=''; $('byChef').value = S.chef||'';
   $('byTag').innerHTML = TAGS.map((t,i)=>`<option value="${i}">${t.replace('{f}','___')}</option>`).join('');
   bins(); drawPreview(); $('home').classList.add('hidden'); $('byos').classList.remove('hidden');
@@ -1115,11 +1409,11 @@ $('byosBtn').onclick = openBuilder; $('menuBtn').onclick = openMenu; $('menuClos
 
 // ------------------------------------------------------------------ boot
 load(); fit();
-$('tipjar').src = ART+'tipjar.webp'; $('plants').src = ART+'plants.webp'; $('bell').src = ART+'bell.webp'; $('neon').src = ART+'neon_open.webp';
+$('tipjar').src = ART+'tipjar.webp'; $('plants').src = ART+'plants.webp'; $('bell').src = ART+'bell.webp'; $('neon').src = ART+'neon_open_a.webp';
 $('bg').onload = () => $('loading').classList.add('hidden');
 setTimeout(()=>$('loading').classList.add('hidden'), 2500);
 goHome();
-window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, get cur(){ return cur; }};
+window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, MG, get cur(){ return cur; }};
 
 </script>
 </body>
