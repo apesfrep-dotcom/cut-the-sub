@@ -59,7 +59,8 @@ button{font-family:inherit;cursor:pointer;border:none}
 .fxbit{position:absolute;pointer-events:none;z-index:40}
 #party{inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .5s;overflow:hidden}
 #party.on{opacity:1}
-#visitBar{left:330px;top:18px;display:flex;gap:16px;align-items:center;background:rgba(36,29,21,.88);color:var(--cream);border-radius:30px;padding:10px 14px 10px 26px;font-size:24px;font-weight:700;z-index:50}
+#visitBar .btn{font-size:22px;padding:8px 16px}
+#visitBar{left:310px;top:18px;display:flex;gap:16px;align-items:center;background:rgba(36,29,21,.88);color:var(--cream);border-radius:30px;padding:10px 14px 10px 26px;font-size:24px;font-weight:700;z-index:50}
 /* ---------- mini-games ---------- */
 #mg{inset:0;background:rgba(20,14,8,.62);backdrop-filter:blur(2px)}
 #mgTop{left:30px;right:30px;top:18px;height:64px;display:flex;align-items:center;gap:18px;z-index:5}
@@ -291,7 +292,6 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
       <div class="weeks" id="weeks"></div>
       <div class="homeBar">
         <div class="money" id="homeTips"></div>
-        <button class="btn ghost" id="shopBtn">🛒 Buy upgrades</button>
         <button class="btn ghost" id="visitBtn">🏪 My shop</button>
         <button class="btn ghost" id="byosBtn">🥪 Build Your Own Sub</button>
         <button class="btn ghost hidden" id="menuBtn">📋 Menu</button>
@@ -302,7 +302,7 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     </div>
   </div>
 
-  <div id="visitBar" class="abs hidden"><span id="visitMsg">Your shop! Tap things to play.</span><button class="btn" id="catchBtn">🕹️ Topping Catch</button><button class="btn" id="visitBack">Back</button></div>
+  <div id="visitBar" class="abs hidden"><span id="visitMsg"></span><button class="btn green" id="shopBtn">🛒 Buy</button><button class="btn" id="catchBtn">🕹️ Topping Catch</button><button class="btn" id="visitBack">Back</button></div>
   <button id="tlight" title="Teacher check" aria-label="Teacher check"></button>
   <div id="tpop" class="hidden"></div>
   <div id="mg" class="abs hidden"><div id="mgArea" class="abs"></div>
@@ -407,6 +407,7 @@ const FOODW = {baguette:'baguette', flatbread:'flatbread', churro:'churro', hot_
 let S = {done:{}, stars:{}, tips:0, spent:0, owned:{}, muted:false, seen:{}, weekSeen:{}, badges:{}};
 function load(){ try{ const v = JSON.parse(localStorage.getItem(KEY)||'null'); if(v) S = Object.assign(S, v); }catch(e){} migrate(); }
 function migrate(){
+  if(S.catchTok===undefined) S.catchTok = S.done && S.done[3] ? 1 : 0;
   if(S.ver>=2) return;
   const od = S.done||{}, os = S.stars||{}, nd = {}, ns = {};
   for(let w=0; w<4; w++){
@@ -912,7 +913,7 @@ function lab(o){
 function endShift(){
   const i = cur.i, base = cur.results.filter(r=>!r.o.bare), boss = cur.results.filter(r=>r.o.bare);
   const tot = base.reduce((a,r)=>a+r.stars,0), tips = base.reduce((a,r)=>a+r.tip,0), max = base.length*3;
-  S.done[i] = 1; S.stars[i] = Math.max(S.stars[i]||0, tot);
+  S.done[i] = 1; S.stars[i] = Math.max(S.stars[i]||0, tot); S.catchTok = 1;
   const bossStars = boss.reduce((a,r)=>a+r.stars,0), passed = boss.length && bossStars>=7;
   if(passed) S.badges[cur.w] = 1;
   save();
@@ -1135,12 +1136,18 @@ $('lights').addEventListener('click', ()=>{ ac(); pop(); document.querySelectorA
 function visitShop(){
   ac(); $('home').classList.add('hidden'); $('custWrap').classList.add('out'); scene();
   setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/PER))));
-  const any = DECOS.concat(['lights','plants','bell','neon']).some(id=>S.owned[id]);
-  $('visitMsg').textContent = any ? 'Tap things to play!' : 'Nothing here yet. Buy things with your tips!';
+  visitInfo();
   $('lights').style.pointerEvents='auto'; $('train').style.left='560px'; $('visitBar').classList.remove('hidden');
-  const cu = !!S.done[PER-1]; $('catchBtn').disabled = !cu; $('catchBtn').textContent = cu ? '🕹️ Topping Catch' : '🔒 Game (finish Week 1)';
+
 }
 $('visitBtn').onclick = visitShop;
+// tips + Topping Catch status in the My shop bar. One Topping Catch play is earned per finished shift (they don't stack).
+function visitInfo(){
+  const any = DECOS.concat(['lights','plants','bell','neon']).some(id=>S.owned[id]);
+  $('visitMsg').textContent = any ? `Tips $${S.tips-S.spent}` : `Tips $${S.tips-S.spent} · Tap Buy!`;
+  const unlocked = !!S.done[PER-1], ok = unlocked && !!S.catchTok, b = $('catchBtn');
+  b.disabled = !ok; b.textContent = ok ? '🕹️ Topping Catch' : unlocked ? '🔒 Game: finish a shift' : '🔒 Game: finish Week 1';
+}
 $('visitBack').onclick = ()=>{ stopMusic(); $('party').classList.remove('on'); $('lights').style.pointerEvents='none'; $('train').style.left='-260px'; $('visitBar').classList.add('hidden'); $('home').classList.remove('hidden'); renderHome(); };
 
 // ------------------------------------------------------------------ mini-games
@@ -1165,14 +1172,14 @@ const MG = {
     const best=(S.mg||{})[id];
     const vid='chef_mg_'+id; chefSay([vid], false);
     $('mgCard').innerHTML=`<h2>${this.g.icon} ${this.g.title} <button class="icon-btn" id="mgHear" title="Hear it again" style="vertical-align:middle;font-size:24px">🔊</button></h2><p>${this.g.how}</p>${best!=null?`<p style="color:#7a6a55">Your best: <b>${best}</b></p>`:''}<button class="btn green" id="mgGo" style="font-size:30px">Start!</button>`;
-    $('mgCard').classList.remove('hidden'); $('mgHear').onclick=()=>{ ac(); chefSay([vid], false); }; $('mgGo').onclick=()=>{ ac(); stopChef(); $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
+    $('mgCard').classList.remove('hidden'); $('mgHear').onclick=()=>{ ac(); chefSay([vid], false); }; $('mgGo').onclick=()=>{ ac(); stopChef(); if(id==='catch'){ if(!S.catchTok) return this.close(); S.catchTok=0; save(); } $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
   },
   end(){
     const sc=this.score; this.stop(); S.mg=S.mg||{}; const prev=S.mg[this.id], best=prev==null||sc>prev; if(best) S.mg[this.id]=sc;
     const tip=this.g.tips(sc); if(tip>0) S.tips+=tip; save(); best&&sc>0 ? fanfare() : coinSnd();
     $('mgCard').innerHTML=`<h2>${this.g.icon} Time's up!</h2><div class="big">${sc} points</div><p>${best&&sc>0?'🏆 New best score!':'Best: '+S.mg[this.id]}</p>${tip?`<p style="color:#2e8b57;font-weight:800">+$${tip} tips for the jar!</p>`:''}
-      <div style="display:flex;gap:16px;justify-content:center;margin-top:10px"><button class="btn ghost" id="mgBack">Back</button><button class="btn green" id="mgAgain">Play again</button></div>`;
-    $('mgCard').classList.remove('hidden'); $('mgAgain').onclick=()=>this.open(this.id); $('mgBack').onclick=()=>this.close();
+      ${this.id==='catch'?'<p style="color:#7a6a55">Finish another shift to play again!</p>':''}<div style="display:flex;gap:16px;justify-content:center;margin-top:10px"><button class="btn ghost" id="mgBack">Back</button>${this.id==='catch'?'':'<button class="btn green" id="mgAgain">Play again</button>'}</div>`;
+    $('mgCard').classList.remove('hidden'); if($('mgAgain')) $('mgAgain').onclick=()=>this.open(this.id); $('mgBack').onclick=()=>this.close();
   },
   close(){ this.stop(); stopChef(); $('mg').classList.add('hidden'); if(this.id==='catch') visitShop(); else goHome(); },
 };
@@ -1302,7 +1309,8 @@ function scene(){
 function renderShop(){
   const have = S.tips - S.spent; $('shopMoney').textContent = '$'+have;
   $('items').innerHTML = UPGRADES.map(u=>`<div class="item">${u.img?`<img src="${ART+u.img}.webp" alt="">`:`<svg viewBox="0 0 400 64" style="height:84px;width:100%">${LIGHTS_SVG}</svg>`}<b>${u.name}</b><div style="font-size:15px;color:#7a6a55;min-height:20px">${u.d}</div>${S.owned[u.id]?'<span style="color:#2e8b57;font-weight:800">Owned ✔</span>':`<button class="btn" data-u="${u.id}" ${have<u.cost?'disabled':''}>$${u.cost}</button>`}</div>`).join('');
-  $('items').querySelectorAll('button[data-u]').forEach(b=>b.onclick=()=>{ const u=UPGRADES.find(x=>x.id===b.dataset.u); if(S.tips-S.spent<u.cost) return; S.spent+=u.cost; S.owned[u.id]=1; save(); coinSnd(); renderShop(); scene(); jar(); $('homeTips').textContent=`Tip jar: $${S.tips-S.spent}`; });
+  $('items').querySelectorAll('button[data-u]').forEach(b=>b.onclick=()=>{ const u=UPGRADES.find(x=>x.id===b.dataset.u); if(S.tips-S.spent<u.cost) return; S.spent+=u.cost; S.owned[u.id]=1; save(); coinSnd(); renderShop(); scene(); jar(); $('homeTips').textContent=`Tip jar: $${S.tips-S.spent}`;
+    if(!$('visitBar').classList.contains('hidden')){ visitInfo(); if(u.id==='train') $('train').style.left='560px'; if(u.id==='lights') $('lights').style.pointerEvents='auto'; } });
 }
 function showIntro(html){ return new Promise(res=>{ $('introBody').innerHTML=html; $('intro').classList.remove('hidden'); $('introGo').onclick=()=>{ $('intro').classList.add('hidden'); res(); }; }); }
 
