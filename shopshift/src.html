@@ -59,7 +59,30 @@ button{font-family:inherit;cursor:pointer;border:none}
 .fxbit{position:absolute;pointer-events:none;z-index:40}
 #party{inset:0;pointer-events:none;mix-blend-mode:screen;opacity:0;transition:opacity .5s;overflow:hidden}
 #party.on{opacity:1}
-#visitBar{left:50%;top:18px;transform:translateX(-50%);display:flex;gap:16px;align-items:center;background:rgba(36,29,21,.88);color:var(--cream);border-radius:30px;padding:10px 14px 10px 26px;font-size:24px;font-weight:700;z-index:50}
+#visitBar{left:330px;top:18px;display:flex;gap:16px;align-items:center;background:rgba(36,29,21,.88);color:var(--cream);border-radius:30px;padding:10px 14px 10px 26px;font-size:24px;font-weight:700;z-index:50}
+/* ---------- mini-games ---------- */
+#mg{inset:0;background:rgba(20,14,8,.62);backdrop-filter:blur(2px)}
+#mgTop{left:30px;right:30px;top:18px;height:64px;display:flex;align-items:center;gap:18px;z-index:5}
+#mgTop .pill{font-size:26px}
+#mgBar{flex:1;height:20px;border-radius:12px;background:rgba(249,244,232,.25);overflow:hidden}
+#mgBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#f2c230,#e9893a);border-radius:12px}
+#mgArea{inset:0;touch-action:none}
+#mgCard{left:50%;top:50%;transform:translate(-50%,-50%);width:780px;background:#fffdf6;border-radius:26px;padding:28px 36px;text-align:center;font-size:26px;line-height:1.35;box-shadow:0 16px 40px rgba(0,0,0,.5);z-index:6}
+#mgCard h2{margin:0 0 6px;font-size:44px}
+#mgCard .big{font-size:58px;font-weight:900;color:var(--red)}
+.mgsub{position:absolute;height:auto;pointer-events:none;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5))}
+.mgfr{position:absolute;color:#fff;font-weight:900;text-shadow:0 3px 8px rgba(0,0,0,.6);transform:translateX(-50%);white-space:nowrap}
+.mgcard{position:absolute;background:#fffdf6;border-radius:24px;box-shadow:0 12px 28px rgba(0,0,0,.45);cursor:pointer;transition:transform .15s}
+.mgcard:hover{transform:scale(1.03)}
+.mgmsg{position:absolute;left:50%;transform:translateX(-50%);font-size:44px;font-weight:900;color:#fff;text-shadow:0 4px 10px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap}
+.mgline{position:absolute;height:6px;background:#fffdf6;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.mgtick{position:absolute;width:5px;background:#fffdf6;border-radius:2px}
+.mglab{position:absolute;color:#fff;font-size:34px;font-weight:900;transform:translateX(-50%);text-shadow:0 2px 6px rgba(0,0,0,.7)}
+.mgticket{position:absolute;width:170px;height:120px;background:#fffdf6;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:46px;font-weight:900;color:var(--dark);box-shadow:0 8px 18px rgba(0,0,0,.45);cursor:pointer;transition:left .5s cubic-bezier(.2,.8,.2,1),top .5s cubic-bezier(.2,.8,.2,1),transform .3s,width .5s,height .5s,font-size .5s}
+.mgticket.shake{animation:shake .4s}
+@keyframes shake{0%,100%{translate:0}25%{translate:-12px}75%{translate:12px}}
+.tile.mgt{width:118px;background:#8fd0a8;box-shadow:0 5px 0 #4f9a6c}
+.tile.mgt.lock{background:#ddd5c4;box-shadow:0 5px 0 #b8ad98}
 /* ---------- teacher light ---------- */
 #tlight{position:absolute;right:14px;bottom:12px;width:24px;height:24px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(0,0,0,.4);cursor:pointer;z-index:999;padding:0}
 #tpop{position:absolute;right:14px;bottom:48px;width:390px;background:#fffdf6;border-radius:16px;padding:16px 18px;font-size:19px;line-height:1.35;box-shadow:0 12px 30px rgba(0,0,0,.45);z-index:999;color:#2b211a}
@@ -279,9 +302,12 @@ p.l{font-size:25px;line-height:1.4;margin:10px 0}
     </div>
   </div>
 
-  <div id="visitBar" class="abs hidden"><span id="visitMsg">Your shop! Tap things to play.</span><button class="btn" id="visitBack">Back</button></div>
+  <div id="visitBar" class="abs hidden"><span id="visitMsg">Your shop! Tap things to play.</span><button class="btn" id="catchBtn">🕹️ Topping Catch</button><button class="btn" id="visitBack">Back</button></div>
   <button id="tlight" title="Teacher check" aria-label="Teacher check"></button>
   <div id="tpop" class="hidden"></div>
+  <div id="mg" class="abs hidden"><div id="mgArea" class="abs"></div>
+    <div id="mgTop" class="abs"><div class="pill" id="mgTitle"></div><div id="mgBar"><i></i></div><div class="pill">Score <b id="mgScore">0</b></div><button class="icon-btn" id="mgQuit" title="Quit">✕</button></div>
+    <div id="mgCard" class="abs"></div></div>
   <div id="receiptScr" class="screen dim hidden"><div id="receipt"></div></div>
 
   <div id="shop" class="screen dim hidden"><div class="card">
@@ -901,9 +927,9 @@ function endShift(){
     (base.some(r=>r.retried)?`<div class="c" style="font-size:18px">↻ = redone with help</div>`:'') + `<div class="c" style="margin-top:10px;font-size:26px;font-weight:700">RANK: ${rank}</div>` +
     `<details style="margin-top:12px"><summary style="cursor:pointer">Show my teacher</summary><div class="ln"><span>Needed a redo</span><span>${cur.results.filter(r=>r.retried).length} of ${cur.results.length}</span></div>${Object.entries(byType).map(([t,[n,g]])=>`<div class="ln"><span>${t}</span><span>${g}/${n} with 2+ stars</span></div>`).join('')}</details>` +
     `<div class="c" style="margin-top:8px">THANK YOU! COME AGAIN</div>` +
-    `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i<NSH-1?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
+    `<div class="rbtns"><button class="btn ghost" id="rMap">Map</button><button class="btn ghost" id="rAgain">Replay shift</button>${i%PER===1?'<button class="btn" id="rGame" style="background:#8fd0a8">🎮 Bonus game!</button>':''}${i<NSH-1?'<button class="btn green" id="rNext">Next shift ➜</button>':''}</div>`;
   $('receiptScr').classList.remove('hidden'); ding();
-  $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1);
+  $('rMap').onclick = goHome; $('rAgain').onclick = ()=>startShift(i); if($('rNext')) $('rNext').onclick = ()=>startShift(i+1); if($('rGame')) $('rGame').onclick = ()=>{ $('receiptScr').classList.add('hidden'); MG.open(cur.w); };
 }
 
 
@@ -1110,11 +1136,124 @@ function visitShop(){
   ac(); $('home').classList.add('hidden'); $('custWrap').classList.add('out'); scene();
   setScene(Math.max(0, Math.min(3, Math.floor(Math.max(0, SHIFTS.findIndex((_,k)=>!S.done[k]))/PER))));
   const any = DECOS.concat(['lights','plants','bell','neon']).some(id=>S.owned[id]);
-  $('visitMsg').textContent = any ? 'Your shop! Tap things to play.' : 'Nothing here yet. Earn tips and buy things in the shop!';
+  $('visitMsg').textContent = any ? 'Tap things to play!' : 'Nothing here yet. Buy things with your tips!';
   $('lights').style.pointerEvents='auto'; $('train').style.left='560px'; $('visitBar').classList.remove('hidden');
+  const cu = !!S.done[PER-1]; $('catchBtn').disabled = !cu; $('catchBtn').textContent = cu ? '🕹️ Topping Catch' : '🔒 Game (finish Week 1)';
 }
 $('visitBtn').onclick = visitShop;
 $('visitBack').onclick = ()=>{ stopMusic(); $('party').classList.remove('on'); $('lights').style.pointerEvents='none'; $('train').style.left='-260px'; $('visitBar').classList.add('hidden'); $('home').classList.remove('hidden'); renderHome(); };
+
+// ------------------------------------------------------------------ mini-games
+const rnd = n => Math.floor(Math.random()*n);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const fracHTML = (n,d) => d===1 ? `${n}` : n>d && n%d ? `${Math.floor(n/d)} ${frac(n%d,d)}` : n%d===0 ? `${n/d}` : frac(n,d);
+function stagePt(e){ const r=$('stage').getBoundingClientRect(); return {x:(e.clientX-r.left)*1600/r.width, y:(e.clientY-r.top)*900/r.height}; }
+const MG = {
+  tok:0, raf:0, timers:[], g:null, id:null, score:0,
+  el(tag, cls, css, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(css) e.style.cssText=css; if(html!=null) e.innerHTML=html; $('mgArea').appendChild(e); return e; },
+  later(fn, ms){ const t=this.tok; this.timers.push(setTimeout(()=>{ if(t===this.tok) fn(); }, ms)); },
+  add(n){ this.score=Math.max(0,this.score+n); $('mgScore').textContent=this.score; },
+  bar(f){ $('mgBar').firstChild.style.width=Math.max(0,Math.min(1,f))*100+'%'; },
+  msg(t, y=430, ms=900, col='#fff'){ const m=this.el('div','mgmsg',`top:${y}px;color:${col}`,t); m.animate([{opacity:0,transform:'translateX(-50%) scale(.6)'},{opacity:1,transform:'translateX(-50%) scale(1.1)',offset:.25},{opacity:1,transform:'translateX(-50%) scale(1)',offset:.8},{opacity:0}],{duration:ms}).onfinish=()=>m.remove(); },
+  clock(secs, done){ const t=this.tok, t0=performance.now(); const tick=now=>{ if(t!==this.tok) return; const f=1-(now-t0)/(secs*1000); this.bar(f); if(f<=0) return done(); this.raf=requestAnimationFrame(tick); }; this.raf=requestAnimationFrame(tick); },
+  stop(){ this.tok++; cancelAnimationFrame(this.raf); this.timers.forEach(clearTimeout); this.timers=[]; $('mgArea').innerHTML=''; $('mgArea').onpointerdown=$('mgArea').onpointermove=null; document.onkeydown=null; },
+  open(id){
+    ac(); stopMusic(); this.stop(); this.id=id; this.g = id==='catch' ? CATCH : MGAMES[id];
+    ['home','visitBar','receiptScr'].forEach(x=>$(x).classList.add('hidden'));
+    if(typeof id==='number') setScene(id);
+    $('mg').classList.remove('hidden'); $('mgTitle').textContent=this.g.title; $('mgScore').textContent='0'; this.bar(1);
+    const best=(S.mg||{})[id];
+    $('mgCard').innerHTML=`<h2>${this.g.icon} ${this.g.title}</h2><p>${this.g.how}</p>${best!=null?`<p style="color:#7a6a55">Your best: <b>${best}</b></p>`:''}<button class="btn green" id="mgGo" style="font-size:30px">Start!</button>`;
+    $('mgCard').classList.remove('hidden'); $('mgGo').onclick=()=>{ ac(); $('mgCard').classList.add('hidden'); this.score=0; this.add(0); this.g.start(this); };
+  },
+  end(){
+    const sc=this.score; this.stop(); S.mg=S.mg||{}; const prev=S.mg[this.id], best=prev==null||sc>prev; if(best) S.mg[this.id]=sc;
+    const tip=this.g.tips(sc); if(tip>0) S.tips+=tip; save(); best&&sc>0 ? fanfare() : coinSnd();
+    $('mgCard').innerHTML=`<h2>${this.g.icon} Time's up!</h2><div class="big">${sc} points</div><p>${best&&sc>0?'🏆 New best score!':'Best: '+S.mg[this.id]}</p>${tip?`<p style="color:#2e8b57;font-weight:800">+$${tip} tips for the jar!</p>`:''}
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:10px"><button class="btn ghost" id="mgBack">Back</button><button class="btn green" id="mgAgain">Play again</button></div>`;
+    $('mgCard').classList.remove('hidden'); $('mgAgain').onclick=()=>this.open(this.id); $('mgBack').onclick=()=>this.close();
+  },
+  close(){ this.stop(); $('mg').classList.add('hidden'); if(this.id==='catch') visitShop(); else goHome(); },
+};
+$('mgQuit').onclick=()=>MG.close();
+
+function pickFrac(dens, max=1){ const d=dens[rnd(dens.length)], n=1+rnd(d*max-1); return [n,d]; }
+const MGAMES = [
+ { title:'Bigger Bite', icon:'🥪', how:'Two orders pop up. Tap the <b>bigger</b> fraction as fast as you can! Get 3 in a row for bonus points. You have 45 seconds.',
+   tips:s=>Math.min(8,Math.floor(s/2)),
+   start(m){ let streak=0; const round=()=>{ $('mgArea').innerHTML='';
+       let a,b; do{ a=pickFrac([2,4,8]); b=pickFrac([2,4,8]); }while(a[0]/a[1]===b[0]/b[1]);
+       [a,b].forEach((f,k)=>{ const x=130+k*700, c=m.el('div','mgcard',`left:${x}px;top:200px;width:640px;height:440px`);
+         c.innerHTML=`<div style="font-size:130px;font-weight:900;text-align:center;margin-top:40px;color:var(--dark)">${frac(f[0],f[1])}</div><div style="position:absolute;left:40px;right:40px;bottom:50px;height:78px"><img src="${ART}sub_party.webp" style="width:100%;height:100%;object-fit:fill"><div class="fill" style="position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(242,194,48,.6);border-right:4px solid #c0392b;transition:width .35s"></div></div>`;
+         c.onclick=()=>{ if(m.lock) return; m.lock=true; const win=f[0]/f[1]>[a,b][1-k][0]/[a,b][1-k][1];
+           document.querySelectorAll('#mgArea .fill').forEach((el,j)=>el.style.width=([a,b][j][0]/[a,b][j][1]*100)+'%');
+           if(win){ streak++; m.add(streak>=3?2:1); coinSnd(); m.msg(streak>=3?`🔥 ${streak} in a row!`:'Yes!',110,800,'#ffe066'); } else { streak=0; sad(); m.msg('The other one is bigger',110,900,'#ffb3a8'); }
+           m.later(()=>{ m.lock=false; round(); }, win?650:1300); }; }); };
+     m.lock=false; round(); m.clock(45, ()=>m.end()); } },
+ { title:'Conveyor Slice', icon:'🔪', how:'Subs roll by on the conveyor belt. Tap to cut when the <b>knife</b> is right on the fraction! 8 subs, and they get faster.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ let k=0; const N=8, KX=800;
+     m.el('div','',`position:absolute;left:0;right:0;top:640px;height:46px;background:repeating-linear-gradient(90deg,#3a3a3a 0 40px,#555 40px 80px);box-shadow:0 6px 12px rgba(0,0,0,.5)`);
+     m.el('div','',`position:absolute;left:${KX-2}px;top:330px;width:4px;height:340px;background:repeating-linear-gradient(#fff 0 14px,transparent 14px 24px)`);
+     m.el('div','',`position:absolute;left:${KX-30}px;top:262px;font-size:56px;transform:rotate(135deg)`,'🔪');
+     const round=()=>{ if(k>=N) return m.end(); m.bar(1-k/N); k++;
+       const [n,d]=pickFrac([2,3,4,6]), L=720, v=240+k*28, y=520; let x=1620, cut=false;
+       const tgt=m.el('div','mgfr',`left:800px;top:96px;font-size:66px`,`Cut at ${frac(n,d)}`);
+       const box=m.el('div','',`position:absolute;left:${x}px;top:${y}px;width:${L}px;height:150px`);
+       box.innerHTML=`<img src="${ART}sub_party.webp" style="position:absolute;left:0;top:0;width:${L}px;height:100px;object-fit:fill"><div style="position:absolute;left:0;top:112px;width:${L}px;height:5px;background:#fff"></div>`+
+         Array.from({length:d+1},(_,j)=>`<div style="position:absolute;left:${j*L/d-2}px;top:${j%d?104:98}px;width:4px;height:${j%d?20:30}px;background:#fff"></div>`).join('')+`<div style="position:absolute;left:-8px;top:126px;color:#fff;font-weight:900;font-size:26px">0</div><div style="position:absolute;left:${L-8}px;top:126px;color:#fff;font-weight:900;font-size:26px">1</div>`;
+       let last=performance.now(); const t=m.tok;
+       const move=now=>{ if(t!==m.tok||cut) return; x-=v*(now-last)/1000; last=now; box.style.left=x+'px';
+         if(x+L<KX-40){ cut=true; sad(); m.msg('Too late!',330); m.later(()=>{ box.remove(); tgt.remove(); round(); },900); return; } m.raf=requestAnimationFrame(move); };
+       m.raf=requestAnimationFrame(move);
+       $('mgArea').onpointerdown=()=>{ if(cut) return; const f=(KX-x)/L; if(f<=0) return; cut=true; chop();
+         const e=Math.abs(f-n/d), pts=e<.03?3:e<.07?2:e<.12?1:0; m.add(pts);
+         box.insertAdjacentHTML('beforeend',`<div style="position:absolute;left:${f*L-3}px;top:-10px;width:6px;height:130px;background:#e0483e"></div><div style="position:absolute;left:${n/d*L-3}px;top:-10px;width:6px;height:130px;background:#3fd47a"></div>`);
+         m.msg(['Missed it','Close-ish','Close!','Perfect!'][pts]+(pts?` +${pts}`:''),330,1000,pts===3?'#ffe066':'#fff'); pts?coinSnd():sad();
+         m.later(()=>{ box.remove(); tgt.remove(); round(); },1300); }; };
+     round(); } },
+ { title:'Hot Dog Toss', icon:'🌭', how:'Toss the hot dog onto the number line! Tap where the fraction goes. Only 0 and 1 are marked, and the line changes size every throw. 8 throws.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ let k=0; const N=8, Y=650;
+     const round=()=>{ if(k>=N) return m.end(); m.bar(1-k/N); k++; $('mgArea').innerHTML='';
+       const [n,d]=pickFrac([2,3,4,6,8]), L=520+rnd(560), x0=800-L/2;
+       m.el('div','mgfr',`left:800px;top:110px;font-size:72px`,`Toss it to ${frac(n,d)}`);
+       m.el('div','mgline',`left:${x0}px;top:${Y}px;width:${L}px`); [0,1].forEach(j=>{ m.el('div','mgtick',`left:${x0+j*L-2}px;top:${Y-20}px;height:46px`); m.el('div','mglab',`left:${x0+j*L}px;top:${Y+34}px`,j); });
+       const hit=m.el('div','',`position:absolute;left:${x0-60}px;top:${Y-120}px;width:${L+120}px;height:200px;cursor:crosshair`);
+       hit.onpointerdown=e=>{ hit.onpointerdown=null; const p=stagePt(e), f=Math.max(0,Math.min(1,(p.x-x0)/L)), tx=x0+f*L;
+         const dog=m.el('img','',`position:absolute;left:0;top:0;width:150px;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))`); dog.src=ART+'food_hotdog.webp'; pop();
+         dog.animate([{transform:'translate(60px,820px) rotate(0)'},{transform:`translate(${(60+tx-75)/2}px,240px) rotate(360deg)`},{transform:`translate(${tx-75}px,${Y-40}px) rotate(720deg)`}],{duration:900,easing:'ease-in-out',fill:'forwards'});
+         m.later(()=>{ const e2=Math.abs(f-n/d), pts=e2<.03?3:e2<.07?2:e2<.12?1:0; m.add(pts);
+           m.el('div','',`position:absolute;left:${x0+n/d*L-3}px;top:${Y-60}px;width:6px;height:70px;background:#3fd47a`); m.el('div','mglab',`left:${x0+n/d*L}px;top:${Y-110}px;font-size:30px;color:#bfffd0`,frac(n,d));
+           m.msg(['Missed','Close-ish','Close!','Bullseye!'][pts]+(pts?` +${pts}`:''),340,1100,pts===3?'#ffe066':'#fff'); pts?coinSnd():sad(); m.later(round,1500); }, 950); }; };
+     round(); } },
+ { title:'Stack the Order', icon:'🎉', how:'Party orders! Tap the tickets from <b>smallest to biggest</b>. Each one jumps to its spot on the number line. Some are bigger than 1! You have 60 seconds.',
+   tips:s=>Math.min(8,Math.floor(s/3)),
+   start(m){ const POOL=[[1,4],[1,3],[1,2],[2,3],[3,4],[1,1],[5,4],[4,3],[3,2],[5,3],[7,4],[2,1],[1,6],[5,6],[1,8],[3,8]], X0=200, L=1200, Y=700;
+     m.el('div','mgline',`left:${X0}px;top:${Y}px;width:${L}px`); [0,1,2].forEach(j=>{ m.el('div','mgtick',`left:${X0+j*L/2-2}px;top:${Y-22}px;height:50px`); m.el('div','mglab',`left:${X0+j*L/2}px;top:${Y+36}px`,j); });
+     const round=()=>{ document.querySelectorAll('#mgArea .mgticket').forEach(t=>t.remove());
+       let set; do{ set=shuffle(POOL.slice()).slice(0,4); }while(new Set(set.map(f=>f[0]/f[1])).size<4);
+       const order=set.slice().sort((a,b)=>a[0]/a[1]-b[0]/b[1]); let next=0, clean=true;
+       set.forEach((f,j)=>{ const t=m.el('div','mgticket',`left:${260+j*290}px;top:250px`,fracHTML(f[0],f[1]));
+         t.onclick=()=>{ if(t.dataset.done) return; if(f!==order[next]){ clean=false; sad(); t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); m.msg('Find the smallest one left!',140,900,'#ffb3a8'); return; }
+           t.dataset.done=1; next++; pop(); const v=f[0]/f[1]; t.style.left=(X0+v/2*L-55)+'px'; t.style.top=(Y-150-(next%2)*70)+'px'; t.style.width='110px'; t.style.height='80px'; t.style.fontSize='34px';
+           if(next===4){ m.add(clean?5:4); coinSnd(); m.msg(clean?'Perfect order! +5':'Done! +4',140,900,'#ffe066'); m.later(round,1100); } }; }); };
+     round(); m.clock(60, ()=>m.end()); } },
+];
+const CATCH = { title:'Topping Catch', icon:'🍅', how:'Slide the sub to catch falling toppings! 🍅 🧀 🥬 🥒 are +1. Watch out for 🧦 and 👟 (−2). Use your finger, mouse, or the arrow keys. 40 seconds.',
+  tips:s=>Math.min(5,Math.floor(s/5)),
+  start(m){ const GOOD=['🍅','🧀','🥬','🥒','🧅','🫑'], BAD=['🧦','👟'], W=300, Y=760; let px=650, items=[], last=performance.now(), spawn=0, t0=last; const t=m.tok;
+    const sub=m.el('img','mgsub',`left:${px}px;top:${Y}px;width:${W}px`); sub.src=ART+'sub_party.webp';
+    $('mgArea').onpointermove=$('mgArea').onpointerdown=e=>{ px=Math.max(0,Math.min(1600-W,stagePt(e).x-W/2)); };
+    const keys={}; document.onkeydown=e=>{ if(e.key==='ArrowLeft') px=Math.max(0,px-60); if(e.key==='ArrowRight') px=Math.min(1600-W,px+60); };
+    const loop=now=>{ if(t!==m.tok) return; const dt=(now-last)/1000, el=(now-t0)/1000; last=now; sub.style.left=px+'px';
+      spawn-=dt; if(spawn<=0){ spawn=Math.max(.32,.7-el*.01); const bad=Math.random()<.22, x=40+Math.random()*1500; items.push({x,y:90,v:260+el*6+Math.random()*120,bad,e:m.el('div','',`position:absolute;left:${x}px;top:90px;font-size:60px;pointer-events:none`,bad?BAD[rnd(2)]:GOOD[rnd(6)])}); }
+      items=items.filter(it=>{ it.y+=it.v*dt; it.e.style.top=it.y+'px';
+        if(it.y>Y-50 && it.y<Y+20 && it.x+30>px && it.x+30<px+W){ it.e.remove(); if(it.bad){ m.add(-2); sad(); m.msg('Yuck! −2',600,700,'#ffb3a8'); } else { m.add(1); pop(); } return false; }
+        if(it.y>900){ it.e.remove(); return false; } return true; });
+      m.raf=requestAnimationFrame(loop); };
+    m.raf=requestAnimationFrame(loop); m.clock(40, ()=>m.end()); } };
+$('catchBtn').onclick=()=>{ $('lights').style.pointerEvents='none'; MG.open('catch'); };
 
 // ------------------------------------------------------------------ teacher light: last 10 first tries
 const TL = {g:['#2fb35a','On track'], y:['#f2c230','Getting there'], r:['#e0483e','Needs help'], n:['#9a9a9a','Not enough orders yet']};
@@ -1141,8 +1280,11 @@ function goHome(){
 function renderHome(){
   const next = SHIFTS.findIndex((_,k)=>!S.done[k]);
   $('weeks').innerHTML = WEEKS.map((w,wi)=>`<div class="week"><div class="wl"><b>${w.t} ${S.badges[wi]?'🏅':''}</b><small>${w.s}</small></div>${[0,1,2,3].map(s=>{ const k=wi*PER+s, open = k===0 || S.done[k-1] || S.done[k];
-      return `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===PER-1?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`; }).join('')}</div>`).join('');
-  $('weeks').querySelectorAll('.tile').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
+      const t = `<button class="tile ${S.done[k]?'done':''} ${open?'':'lock'} ${k===next?'next':''}" data-k="${k}">Shift ${s+1}${s===PER-1?' 🔍':''}<small>${S.done[k]? '★ '+S.stars[k]+'/'+shiftMax(k) : open? 'Play' : '🔒'}</small></button>`;
+      if(s!==1) return t; const mo = !!S.done[wi*PER+1], best = (S.mg||{})[wi];
+      return t + `<button class="tile mgt ${mo?'':'lock'}" data-g="${wi}" title="${MGAMES[wi].title}">🎮 Bonus<small>${mo ? (best!=null ? 'best '+best : 'Play!') : '🔒'}</small></button>`; }).join('')}</div>`).join('');
+  $('weeks').querySelectorAll('.tile[data-k]').forEach(b=>b.onclick=()=>startShift(+b.dataset.k));
+  $('weeks').querySelectorAll('.tile[data-g]').forEach(b=>b.onclick=()=>MG.open(+b.dataset.g));
   $('homeTips').textContent = `Tip jar: $${S.tips-S.spent}`; scene(); jar();
   $('byosBtn').innerHTML = S.done[NSH-1] ? '🥪 Build Your Own Sub' : '🔒 Build Your Own Sub'; $('menuBtn').classList.toggle('hidden', !(S.menu&&S.menu.length));
 }
@@ -1270,7 +1412,7 @@ $('tipjar').src = ART+'tipjar.webp'; $('plants').src = ART+'plants.webp'; $('bel
 $('bg').onload = () => $('loading').classList.add('hidden');
 setTimeout(()=>$('loading').classList.add('hidden'), 2500);
 goHome();
-window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, get cur(){ return cur; }};
+window.__game = {get S(){ return S; }, SHIFTS, startShift, MODES, subGeometry, MG, get cur(){ return cur; }};
 
 </script>
 </body>
